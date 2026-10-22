@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 270" fill="none">
+  <defs>
+    <linearGradient id="fl-gold-swoosh" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C5A059" />
+      <stop offset="50%" stop-color="#D4AF37" />
+      <stop offset="100%" stop-color="#F5D77F" />
+    </linearGradient>
+    <linearGradient id="fl-star-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A" />
+      <stop offset="50%" stop-color="#D4AF37" />
+      <stop offset="100%" stop-color="#C5A059" />
+    </linearGradient>
+    <linearGradient id="fl-navy-body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1B365D" />
+      <stop offset="60%" stop-color="#0F2137" />
+      <stop offset="100%" stop-color="#0B1B3D" />
+    </linearGradient>
+  </defs>
+  <path d="M 44 14 Q 44 32 26 32 Q 44 32 44 50 Q 44 32 62 32 Q 44 32 44 14 Z" fill="url(#fl-star-gold)" />
+  <path d="M 22 48 Q 22 60 10 60 Q 22 60 22 72 Q 22 60 34 60 Q 22 60 22 48 Z" fill="url(#fl-star-gold)" />
+  <path d="M 52 248 L 52 196 C 36 180 26 150 26 116 C 26 50 74 14 146 14 L 214 14 C 226 14 236 24 236 36 C 236 48 226 58 214 58 L 146 58 C 112 58 76 76 76 118 C 76 142 80 170 94 192 L 52 248 Z" fill="url(#fl-navy-body)" />
+  <rect x="100" y="86" width="76" height="22" rx="11" fill="url(#fl-navy-body)" />
+  <rect x="100" y="126" width="56" height="22" rx="11" fill="url(#fl-navy-body)" />
+  <path d="M 84 186 C 104 206 132 218 164 218 C 196 218 224 196 236 164 C 238 156 238 144 238 126 C 238 118 244 116 247 122 C 250 134 250 152 244 174 C 230 220 190 244 148 244 C 112 244 80 228 58 202 Z" fill="url(#fl-gold-swoosh)" />
+</svg>

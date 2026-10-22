@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 560" width="100%" height="100%" fill="none">
+  <defs>
+    <!-- Warm Metallic Gold Gradient for Swoosh -->
+    <linearGradient id="fluentic-gold-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9E6F22" />
+      <stop offset="35%" stop-color="#C59239" />
+      <stop offset="70%" stop-color="#E2B85E" />
+      <stop offset="100%" stop-color="#F3CF7A" />
+    </linearGradient>
+
+    <!-- Star Glow Gold -->
+    <linearGradient id="fluentic-star-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5D384" />
+      <stop offset="100%" stop-color="#C59239" />
+    </linearGradient>
+
+    <!-- Deep Navy for Main Body -->
+    <linearGradient id="fluentic-navy-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E214B" />
+      <stop offset="100%" stop-color="#081430" />
+    </linearGradient>
+  </defs>
+
+  <!-- Group: Main Emblem (centered horizontally) -->
+  <g transform="translate(130, 20)">
+    <!-- Top-Left Large Sparkle Star -->
+    <path d="M 32 10 Q 32 30 12 30 Q 32 30 32 50 Q 32 30 52 30 Q 32 30 32 10 Z" fill="url(#fluentic-star-grad)" />
+
+    <!-- Top-Left Small Sparkle Star -->
+    <path d="M 8 50 Q 8 62 -4 62 Q 8 62 8 74 Q 8 62 20 62 Q 8 62 8 50 Z" fill="url(#fluentic-star-grad)" />
+
+    <!-- Main Navy Speech Bubble 'F' Spine & Top -->
+    <path d="M 40 252 
+             L 40 200 
+             C 25 185 15 155 15 120 
+             C 15 52 65 12 140 12 
+             L 210 12 
+             C 224 12 235 23 235 37 
+             C 235 51 224 62 210 62 
+             L 140 62 
+             C 105 62 65 82 65 125 
+             C 65 148 70 178 85 200 
+             L 40 252 Z" 
+          fill="url(#fluentic-navy-grad)" />
+
+    <!-- Two Horizontal Inner Speech Bars (F rungs) -->
+    <!-- Top Bar -->
+    <rect x="92" y="90" width="80" height="24" rx="12" fill="url(#fluentic-navy-grad)" />
+    <!-- Bottom Bar -->
+    <rect x="92" y="132" width="60" height="24" rx="12" fill="url(#fluentic-navy-grad)" />
+
+    <!-- Bottom-Right Golden Swoosh -->
+    <path d="M 75 192 
+             C 95 212 125 224 158 224 
+             C 192 224 222 202 234 168 
+             C 236 160 236 148 236 128 
+             C 236 120 242 118 245 124 
+             C 248 135 248 155 242 178 
+             C 228 226 186 250 142 250 
+             C 105 250 72 234 50 208 
+             Z" 
+          fill="url(#fluentic-gold-grad)" />
+  </g>
+
+  <!-- Typography Section -->
+  <!-- "Fluentic" Wordmark -->
+  <text x="250" y="380" 
+        text-anchor="middle" 
+        font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" 
+        font-size="82" 
+        font-weight="800" 
+        letter-spacing="-1.5" 
+        fill="#091636">
+    Fluent<tspan fill="#C59239">i</tspan>c
+  </text>
+
+  <!-- Golden Dot on the "i" -->
+  <!-- The dot for the 'i' is located at roughly x=376, y=326 in this typography -->
+  <circle cx="376" cy="328" r="8" fill="url(#fluentic-gold-grad)" />
+
+  <!-- Tagline: "— Fluent in every word. —" -->
+  <g transform="translate(250, 420)">
+    <text text-anchor="middle" 
+          font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" 
+          font-size="21" 
+          font-weight="600" 
+          letter-spacing="0.5">
+      <tspan fill="#C59239" font-weight="700">— </tspan>
+      <tspan fill="#0D1E44">Fluent in </tspan>
+      <tspan fill="#C59239" font-style="italic" font-weight="700">every </tspan>
+      <tspan fill="#0D1E44">word. </tspan>
+      <tspan fill="#C59239" font-weight="700">—</tspan>
+    </text>
+  </g>
+</svg>

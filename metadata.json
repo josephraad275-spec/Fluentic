@@ -1,0 +1,10 @@
+{
+  "name": "Remix Fluentic",
+  "description": "Unrestricted omni-studio language learning platform featuring neural voice cloning, generative AI scenario studio, multi-agent debates, FSRS memory scheduling, grammar surgery, and 55+ world languages.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
