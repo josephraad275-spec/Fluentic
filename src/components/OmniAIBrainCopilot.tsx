@@ -19,6 +19,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { Language, CefrLevel, UserProfile } from '../types';
+import { WORLD_LANGUAGES } from '../data/languages';
 import { audioSynth } from '../services/audioSynthesizer';
 import { speechDetector } from '../services/speechDetectionService';
 import { stripTransliteration } from '../services/languageTypography';
@@ -171,7 +172,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
         try {
           const lesson = await fluenticLearning.createPersonalLesson({
             targetLanguage: activeLanguage.name,
-            nativeLanguage: user.nativeLanguage || user.nativeLanguageCode || 'English',
+            nativeLanguage: user.nativeLanguage || WORLD_LANGUAGES.find((language) => language.code === user.nativeLanguageCode)?.name || 'English',
             cefrLevel: activeCefr,
             goal: user.learningIntent || 'conversational',
             learningIntent: user.learningIntent || 'conversational',
