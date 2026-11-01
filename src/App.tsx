@@ -178,8 +178,8 @@ export function App() {
 
     handleUpdateUser({
       ...user,
-      xp: user.xp + xpEarned,
-      gems: user.gems + gemsEarned,
+      xp: user.xp,
+      gems: user.gems,
       streakDays: nextStreak,
       totalPracticeMinutes: nextPracticeMinutes,
       completedNodeIds: completedIds,
@@ -393,12 +393,7 @@ export function App() {
             user={{ ...user, activeCefr }}
             activeLanguage={activeLanguage}
             onSelectNode={(node) => setActiveLessonNode(node)}
-            onClaimMilestone={(rewardGems) => {
-              handleUpdateUser({
-                ...user,
-                gems: user.gems + rewardGems,
-              });
-            }}
+            onClaimMilestone={() => undefined}
             onUpdateUser={handleUpdateUser}
           />
         )}
