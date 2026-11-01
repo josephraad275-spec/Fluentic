@@ -115,15 +115,18 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
       if (action === "personal-lesson") {
         const targetLanguage = requireText(payload.targetLanguage, "targetLanguage", 100);
         const nativeLanguage = cleanString(payload.nativeLanguage, "English");
-        const level = cleanString(payload.cefrLevel, "A1");
+        const rawLevel = cleanString(payload.cefrLevel, "A1").toUpperCase();
+        const level = CEFR_LEVELS.includes(rawLevel as any) ? rawLevel : "A1";
+        const intent = normalizeLearningIntent(payload.learningIntent || payload.goal);
         const result = await generateJson(
           ai,
-          `You are Fluentic's adaptive language curriculum designer. Build one practical, personalized lesson for a ${level} learner studying ${targetLanguage}. Explanations should be in ${nativeLanguage}; examples and exercises in ${targetLanguage}. Adapt to the learner's goal, interests, available time and demonstrated weaknesses. Teach one clear objective, scaffold examples, then test transfer. Return JSON: {"title":"...","level":"...","objective":"...","estimatedMinutes":15,"whyThisLesson":"...","teachingPoints":[{"concept":"...","explanation":"...","examples":[{"target":"...","translation":"..."}]}],"practice":[{"type":"multiple_choice|translation|short_answer|conversation","prompt":"...","options":["..."],"expectedAnswer":"...","feedback":"..."}],"recallPrompt":"...","nextLessonRecommendation":"..."}.`,
+          buildPersonalLessonInstruction(targetLanguage, nativeLanguage, level as any, intent),
           {
             targetLanguage, nativeLanguage, level,
             goal: cleanString(payload.goal, "general fluency"),
-            interests: payload.interests || [],
-            weaknesses: payload.weaknesses || [],
+            learningIntent: intent,
+            interests: Array.isArray(payload.interests) ? payload.interests.slice(0, 8) : [],
+            weaknesses: Array.isArray(payload.weaknesses) ? payload.weaknesses.slice(0, 12) : [],
             recentPerformance: payload.recentPerformance || {},
             minutesAvailable: Math.max(5, Math.min(60, Number(payload.minutesAvailable) || 15)),
           },
