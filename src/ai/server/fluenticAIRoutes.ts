@@ -152,37 +152,41 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
       if (action === "voice-synthesis") {
         const text = requireText(payload.text, "text", 5000);
         const language = cleanString(payload.language, "English");
+        const languageCode = cleanString(payload.languageCode, "en-US");
         const voiceName = cleanString(payload.voiceName, "Kore");
         const style = cleanString(
           payload.style,
-          "Fluentic's consistent language tutor persona: warm, confident, encouraging, clear, natural pacing, friendly and articulate. Pronounce the learner's target language accurately."
+          "Warm, confident, encouraging language tutor. Clear articulation, natural conversational pacing, friendly and articulate."
         );
-        const result = await ai.models.generateContent({
+
+        // Gemini 3.8 TTS uses the Interactions API and structured speech metadata.
+        const interaction = await ai.interactions.create({
           model: TTS_MODEL,
-          contents: [{
-            role: "user",
-            parts: [{
+          input: [{
+            type: "user_input",
+            content: [{
+              type: "text",
               text,
-              speech_metadata: { style },
+              annotations: [{ type: "speech_metadata", style }],
             }],
           }],
-          config: {
-            responseModalities: ["AUDIO"],
-            speechConfig: {
-              voiceConfig: { prebuiltVoiceConfig: { voiceName } },
-              languageCode: cleanString(payload.languageCode, undefined),
-            },
-          } as any,
-        });
-        const audioPart = result.candidates?.[0]?.content?.parts?.find((part: any) => part.inlineData?.data);
-        if (!audioPart?.inlineData?.data) throw new Error("Voice synthesis returned no audio.");
+          response_format: { type: "audio" },
+          generation_config: {
+            speech_config: [{ voice: voiceName }],
+          },
+        } as any);
+
+        const audioBase64 = (interaction as any).output_audio?.data;
+        if (!audioBase64) throw new Error("Voice synthesis returned no audio.");
         return res.json({
           success: true,
           action,
-          mimeType: audioPart.inlineData.mimeType || "audio/pcm",
-          audioBase64: audioPart.inlineData.data,
+          mimeType: "audio/wav",
+          audioBase64,
           voiceName,
-          note: "This is a generated preset voice, not a cloned person's voice.",
+          language,
+          languageCode,
+          note: "Fluentic's consistent generated tutor voice. This is not a cloned person's voice.",
         });
       }
 
