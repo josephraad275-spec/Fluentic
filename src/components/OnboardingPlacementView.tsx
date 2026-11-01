@@ -14,6 +14,8 @@ import {
 } from '../services/placementTestService';
 import { OmniAppEngineClient, DiagnosticData } from '../services/omniEngineService';
 import { getI18n } from '../services/localization';
+import { fluenticAssessment } from '../ai';
+import { FLUENTIC_CEFR_LEVELS, estimateLevelFromEvidence, nextAdaptiveLevel } from '../ai/pedagogy';
 import { isRtlLanguage, resolveDirection, hasRtlCharacters, stripTransliteration } from '../services/languageTypography';
 import { 
   Sparkles, 
@@ -117,21 +119,63 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
     setTestQuestions(getLoadedQuestions(selectedVariant));
   }, [getLoadedQuestions, selectedVariant]);
 
-  const currentQuestion = testQuestions[adaptiveStep] || getLoadedQuestions()[adaptiveStep] || getLoadedQuestions()[0];
+  const currentQuestion = (() => {
+    const remaining = testQuestions.filter((question) => !answeredQuestionIds.includes(question.id));
+    const exact = remaining.find((question) => question.level.toUpperCase() === activeTier);
+    if (exact) return exact;
+    const tierIndex = FLUENTIC_CEFR_LEVELS.indexOf(activeTier as any);
+    const nearest = remaining.slice().sort((left, right) => {
+      const leftIndex = FLUENTIC_CEFR_LEVELS.indexOf(left.level.toUpperCase() as any);
+      const rightIndex = FLUENTIC_CEFR_LEVELS.indexOf(right.level.toUpperCase() as any);
+      return Math.abs(leftIndex - tierIndex) - Math.abs(rightIndex - tierIndex);
+    })[0];
+    return nearest || testQuestions[adaptiveStep] || getLoadedQuestions()[0];
+  })();
 
   // Step 1 -> Step 2: Start the 10-Question Standardized Placement Test
-  const handleStartPlacementTest = () => {
+  const handleStartPlacementTest = async () => {
     if (!name.trim()) {
-      setName(nativeLanguageCode === 'nl' ? 'Taalstudent' : 'Polyglot Explorer');
+      setName(i18n.guestUser);
     }
     audioSynth.playSuccessChime();
     PlacementAssessmentEngine.clearTestCache();
-    const fresh = PlacementAssessmentEngine.getPlacementTest(
+    let fresh = PlacementAssessmentEngine.getPlacementTest(
       targetLanguage.code,
       targetLanguage.name,
       selectedVariant,
       nativeLanguageCode
     ).questions;
+    try {
+      const nativeName = WORLD_LANGUAGES.find((language) => language.code === nativeLanguageCode)?.name || 'English';
+      const generated = await fluenticAssessment.createPlacementTest(targetLanguage.name, nativeName, 10, initialProfile?.learningIntent || 'conversational');
+      const generatedQuestions = generated.questions as any[];
+      const tiers = new Set(generatedQuestions.map((question) => String(question.level || '').toUpperCase()));
+      const valid = generatedQuestions.length === 10 && FLUENTIC_CEFR_LEVELS.every((level) => tiers.has(level)) && generatedQuestions.every((question) => Array.isArray(question.options) && question.options.length === 4 && question.options.some((option) => option.key === question.correctKey));
+      if (valid) {
+        const mapped: PlacementTestQuestion[] = generatedQuestions.map((question, index) => ({
+          id: Number(question.id) || index + 1,
+          level: String(question.level).toUpperCase(),
+          target_skill: String(question.skill || 'Language proficiency'),
+          instruction: String(question.instruction || ''),
+          prompt: String(question.prompt || ''),
+          prompt_native: String(question.prompt || ''),
+          prompt_translation: String(question.instruction || ''),
+          options: question.options.map((option, optionIndex) => ({
+            key: (option.key || ['A', 'B', 'C', 'D'][optionIndex]) as 'A' | 'B' | 'C' | 'D',
+            text: String(option.text || ''),
+            text_native: String(option.text || ''),
+            text_translation: String(option.text || ''),
+          })),
+          correct_key: question.correctKey as 'A' | 'B' | 'C' | 'D',
+          explanation: String(question.explanation || ''),
+          explanation_translation: String(question.explanation || ''),
+          audioText: String(question.prompt || ''),
+        }));
+        fresh = PlacementAssessmentEngine.scrambleQuestionOptions(mapped);
+      }
+    } catch (error) {
+      console.warn('[Fluentic placement] AI diagnostic unavailable; using curated assessment.', error);
+    }
     setTestQuestions(fresh);
     setAdaptiveStep(0);
     setActiveTier('A1');
@@ -146,7 +190,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
   // Skip Test: Allows user to bypass the test and start immediately at A1
   const handleSkipTest = () => {
     audioSynth.playGentleFeedback();
-    const defaultName = nativeLanguageCode === 'ar' ? 'أدخل اسمك' : 'Enter your name';
+    const defaultName = i18n.guestUser;
     const cleanProfile: UserProfile = {
       id: initialProfile?.id || `usr-${Date.now().toString(36)}`,
       name: name.trim() || defaultName,
@@ -202,7 +246,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
     audioSynth.playGentleFeedback();
     setSelectedVariant(variant);
     setAdaptiveStep(0);
-    setActiveTier('A2');
+    setActiveTier('A1');
     setAnsweredQuestionIds([]);
     setTierPerformance([]);
     setSelectedOptionKey(null);
@@ -211,18 +255,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
   };
 
   // Dynamic Routing step transition
-  const getNextAdaptiveTier = (current: CefrLevel, wasCorrect: boolean): CefrLevel => {
-    const tiers: CefrLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-    const currentIdx = tiers.indexOf(current);
-
-    if (wasCorrect) {
-      // Step up in difficulty
-      return currentIdx < tiers.length - 1 ? tiers[currentIdx + 1] : 'C2';
-    } else {
-      // Step down in difficulty
-      return currentIdx > 0 ? tiers[currentIdx - 1] : 'A1';
-    }
-  };
+  const getNextAdaptiveTier = (current: CefrLevel, wasCorrect: boolean): CefrLevel => nextAdaptiveLevel(current as any, wasCorrect) as CefrLevel;
 
   // Check Answer
   const handleCheckAnswer = () => {
@@ -263,7 +296,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
 
     if (adaptiveStep + 1 < TOTAL_ADAPTIVE_QUESTIONS) {
       // Route difficulty adaptively based on accuracy
-      const nextTier = getNextAdaptiveTier(activeTier, wasCorrect);
+      const nextTier = getNextAdaptiveTier(currentQLevel, wasCorrect);
       setActiveTier(nextTier);
       setAdaptiveStep((prev) => prev + 1);
       setSelectedOptionKey(null);
@@ -272,24 +305,9 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
       // Test Complete: Calculate official verified CEFR diagnostic score
       const finalScore = score + (selectedOptionKey === currentQuestion.correct_key && !isAnswerChecked ? 1 : 0);
       
-      // Determine highest sustained level where student performed correctly
-      const tiersHierarchy: CefrLevel[] = ['C2', 'C1', 'B2', 'B1', 'A2', 'A1'];
-      let calibratedTier: CefrLevel = 'A1';
-
-      for (const tier of tiersHierarchy) {
-        const correctAtTier = updatedHistory.filter((item) => item.level === tier && item.correct).length;
-        if (correctAtTier > 0) {
-          calibratedTier = tier;
-          break;
-        }
-      }
-
-      // If score is high across the adaptive ladder
-      if (finalScore >= 7) calibratedTier = 'C2';
-      else if (finalScore >= 6 && calibratedTier < 'C1') calibratedTier = 'C1';
-      else if (finalScore >= 5 && calibratedTier < 'B2') calibratedTier = 'B2';
-      else if (finalScore >= 3 && calibratedTier < 'B1') calibratedTier = 'B1';
-      else if (finalScore >= 2 && calibratedTier < 'A2') calibratedTier = 'A2';
+      // Calibrate to tier-by-tier evidence; total correct alone cannot award C1 or C2.
+      const evidenceResult = estimateLevelFromEvidence(updatedHistory);
+      const calibratedTier = evidenceResult.level as CefrLevel;
 
       const result = PlacementAssessmentEngine.calculateCefrPlacement(finalScore, nativeLanguageCode, calibratedTier);
 
@@ -392,9 +410,9 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
           {/* Stepper Indicator */}
           <div className="flex items-center gap-2">
             {[
-              { num: 1, label: nativeLanguageCode === 'nl' ? 'Profiel & Talen' : 'Profile & Languages' },
-              { num: 2, label: nativeLanguageCode === 'nl' ? 'Niveautest (10 Vragen)' : 'Placement Test (10Q)' },
-              { num: 3, label: nativeLanguageCode === 'nl' ? 'Kwalificatie' : 'Results' },
+              { num: 1, label: i18n.profile },
+              { num: 2, label: i18n.placementTestTitle },
+              { num: 3, label: i18n.unlockedLevelResult },
             ].map((s) => (
               <div
                 key={s.num}

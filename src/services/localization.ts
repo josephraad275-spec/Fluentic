@@ -45,41 +45,41 @@ export interface TranslationDictionary {
   navVault: string;
   navDisciplines: string;
   navPro: string;
-  navFocus?: string;
-  navAITutor?: string;
+  navFocus: string;
+  navAITutor: string;
 
   // Intent-Driven Learning ("The Why")
-  whyPromptTitle?: string;
-  whyPromptSubtitle?: string;
-  intentBusiness?: string;
-  intentTravel?: string;
-  intentAcademic?: string;
-  intentConversational?: string;
-  intentCulture?: string;
-  changeGoal?: string;
-  tailoredFor?: string;
+  whyPromptTitle: string;
+  whyPromptSubtitle: string;
+  intentBusiness: string;
+  intentTravel: string;
+  intentAcademic: string;
+  intentConversational: string;
+  intentCulture: string;
+  changeGoal: string;
+  tailoredFor: string;
 
   // Focus Mode Alpha Soundwaves
-  focusTitle?: string;
-  focusSubtitle?: string;
-  startSoundwave?: string;
-  stopSoundwave?: string;
-  soundwaveActive?: string;
-  frequencyControl?: string;
-  volumeControl?: string;
-  focusPresets?: string;
-  presetAlpha?: string;
-  presetTheta?: string;
-  presetGamma?: string;
-  presetPinkNoise?: string;
+  focusTitle: string;
+  focusSubtitle: string;
+  startSoundwave: string;
+  stopSoundwave: string;
+  soundwaveActive: string;
+  frequencyControl: string;
+  volumeControl: string;
+  focusPresets: string;
+  presetAlpha: string;
+  presetTheta: string;
+  presetGamma: string;
+  presetPinkNoise: string;
 
   // Pricing & Pro
-  proMonthlyTitle?: string;
-  proMonthlyPrice?: string;
-  proAnnualTitle?: string;
-  proAnnualPrice?: string;
-  mostPopularBadge?: string;
-  billedAnnuallyNotice?: string;
+  proMonthlyTitle: string;
+  proMonthlyPrice: string;
+  proAnnualTitle: string;
+  proAnnualPrice: string;
+  mostPopularBadge: string;
+  billedAnnuallyNotice: string;
 
   // Header
   selectLanguage: string;
@@ -743,7 +743,36 @@ export const SPANISH_TRANSLATIONS: TranslationDictionary = {
   cefrEvaluationNotice: "Cada pregunta evalúa un peldaño del marco europeo MCER.",
   levelMustBeEarned: "El nivel no se elige al azar; se acredita con la prueba.",
   takeTestNow: "Hacer prueba de nivel ahora",
-  unlockedLevelResult: "Nivel obtenido"
+  unlockedLevelResult: "Nivel obtenido",
+  navFocus: "Modo de concentración",
+  navAITutor: "Tutor de IA",
+  whyPromptTitle: "¿Por qué aprendes?",
+  whyPromptSubtitle: "Personaliza tu ruta según tu objetivo.",
+  intentBusiness: "Negocios",
+  intentTravel: "Viajes",
+  intentAcademic: "Académico",
+  intentConversational: "Conversación",
+  intentCulture: "Cultura",
+  changeGoal: "Cambiar objetivo",
+  tailoredFor: "Diseñado para",
+  focusTitle: "Modo de concentración",
+  focusSubtitle: "Crea un entorno de estudio tranquilo.",
+  startSoundwave: "Iniciar sonido",
+  stopSoundwave: "Detener sonido",
+  soundwaveActive: "Sonido activo",
+  frequencyControl: "Frecuencia",
+  volumeControl: "Volumen",
+  focusPresets: "Ajustes predefinidos",
+  presetAlpha: "Ondas alfa",
+  presetTheta: "Ondas theta",
+  presetGamma: "Ondas gamma",
+  presetPinkNoise: "Ruido rosa",
+  proMonthlyTitle: "Plan Pro mensual",
+  proMonthlyPrice: "Precio mensual",
+  proAnnualTitle: "Plan Pro anual",
+  proAnnualPrice: "Precio anual",
+  mostPopularBadge: "Más popular",
+  billedAnnuallyNotice: "Facturado anualmente",
 };
 
 export const FRENCH_TRANSLATIONS: TranslationDictionary = {
@@ -897,7 +926,36 @@ export const FRENCH_TRANSLATIONS: TranslationDictionary = {
   cefrEvaluationNotice: "Chaque question évalue un échelon du cadre européen CECRL.",
   levelMustBeEarned: "Les niveaux s’obtiennent par le test pour garantir une vraie progression.",
   takeTestNow: "Passer le test de niveau maintenant",
-  unlockedLevelResult: "Niveau certifié"
+  unlockedLevelResult: "Niveau certifié",
+  navFocus: "Mode concentration",
+  navAITutor: "Tuteur IA",
+  whyPromptTitle: "Pourquoi apprenez-vous ?",
+  whyPromptSubtitle: "Personnalisez votre parcours selon votre objectif.",
+  intentBusiness: "Affaires",
+  intentTravel: "Voyage",
+  intentAcademic: "Études",
+  intentConversational: "Conversation",
+  intentCulture: "Culture",
+  changeGoal: "Modifier l’objectif",
+  tailoredFor: "Adapté à",
+  focusTitle: "Mode concentration",
+  focusSubtitle: "Créez un environnement d’étude apaisant.",
+  startSoundwave: "Lancer le son",
+  stopSoundwave: "Arrêter le son",
+  soundwaveActive: "Son actif",
+  frequencyControl: "Fréquence",
+  volumeControl: "Volume",
+  focusPresets: "Préréglages",
+  presetAlpha: "Ondes alpha",
+  presetTheta: "Ondes thêta",
+  presetGamma: "Ondes gamma",
+  presetPinkNoise: "Bruit rose",
+  proMonthlyTitle: "Offre Pro mensuelle",
+  proMonthlyPrice: "Prix mensuel",
+  proAnnualTitle: "Offre Pro annuelle",
+  proAnnualPrice: "Prix annuel",
+  mostPopularBadge: "Le plus populaire",
+  billedAnnuallyNotice: "Facturé annuellement",
 };
 
 export const GERMAN_TRANSLATIONS: TranslationDictionary = {
@@ -1051,7 +1109,36 @@ export const GERMAN_TRANSLATIONS: TranslationDictionary = {
   cefrEvaluationNotice: "Jede Frage misst eine Stufe des Gemeinsamen Europäischen Referenzrahmens.",
   levelMustBeEarned: "Stufen werden durch den Test ermittelt, um echten Lernerfolg zu sichern.",
   takeTestNow: "Einstufungstest jetzt starten",
-  unlockedLevelResult: "Erreichtes Niveau"
+  unlockedLevelResult: "Erreichtes Niveau",
+  navFocus: "Fokusmodus",
+  navAITutor: "KI-Sprachtutor",
+  whyPromptTitle: "Warum lernst du?",
+  whyPromptSubtitle: "Passe deinen Lernpfad an dein Ziel an.",
+  intentBusiness: "Beruf",
+  intentTravel: "Reisen",
+  intentAcademic: "Akademisch",
+  intentConversational: "Gespräch",
+  intentCulture: "Kultur",
+  changeGoal: "Ziel ändern",
+  tailoredFor: "Abgestimmt auf",
+  focusTitle: "Fokusmodus",
+  focusSubtitle: "Schaffe eine ruhige Lernumgebung.",
+  startSoundwave: "Klang starten",
+  stopSoundwave: "Klang stoppen",
+  soundwaveActive: "Klang aktiv",
+  frequencyControl: "Frequenz",
+  volumeControl: "Lautstärke",
+  focusPresets: "Voreinstellungen",
+  presetAlpha: "Alpha-Wellen",
+  presetTheta: "Theta-Wellen",
+  presetGamma: "Gamma-Wellen",
+  presetPinkNoise: "Rosa Rauschen",
+  proMonthlyTitle: "Monatliches Pro-Abo",
+  proMonthlyPrice: "Monatspreis",
+  proAnnualTitle: "Jährliches Pro-Abo",
+  proAnnualPrice: "Jahrespreis",
+  mostPopularBadge: "Am beliebtesten",
+  billedAnnuallyNotice: "Jährliche Abrechnung",
 };
 
 export const ITALIAN_TRANSLATIONS: TranslationDictionary = {
@@ -1205,7 +1292,36 @@ export const ITALIAN_TRANSLATIONS: TranslationDictionary = {
   cefrEvaluationNotice: "Ogni domanda misura un livello del Quadro Comune Europeo di Riferimento.",
   levelMustBeEarned: "I livelli vengono sbloccati dimostrando competenza effettiva nel test.",
   takeTestNow: "Avvia il Test di Livello",
-  unlockedLevelResult: "Livello Conseguito"
+  unlockedLevelResult: "Livello Conseguito",
+  navFocus: "Modalità concentrazione",
+  navAITutor: "Tutor IA",
+  whyPromptTitle: "Perché stai imparando?",
+  whyPromptSubtitle: "Personalizza il percorso in base al tuo obiettivo.",
+  intentBusiness: "Lavoro",
+  intentTravel: "Viaggi",
+  intentAcademic: "Accademico",
+  intentConversational: "Conversazione",
+  intentCulture: "Cultura",
+  changeGoal: "Cambia obiettivo",
+  tailoredFor: "Pensato per",
+  focusTitle: "Modalità concentrazione",
+  focusSubtitle: "Crea un ambiente tranquillo per studiare.",
+  startSoundwave: "Avvia il suono",
+  stopSoundwave: "Ferma il suono",
+  soundwaveActive: "Suono attivo",
+  frequencyControl: "Frequenza",
+  volumeControl: "Volume",
+  focusPresets: "Impostazioni predefinite",
+  presetAlpha: "Onde alfa",
+  presetTheta: "Onde theta",
+  presetGamma: "Onde gamma",
+  presetPinkNoise: "Rumore rosa",
+  proMonthlyTitle: "Piano Pro mensile",
+  proMonthlyPrice: "Prezzo mensile",
+  proAnnualTitle: "Piano Pro annuale",
+  proAnnualPrice: "Prezzo annuale",
+  mostPopularBadge: "Più popolare",
+  billedAnnuallyNotice: "Addebito annuale",
 };
 
 export const RUSSIAN_TRANSLATIONS: TranslationDictionary = {
@@ -1359,7 +1475,36 @@ export const RUSSIAN_TRANSLATIONS: TranslationDictionary = {
   cefrEvaluationNotice: "Каждый вопрос проверяет уровень общеевропейской шкалы CEFR.",
   levelMustBeEarned: "Уровни подтверждаются результатами тестирования.",
   takeTestNow: "Начать тест сейчас",
-  unlockedLevelResult: "Ваш уровень"
+  unlockedLevelResult: "Ваш уровень",
+  navFocus: "Режим концентрации",
+  navAITutor: "ИИ-репетитор",
+  whyPromptTitle: "Зачем вы изучаете язык?",
+  whyPromptSubtitle: "Настройте учебный маршрут под свою цель.",
+  intentBusiness: "Работа",
+  intentTravel: "Путешествия",
+  intentAcademic: "Учёба",
+  intentConversational: "Общение",
+  intentCulture: "Культура",
+  changeGoal: "Изменить цель",
+  tailoredFor: "Подходит для",
+  focusTitle: "Режим концентрации",
+  focusSubtitle: "Создайте спокойную атмосферу для занятий.",
+  startSoundwave: "Включить звук",
+  stopSoundwave: "Остановить звук",
+  soundwaveActive: "Звук включён",
+  frequencyControl: "Частота",
+  volumeControl: "Громкость",
+  focusPresets: "Готовые настройки",
+  presetAlpha: "Альфа-волны",
+  presetTheta: "Тета-волны",
+  presetGamma: "Гамма-волны",
+  presetPinkNoise: "Розовый шум",
+  proMonthlyTitle: "Месячный план Pro",
+  proMonthlyPrice: "Цена за месяц",
+  proAnnualTitle: "Годовой план Pro",
+  proAnnualPrice: "Цена за год",
+  mostPopularBadge: "Популярный выбор",
+  billedAnnuallyNotice: "Оплата за год",
 };
 
 export const ARABIC_TRANSLATIONS: TranslationDictionary = {

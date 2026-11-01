@@ -19,10 +19,12 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { Language, CefrLevel, UserProfile } from '../types';
+import { WORLD_LANGUAGES } from '../data/languages';
 import { audioSynth } from '../services/audioSynthesizer';
 import { speechDetector } from '../services/speechDetectionService';
 import { stripTransliteration } from '../services/languageTypography';
 import { OmniAppEngineClient } from '../services/omniEngineService';
+import { fluenticVoice, fluenticLearning } from '../ai';
 
 interface OmniAIBrainCopilotProps {
   activeLanguage: Language;
@@ -107,6 +109,45 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
     if (!started) setIsListening(false);
   };
 
+  // Stream Fluentic's consistent tutor voice as 24 kHz PCM; keep the browser voice as fallback.
+  const playTutorVoice = async (phrase: string) => {
+    let context: AudioContext | null = null;
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      context = new AudioContextClass();
+      if (context.state === 'suspended') await context.resume();
+      let scheduledAt = context.currentTime;
+      for await (const event of fluenticVoice.synthesizeStream(
+        phrase,
+        activeLanguage.name,
+        'Kore',
+        'Fluentic tutor persona: warm, confident, encouraging, calm, articulate. Native pronunciation, natural sentence stress and conversational pacing.',
+      )) {
+        if (event.type !== 'audio' || !event.data) continue;
+        const binary = atob(event.data);
+        const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+        const pcm = new Int16Array(bytes.buffer, bytes.byteOffset, Math.floor(bytes.byteLength / 2));
+        if (!pcm.length) continue;
+        const sampleRate = event.sampleRate || 24000;
+        const audioBuffer = context.createBuffer(1, pcm.length, sampleRate);
+        const channel = audioBuffer.getChannelData(0);
+        for (let index = 0; index < pcm.length; index += 1) channel[index] = pcm[index] / 32768;
+        const source = context.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(context.destination);
+        const startAt = Math.max(context.currentTime, scheduledAt);
+        source.start(startAt);
+        scheduledAt = startAt + audioBuffer.duration;
+      }
+      const remainingMs = Math.max(0, (scheduledAt - context.currentTime) * 1000);
+      if (remainingMs > 0) await new Promise((resolve) => window.setTimeout(resolve, remainingMs));
+    } catch (error) {
+      console.warn('[Fluentic voice] Falling back to the device voice.', error);
+      await audioSynth.speakPhraseNative(phrase, activeLanguage.code);
+    } finally {
+      if (context && context.state !== 'closed') await context.close().catch(() => undefined);
+    }
+  };
   // Send message to ultra-fast backend engine
   const handleSend = async (customPrompt?: string) => {
     const text = (customPrompt || inputText).trim();
@@ -126,6 +167,54 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
     setIsLoading(true);
 
     try {
+      const wantsStructuredLesson = /\b(lesson|study plan|practice plan|learning plan|guided practice)\b/i.test(text);
+      if (wantsStructuredLesson) {
+        try {
+          const lesson = await fluenticLearning.createPersonalLesson({
+            targetLanguage: activeLanguage.name,
+            nativeLanguage: user.nativeLanguage || WORLD_LANGUAGES.find((language) => language.code === user.nativeLanguageCode)?.name || 'English',
+            cefrLevel: activeCefr,
+            goal: user.learningIntent || 'conversational',
+            learningIntent: user.learningIntent || 'conversational',
+            weaknesses: (user.recycledErrors || []).map((error) => error.concept).slice(0, 8),
+            recentPerformance: user.conceptProgress || {},
+            minutesAvailable: 15,
+          });
+          const steps = Array.isArray(lesson.steps) ? lesson.steps as any[] : [];
+          if (steps.length >= 4) {
+            const firstTarget = stripTransliteration(String(steps[0].targetLanguageText || ''));
+            const lessonText = [
+              String(lesson.title || 'Your Fluentic lesson'),
+              String(lesson.objective || ''),
+              ...steps.map((step, index) => [
+                `${index + 1}. ${step.instruction || 'Practice the target structure.'}`,
+                stripTransliteration(String(step.targetLanguageText || '')),
+                String(step.meaning || ''),
+                step.expectedAnswer ? `Recall: ${step.expectedAnswer}` : '',
+              ].filter(Boolean).join('\n')),
+              Array.isArray(lesson.retrievalPrompts) ? `Active recall: ${lesson.retrievalPrompts.join(' | ')}` : '',
+              Array.isArray(lesson.errorRecycling) ? `Spaced review: ${lesson.errorRecycling.map((item: any) => `${item.concept} — revisit after ${item.revisitAfterMinutes} minutes`).join('; ')}` : '',
+              Array.isArray(lesson.masteryCriteria) ? `Mastery: ${lesson.masteryCriteria.join('; ')}` : '',
+            ].filter(Boolean).join('\n\n');
+            const aiMsg: AIMessage = {
+              id: `ai-lesson-${Date.now()}`,
+              sender: 'ai',
+              text: lessonText,
+              targetSnippet: firstTarget || undefined,
+              audioReadyText: firstTarget || undefined,
+              translation: String(steps[0].meaning || ''),
+              latencyMs: Math.round(performance.now() - startTime),
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            };
+            setLastLatency(aiMsg.latencyMs || 0);
+            setMessages((prev) => [...prev, aiMsg]);
+            audioSynth.playSuccessChime();
+            return;
+          }
+        } catch (lessonError) {
+          console.warn('[Fluentic lesson] Falling back to the Omni tutor.', lessonError);
+        }
+      }
       const activeChat = await OmniAppEngineClient.executeActiveChat({
         userMessage: text,
         targetLanguage: activeLanguage.name,
@@ -396,7 +485,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                           </div>
                           <button
                             type="button"
-                            onClick={() => audioSynth.speakPhraseNative(m.audioReadyText || m.targetSnippet!, activeLanguage.code)}
+                            onClick={() => void playTutorVoice(m.audioReadyText || m.targetSnippet!)}
                             className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors shrink-0 cursor-pointer"
                             title="Play Native Pronunciation"
                           >

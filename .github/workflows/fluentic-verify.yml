@@ -1,0 +1,25 @@
+name: Fluentic verification
+
+on:
+  push:
+    branches:
+      - feature/fluentic-ai-core
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+      - name: Type-check
+        run: bun run lint
+      - name: Build production app
+        run: bun run build

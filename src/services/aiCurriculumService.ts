@@ -3,6 +3,7 @@ import { PlacementTestQuestion } from './placementTestService';
 import { GrammarTopic } from '../data/grammarTopicsData';
 import { SpeechScenario } from '../data/speechScenariosData';
 import { WORLD_LANGUAGES } from '../data/languages';
+import { stripTransliteration } from './languageTypography';
 import { Coffee, Compass, Users, Sparkles } from 'lucide-react';
 
 // Dictionary of authentic native script linguistic profiles for major world writing systems
@@ -580,25 +581,31 @@ export class AICurriculumEngine {
     const cafe1 = profile.cafePhrases[0];
     const transit1 = profile.transitPhrases[0];
     const advanced1 = profile.advancedPhrases[0] || profile.socialPhrases[0];
+    const isAdvanced = cefr === 'C1' || cefr === 'C2';
+    const isIntermediate = cefr === 'B1' || cefr === 'B2';
+    const contextPhrase = cefr === 'A1' ? greeting2 : cefr === 'A2' ? cafe1 : cefr === 'A3' ? transit1 : cefr === 'B1' ? profile.socialPhrases[0] || transit1 : cefr === 'B2' ? profile.socialPhrases[1] || profile.transitPhrases[1] || profile.socialPhrases[0] || transit1 : profile.advancedPhrases[1] || advanced1;
 
-    const phraseForLevel = 
+    const phraseForLevel =
       cefr === 'A1' ? greeting1 :
       cefr === 'A2' ? cafe1 :
       cefr === 'A3' ? transit1 :
+      cefr === 'B1' ? profile.socialPhrases[0] || transit1 :
+      cefr === 'B2' ? profile.socialPhrases[1] || profile.transitPhrases[1] || profile.socialPhrases[0] || transit1 :
+      cefr === 'C2' ? profile.advancedPhrases[1] || advanced1 :
       advanced1;
 
-    const alt1 = profile.greetings[2]?.native || profile.cafePhrases[1]?.native || '---';
-    const alt2 = profile.transitPhrases[1]?.native || profile.cafePhrases[2]?.native || '---';
-    const alt3 = profile.socialPhrases[0]?.native || '---';
+    const alt1 = isAdvanced ? profile.advancedPhrases[1]?.native || advanced1.native : isIntermediate ? profile.socialPhrases[1]?.native || profile.transitPhrases[1]?.native || '---' : profile.greetings[2]?.native || profile.cafePhrases[1]?.native || '---';
+    const alt2 = isAdvanced ? profile.advancedPhrases[0]?.native || advanced1.native : isIntermediate ? profile.transitPhrases[1]?.native || profile.advancedPhrases[0]?.native || '---' : profile.transitPhrases[1]?.native || profile.cafePhrases[2]?.native || '---';
+    const alt3 = isAdvanced ? profile.grammarTopics[0]?.example || advanced1.native : isIntermediate ? profile.advancedPhrases[0]?.native || profile.socialPhrases[0]?.native || '---' : profile.socialPhrases[0]?.native || '---';
 
     return [
       {
         id: `${targetLang.code}-${cefr.toLowerCase()}-1`,
         title: `${targetLang.name} • ${cefr} Core Mastery`,
-        nativeTitle: phraseForLevel.native,
+        nativeTitle: stripTransliteration(phraseForLevel.native),
         category: cefr === 'A1' ? 'Foundations' : cefr === 'A2' || cefr === 'A3' ? 'Conversation' : 'Advanced Mastery',
         cefr: cefr,
-        description: `${prompts.chooseGreeting} Master authentic phrasing and native script articulation.`,
+        description: isAdvanced || isIntermediate ? prompts.correctExplanation : `${prompts.chooseGreeting} Master authentic phrasing and native script articulation.`,
         xpReward: 60,
         gemReward: 12,
         targetDurationMinutes: 5,
@@ -608,12 +615,12 @@ export class AICurriculumEngine {
           {
             id: `ex-${targetLang.code}-${cefr}-1`,
             type: 'multiple-choice',
-            prompt: prompts.chooseGreeting,
-            targetPhrase: phraseForLevel.native,
+            prompt: isAdvanced || isIntermediate ? prompts.completeSentence : prompts.chooseGreeting,
+            targetPhrase: stripTransliteration(phraseForLevel.native),
             translation: phraseForLevel.translationEn,
             phoneticIpa: phraseForLevel.ipa,
-            options: [phraseForLevel.native, alt1, alt2, alt3].sort(() => 0.5 - Math.random()),
-            correctAnswer: phraseForLevel.native,
+            options: [phraseForLevel.native, alt1, alt2, alt3].map(stripTransliteration).sort(() => 0.5 - Math.random()),
+            correctAnswer: stripTransliteration(phraseForLevel.native),
             culturalNote: prompts.culturalNote,
             grammarTip: prompts.grammarTip,
           },
@@ -621,21 +628,21 @@ export class AICurriculumEngine {
             id: `ex-${targetLang.code}-${cefr}-2`,
             type: 'speech-pronounce',
             prompt: prompts.speakClearPrompt,
-            targetPhrase: phraseForLevel.native,
+            targetPhrase: stripTransliteration(phraseForLevel.native),
             translation: phraseForLevel.translationEn,
             phoneticIpa: phraseForLevel.ipa,
-            correctAnswer: phraseForLevel.native,
+            correctAnswer: stripTransliteration(phraseForLevel.native),
             culturalNote: prompts.culturalNote,
           },
         ]
       },
       {
         id: `${targetLang.code}-${cefr.toLowerCase()}-2`,
-        title: `${targetLang.name} • Real-World Context`,
-        nativeTitle: (cefr === 'A1' ? greeting2 : cafe1).native,
-        category: 'Conversation',
+        title: `${targetLang.name} • ${isAdvanced ? 'Formal Discourse & Synthesis' : 'Real-World Context'}`,
+        nativeTitle: stripTransliteration(contextPhrase.native),
+        category: isAdvanced ? 'Advanced Mastery' : 'Conversation',
         cefr: cefr,
-        description: prompts.orderCoffee,
+        description: isAdvanced || isIntermediate ? prompts.correctExplanation : prompts.orderCoffee,
         xpReward: 70,
         gemReward: 15,
         targetDurationMinutes: 5,
@@ -645,22 +652,22 @@ export class AICurriculumEngine {
           {
             id: `ex-${targetLang.code}-${cefr}-3`,
             type: 'multiple-choice',
-            prompt: cefr === 'A1' ? prompts.introduceSelf : prompts.orderCoffee,
-            targetPhrase: (cefr === 'A1' ? greeting2 : cafe1).native,
-            translation: (cefr === 'A1' ? greeting2 : cafe1).translationEn,
-            phoneticIpa: (cefr === 'A1' ? greeting2 : cafe1).ipa,
-            options: [(cefr === 'A1' ? greeting2 : cafe1).native, alt1, alt2, alt3].sort(() => 0.5 - Math.random()),
-            correctAnswer: (cefr === 'A1' ? greeting2 : cafe1).native,
+            prompt: isAdvanced || isIntermediate ? prompts.completeSentence : cefr === 'A1' ? prompts.introduceSelf : prompts.orderCoffee,
+            targetPhrase: stripTransliteration(contextPhrase.native),
+            translation: contextPhrase.translationEn,
+            phoneticIpa: contextPhrase.ipa,
+            options: [contextPhrase.native, alt1, alt2, alt3].map(stripTransliteration).sort(() => 0.5 - Math.random()),
+            correctAnswer: stripTransliteration(contextPhrase.native),
             grammarTip: prompts.grammarTip,
           },
           {
             id: `ex-${targetLang.code}-${cefr}-4`,
             type: 'speech-pronounce',
             prompt: prompts.speakClearPrompt,
-            targetPhrase: (cefr === 'A1' ? greeting2 : cafe1).native,
-            translation: (cefr === 'A1' ? greeting2 : cafe1).translationEn,
-            phoneticIpa: (cefr === 'A1' ? greeting2 : cafe1).ipa,
-            correctAnswer: (cefr === 'A1' ? greeting2 : cafe1).native,
+            targetPhrase: stripTransliteration(contextPhrase.native),
+            translation: contextPhrase.translationEn,
+            phoneticIpa: contextPhrase.ipa,
+            correctAnswer: stripTransliteration(contextPhrase.native),
           }
         ]
       }
@@ -697,17 +704,17 @@ export class AICurriculumEngine {
         if (data.questions && Array.isArray(data.questions) && data.questions.length >= 5) {
           const questions: PlacementTestQuestion[] = data.questions.map((q: any, idx: number) => ({
             id: idx + 1,
-            level: q.level || (idx < 3 ? 'A1' : idx < 6 ? 'B1' : 'C1'),
+            level: (['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].includes(String(q.level).toUpperCase()) ? String(q.level).toUpperCase() : (idx < 2 ? 'A1' : idx < 4 ? 'A2' : idx < 6 ? 'B1' : idx < 8 ? 'B2' : idx === 8 ? 'C1' : 'C2')),
             target_skill: q.target_skill || `Diagnostic Assessment Q${idx + 1}`,
-            prompt_native: q.prompt_native || targetLang.name,
-            prompt_translation: q.prompt_translation || `Question ${idx + 1}`,
+            prompt_native: stripTransliteration(q.prompt_native || q.prompt || targetLang.name),
+            prompt_translation: q.prompt_translation || q.instruction || `Question ${idx + 1}`,
             options: (q.options || []).map((opt: any, oIdx: number) => ({
               key: (['A', 'B', 'C', 'D'][oIdx] || 'A') as 'A' | 'B' | 'C' | 'D',
-              text_native: opt.text_native || opt,
-              text_translation: opt.text_translation || '',
+              text_native: stripTransliteration(typeof opt === 'string' ? opt : opt.text_native || opt.text || ''),
+              text_translation: typeof opt === 'string' ? '' : opt.text_translation || opt.translation || '',
             })),
-            correct_key: (q.correct_key || 'A') as 'A' | 'B' | 'C' | 'D',
-            explanation_translation: q.explanation_translation || 'Evaluates grammatical precision and vocabulary depth.'
+            correct_key: (q.correct_key || q.correctKey || 'A') as 'A' | 'B' | 'C' | 'D',
+            explanation_translation: q.explanation_translation || q.explanation || 'Evaluates grammatical precision and vocabulary depth.'
           }));
 
           this.placementTestCache.set(cacheKey, questions);
@@ -769,7 +776,7 @@ export class AICurriculumEngine {
       // Q3: A3 Navigation
       {
         id: 3,
-        level: 'A3',
+        level: 'A2',
         target_skill: 'Wayfinding & Urban Transit',
         prompt_native: profile.transitPhrases[0]?.native || targetLang.name,
         prompt_translation: `${prompts.askDirections} "${profile.transitPhrases[0]?.translationEn || 'Where is the station?'}"`,
@@ -817,7 +824,7 @@ export class AICurriculumEngine {
       // Q6: B3 Commercial Inquiries
       {
         id: 6,
-        level: 'B3',
+        level: 'B2',
         target_skill: 'Transactions & Account Balancing',
         prompt_native: profile.cafePhrases[1]?.native || targetLang.name,
         prompt_translation: `${prompts.completeSentence} "${profile.cafePhrases[1]?.translationEn || 'The bill please'}"`,
@@ -865,13 +872,13 @@ export class AICurriculumEngine {
       // Q9: C3 Literary Inversions
       {
         id: 9,
-        level: 'C3',
+        level: 'C1',
         target_skill: 'Stylistic Mastery & Morphology',
-        prompt_native: profile.grammarTopics[0]?.example || profile.greetings[0]?.native,
+        prompt_native: profile.advancedPhrases[0]?.native || profile.grammarTopics[0]?.example || profile.greetings[0]?.native,
         prompt_translation: `Syntactic agreement rule: "${profile.grammarTopics[0]?.titleEn || 'Grammar'}"`,
         options: [
           { key: 'A', text_native: profile.cafePhrases[0]?.native || 'Option A', text_translation: profile.cafePhrases[0]?.translationEn || '' },
-          { key: 'B', text_native: profile.grammarTopics[0]?.example || 'Option B', text_translation: profile.grammarTopics[0]?.titleEn || '' },
+          { key: 'B', text_native: profile.advancedPhrases[0]?.native || profile.grammarTopics[0]?.example || 'Option B', text_translation: profile.grammarTopics[0]?.titleEn || '' },
           { key: 'C', text_native: profile.greetings[2]?.native || 'Option C', text_translation: profile.greetings[2]?.translationEn || '' },
           { key: 'D', text_native: profile.transitPhrases[0]?.native || 'Option D', text_translation: profile.transitPhrases[0]?.translationEn || '' },
         ],
@@ -881,22 +888,29 @@ export class AICurriculumEngine {
       // Q10: C3+ Native Pragmatic Nuance
       {
         id: 10,
-        level: 'C3+',
+        level: 'C2',
         target_skill: 'Native Pragmatic Nuances & Etymology',
-        prompt_native: profile.grammarTopics[1]?.example || profile.advancedPhrases[0]?.native,
+        prompt_native: profile.advancedPhrases[1]?.native || profile.advancedPhrases[0]?.native || profile.grammarTopics[1]?.example,
         prompt_translation: `Native nuance and subtle register shift: "${profile.grammarTopics[1]?.titleEn || 'Advanced Mastery'}"`,
         options: [
           { key: 'A', text_native: profile.greetings[0]?.native || 'Option A', text_translation: profile.greetings[0]?.translationEn || '' },
           { key: 'B', text_native: profile.transitPhrases[1]?.native || 'Option B', text_translation: profile.transitPhrases[1]?.translationEn || '' },
           { key: 'C', text_native: profile.cafePhrases[2]?.native || 'Option C', text_translation: profile.cafePhrases[2]?.translationEn || '' },
-          { key: 'D', text_native: profile.grammarTopics[1]?.example || 'Option D', text_translation: profile.grammarTopics[1]?.titleEn || '' },
+          { key: 'D', text_native: profile.advancedPhrases[1]?.native || profile.grammarTopics[1]?.example || 'Option D', text_translation: profile.grammarTopics[1]?.titleEn || '' },
         ],
         correct_key: 'D',
         explanation_translation: prompts.correctExplanation,
       },
     ];
 
-    return questions;
+    return questions.map((question) => ({
+      ...question,
+      prompt_native: stripTransliteration(question.prompt_native || ''),
+      options: question.options.map((option) => ({
+        ...option,
+        text_native: stripTransliteration(option.text_native || option.text || ''),
+      })),
+    }));
   }
 
   /**

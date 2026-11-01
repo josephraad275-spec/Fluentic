@@ -7,6 +7,7 @@ import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { getI18n } from "./src/services/localization.ts";
 import { stripTransliteration } from "./src/services/languageTypography.ts";
+import { registerFluenticAIRoutes } from "./src/ai/server/fluenticAIRoutes.ts";
 
 dotenv.config();
 
@@ -404,6 +405,9 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json({ limit: "10mb" }));
+
+  // Fluentic AI API layer. Existing screens and visual components remain untouched.
+  registerFluenticAIRoutes(app, getGeminiClient);
 
   // Health check
   app.get("/api/health", (req, res) => {
