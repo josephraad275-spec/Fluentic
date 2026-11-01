@@ -132,6 +132,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           },
           3500
         );
+        if (!Array.isArray(result.steps) || result.steps.length < 4) throw new Error("The adaptive lesson did not contain a complete retrieval-to-transfer sequence.");
         return res.json({ success: true, action, ...result });
       }
 
