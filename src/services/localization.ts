@@ -743,7 +743,7 @@ export const SPANISH_TRANSLATIONS: TranslationDictionary = {
   cefrEvaluationNotice: "Cada pregunta evalúa un peldaño del marco europeo MCER.",
   levelMustBeEarned: "El nivel no se elige al azar; se acredita con la prueba.",
   takeTestNow: "Hacer prueba de nivel ahora",
-  unlockedLevelResult: "Nivel obtenido"
+  unlockedLevelResult: "Nivel obtenido",
   navFocus: "Modo de concentración",
   navAITutor: "Tutor de IA",
   whyPromptTitle: "¿Por qué aprendes?",
@@ -926,7 +926,7 @@ export const FRENCH_TRANSLATIONS: TranslationDictionary = {
   cefrEvaluationNotice: "Chaque question évalue un échelon du cadre européen CECRL.",
   levelMustBeEarned: "Les niveaux s’obtiennent par le test pour garantir une vraie progression.",
   takeTestNow: "Passer le test de niveau maintenant",
-  unlockedLevelResult: "Niveau certifié"
+  unlockedLevelResult: "Niveau certifié",
   navFocus: "Mode concentration",
   navAITutor: "Tuteur IA",
   whyPromptTitle: "Pourquoi apprenez-vous ?",
@@ -1109,7 +1109,7 @@ export const GERMAN_TRANSLATIONS: TranslationDictionary = {
   cefrEvaluationNotice: "Jede Frage misst eine Stufe des Gemeinsamen Europäischen Referenzrahmens.",
   levelMustBeEarned: "Stufen werden durch den Test ermittelt, um echten Lernerfolg zu sichern.",
   takeTestNow: "Einstufungstest jetzt starten",
-  unlockedLevelResult: "Erreichtes Niveau"
+  unlockedLevelResult: "Erreichtes Niveau",
   navFocus: "Fokusmodus",
   navAITutor: "KI-Sprachtutor",
   whyPromptTitle: "Warum lernst du?",
@@ -1292,7 +1292,7 @@ export const ITALIAN_TRANSLATIONS: TranslationDictionary = {
   cefrEvaluationNotice: "Ogni domanda misura un livello del Quadro Comune Europeo di Riferimento.",
   levelMustBeEarned: "I livelli vengono sbloccati dimostrando competenza effettiva nel test.",
   takeTestNow: "Avvia il Test di Livello",
-  unlockedLevelResult: "Livello Conseguito"
+  unlockedLevelResult: "Livello Conseguito",
   navFocus: "Modalità concentrazione",
   navAITutor: "Tutor IA",
   whyPromptTitle: "Perché stai imparando?",
@@ -1475,7 +1475,7 @@ export const RUSSIAN_TRANSLATIONS: TranslationDictionary = {
   cefrEvaluationNotice: "Каждый вопрос проверяет уровень общеевропейской шкалы CEFR.",
   levelMustBeEarned: "Уровни подтверждаются результатами тестирования.",
   takeTestNow: "Начать тест сейчас",
-  unlockedLevelResult: "Ваш уровень"
+  unlockedLevelResult: "Ваш уровень",
   navFocus: "Режим концентрации",
   navAITutor: "ИИ-репетитор",
   whyPromptTitle: "Зачем вы изучаете язык?",
