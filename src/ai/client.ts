@@ -111,7 +111,7 @@ export const fluenticVoice = {
   synthesize: (text: string, language: string, voiceName = "Kore", style?: string) =>
     fluenticAI<{ audioBase64: string; mimeType: string; voiceName: string; note: string }>(
       "voice-synthesis", { text, language, voiceName, style },
-    ),,
+    ),
   synthesizeStream: (text: string, language: string, voiceName = "Kore", style?: string, signal?: AbortSignal) =>
     streamFluenticVoice(text, language, voiceName, style, signal),
 };
