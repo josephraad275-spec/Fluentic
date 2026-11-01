@@ -191,6 +191,8 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                 String(step.meaning || ''),
                 step.expectedAnswer ? `Recall: ${step.expectedAnswer}` : '',
               ].filter(Boolean).join('\n')),
+              Array.isArray(lesson.retrievalPrompts) ? `Active recall: ${lesson.retrievalPrompts.join(' | ')}` : '',
+              Array.isArray(lesson.errorRecycling) ? `Spaced review: ${lesson.errorRecycling.map((item: any) => `${item.concept} — revisit after ${item.revisitAfterMinutes} minutes`).join('; ')}` : '',
               Array.isArray(lesson.masteryCriteria) ? `Mastery: ${lesson.masteryCriteria.join('; ')}` : '',
             ].filter(Boolean).join('\n\n');
             const aiMsg: AIMessage = {
