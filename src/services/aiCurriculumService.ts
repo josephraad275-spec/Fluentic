@@ -652,18 +652,18 @@ export class AICurriculumEngine {
             targetPhrase: contextPhrase.native,
             translation: contextPhrase.translationEn,
             phoneticIpa: contextPhrase.ipa,
-            options: [(cefr === 'A1' ? greeting2 : cafe1).native, alt1, alt2, alt3].sort(() => 0.5 - Math.random()),
-            correctAnswer: (cefr === 'A1' ? greeting2 : cafe1).native,
+            options: [contextPhrase.native, alt1, alt2, alt3].sort(() => 0.5 - Math.random()),
+            correctAnswer: contextPhrase.native,
             grammarTip: prompts.grammarTip,
           },
           {
             id: `ex-${targetLang.code}-${cefr}-4`,
             type: 'speech-pronounce',
             prompt: prompts.speakClearPrompt,
-            targetPhrase: (cefr === 'A1' ? greeting2 : cafe1).native,
-            translation: (cefr === 'A1' ? greeting2 : cafe1).translationEn,
-            phoneticIpa: (cefr === 'A1' ? greeting2 : cafe1).ipa,
-            correctAnswer: (cefr === 'A1' ? greeting2 : cafe1).native,
+            targetPhrase: contextPhrase.native,
+            translation: contextPhrase.translationEn,
+            phoneticIpa: contextPhrase.ipa,
+            correctAnswer: contextPhrase.native,
           }
         ]
       }
