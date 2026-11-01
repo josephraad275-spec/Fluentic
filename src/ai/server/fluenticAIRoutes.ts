@@ -153,13 +153,25 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
         const text = requireText(payload.text, "text", 5000);
         const language = cleanString(payload.language, "English");
         const voiceName = cleanString(payload.voiceName, "Kore");
-        const style = cleanString(payload.style, "Natural, warm, clear language tutor");
+        const style = cleanString(
+          payload.style,
+          "Fluentic's consistent language tutor persona: warm, confident, encouraging, clear, natural pacing, friendly and articulate. Pronounce the learner's target language accurately."
+        );
         const result = await ai.models.generateContent({
           model: TTS_MODEL,
-          contents: [{ parts: [{ text: `Speak the following ${language} text. Voice direction: ${style}. Text: ${text}` }] }],
+          contents: [{
+            role: "user",
+            parts: [{
+              text,
+              speech_metadata: { style },
+            }],
+          }],
           config: {
             responseModalities: ["AUDIO"],
-            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
+            speechConfig: {
+              voiceConfig: { prebuiltVoiceConfig: { voiceName } },
+              languageCode: cleanString(payload.languageCode, undefined),
+            },
           } as any,
         });
         const audioPart = result.candidates?.[0]?.content?.parts?.find((part: any) => part.inlineData?.data);
