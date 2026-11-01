@@ -76,7 +76,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
         const targetLanguage = requireText(payload.targetLanguage, "targetLanguage", 100);
         const result = await generateJson(
           ai,
-          `You are Fluentic's expert translation engine. Translate into ${targetLanguage}. Source language: ${sourceLanguage}. Preserve meaning, tone, formatting, names, numbers and intent. Handle idioms naturally rather than literally. Return JSON only: {"translation":"...","detectedSourceLanguage":"...","register":"formal|informal|neutral","notes":"short optional nuance note"}.`,
+          `You are Fluentic's expert translation engine. Translate into ${targetLanguage}. Source language: ${sourceLanguage}. Preserve meaning, tone, formatting, names, numbers and intent. Handle idioms naturally rather than literally. Return only the target language in its authentic writing system; never append transliteration, phonetic respelling, or English approximations. Return JSON only: {"translation":"...","detectedSourceLanguage":"...","register":"formal|informal|neutral","notes":"short optional nuance note"}.`,
           sourceText,
           1200
         );
@@ -104,7 +104,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
         if (!Array.isArray(answers) || answers.length < 3) throw new Error("At least three assessment answers are required.");
         const result = await generateJson(
           ai,
-          `You are Fluentic's cautious CEFR assessor for ${targetLanguage}. Estimate the learner's level using only the supplied evidence. Distinguish demonstrated ability from uncertainty; never overstate precision. Evaluate grammar, vocabulary, reading, writing and communication where evidence exists. Return JSON: {"estimatedLevel":"A1|A2|B1|B2|C1|C2","confidence":0-100,"skillLevels":{"grammar":"...","vocabulary":"...","reading":"...","writing":"...","communication":"..."},"strengths":["..."],"priorityGaps":["..."],"reasoning":"...","recommendedNextStep":"..."}.`,
+          `You are Fluentic's cautious CEFR assessor for ${targetLanguage}. Estimate the learner's level using only the supplied evidence. Distinguish demonstrated ability from uncertainty; never overstate precision. C1/C2 require advanced academic discourse, formal debate, complex literary/rhetorical analysis, inference and synthesis; elementary phrase recognition cannot support an advanced result. Evaluate grammar, vocabulary, reading, writing and communication where evidence exists. Return JSON: {"estimatedLevel":"A1|A2|B1|B2|C1|C2","confidence":0-100,"skillLevels":{"grammar":"...","vocabulary":"...","reading":"...","writing":"...","communication":"..."},"strengths":["..."],"priorityGaps":["..."],"reasoning":"...","recommendedNextStep":"..."}.`,
           { answers, selfReportedLevel: cleanString(payload.selfReportedLevel, "unknown"), learnerGoal: cleanString(payload.goal, "general fluency") },
           2200
         );
@@ -142,7 +142,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           contents: {
             parts: [
               { inlineData: { mimeType, data: audioBase64 } },
-              { text: `Analyze this learner's speech. Target language: ${targetLanguage}. Feedback language: ${nativeLanguage}. Detect the spoken language, transcribe faithfully in its native writing system, and evaluate intelligibility, pronunciation patterns, fluency and grammar only where audible. Do not guess inaudible words. Return JSON: {"transcript":"...","detectedLanguage":"...","targetLanguageMatch":true,"pronunciationScore":0-100,"fluencyScore":0-100,"intelligibilityScore":0-100,"observations":["..."],"corrections":[{"heard":"...","suggested":"...","reason":"..."}],"practiceDrill":"..."}.` },
+              { text: `Analyze this learner's speech. Target language: ${targetLanguage}. Feedback language: ${nativeLanguage}. Detect the spoken language, transcribe faithfully in its authentic writing system. Never include transliteration, Latin phonetic respelling, or English approximations in transcript, heard, or suggested fields. Evaluate intelligibility, pronunciation patterns, fluency and grammar only where audible. Do not guess inaudible words. Return JSON: {"transcript":"...","detectedLanguage":"...","targetLanguageMatch":true,"pronunciationScore":0-100,"fluencyScore":0-100,"intelligibilityScore":0-100,"observations":["..."],"corrections":[{"heard":"...","suggested":"...","reason":"..."}],"practiceDrill":"..."}.` },
             ],
           },
           config: { responseMimeType: "application/json", temperature: 0.15, maxOutputTokens: 1800 },
@@ -157,7 +157,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
         const voiceName = cleanString(payload.voiceName, "Kore");
         const style = cleanString(
           payload.style,
-          "Warm, confident, encouraging language tutor. Clear articulation, natural conversational pacing, friendly and articulate."
+          "Fluentic's consistent tutor persona: warm, confident, encouraging, calm, articulate, and naturally conversational. Speak the supplied transcript verbatim in the language indicated by its script and language metadata. Use native phonology, natural sentence stress, appropriate cadence, and clear but unhurried pacing. Never read stage directions or add words."
         );
 
         // Gemini 3.8 TTS uses the Interactions API and structured speech metadata.
