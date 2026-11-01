@@ -56,6 +56,7 @@ export const fluenticLearning = {
     nativeLanguage: string;
     cefrLevel: string;
     goal?: string;
+    learningIntent?: "travel" | "business" | "academic" | "conversational" | "culture";
     interests?: string[];
     weaknesses?: string[];
     recentPerformance?: Record<string, unknown>;
