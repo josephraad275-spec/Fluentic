@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
 import type { GoogleGenAI } from "@google/genai";
+import { FLUENTIC_CEFR_LEVELS, buildPlacementAuthoringInstruction, buildPersonalLessonInstruction, estimateLevelFromEvidence, normalizeLearningIntent } from "../pedagogy";
 
 type AIClientProvider = () => GoogleGenAI | null;
 
@@ -7,7 +8,7 @@ const CORE_MODEL = "gemini-3.8-flash";
 const TRANSCRIPTION_MODEL = "gemini-3.5-transcribe";
 const TTS_MODEL = "gemini-3.8-flash-tts";
 const MAX_TEXT_LENGTH = 12000;
-const CEFR_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
+const CEFR_LEVELS = FLUENTIC_CEFR_LEVELS;
 
 function cleanString(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value.trim() : fallback;
@@ -89,7 +90,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
         const count = Math.max(8, Math.min(30, Number(payload.questionCount) || 15));
         const result = await generateJson(
           ai,
-          `You are Fluentic's CEFR placement-test author. Create exactly ${count} original questions for a learner of ${targetLanguage}; explain instructions in ${nativeLanguage}. Cover vocabulary, grammar, reading, functional communication and (where text permits) listening-readiness. Spread difficulty from A1 to C2 and make later questions progressively harder. Every multiple-choice question must have exactly four options and exactly one defensible correct answer. Avoid cultural trivia. Return JSON: {"language":"...","questions":[{"id":1,"level":"A1|A2|B1|B2|C1|C2","skill":"...","instruction":"...","prompt":"...","options":[{"key":"A","text":"..."},{"key":"B","text":"..."},{"key":"C","text":"..."},{"key":"D","text":"..."}],"correctKey":"A","explanation":"..."}]}.`,
+          buildPlacementAuthoringInstruction(targetLanguage, nativeLanguage, count),
           { learnerGoal: cleanString(payload.goal, "general fluency"), knownLevel: cleanString(payload.currentLevel, "unknown") },
           5000
         );
