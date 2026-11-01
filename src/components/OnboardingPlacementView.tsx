@@ -135,7 +135,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
   // Step 1 -> Step 2: Start the 10-Question Standardized Placement Test
   const handleStartPlacementTest = async () => {
     if (!name.trim()) {
-      setName(nativeLanguageCode === 'nl' ? 'Taalstudent' : 'Polyglot Explorer');
+      setName(i18n.guestUser);
     }
     audioSynth.playSuccessChime();
     PlacementAssessmentEngine.clearTestCache();
@@ -190,7 +190,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
   // Skip Test: Allows user to bypass the test and start immediately at A1
   const handleSkipTest = () => {
     audioSynth.playGentleFeedback();
-    const defaultName = nativeLanguageCode === 'ar' ? 'أدخل اسمك' : 'Enter your name';
+    const defaultName = i18n.guestUser;
     const cleanProfile: UserProfile = {
       id: initialProfile?.id || `usr-${Date.now().toString(36)}`,
       name: name.trim() || defaultName,
@@ -410,9 +410,9 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
           {/* Stepper Indicator */}
           <div className="flex items-center gap-2">
             {[
-              { num: 1, label: nativeLanguageCode === 'nl' ? 'Profiel & Talen' : 'Profile & Languages' },
-              { num: 2, label: nativeLanguageCode === 'nl' ? 'Niveautest (10 Vragen)' : 'Placement Test (10Q)' },
-              { num: 3, label: nativeLanguageCode === 'nl' ? 'Kwalificatie' : 'Results' },
+              { num: 1, label: i18n.profile },
+              { num: 2, label: i18n.placementTestTitle },
+              { num: 3, label: i18n.unlockedLevelResult },
             ].map((s) => (
               <div
                 key={s.num}
