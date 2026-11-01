@@ -103,7 +103,7 @@ export function estimateLevelFromEvidence(
   let passed = 0;
   for (const level of FLUENTIC_CEFR_LEVELS) {
     const item = evidence[level];
-    if (!item.seen) continue;
+    if (!item.seen) break;
     evaluated += item.seen;
     const accuracy = item.correct / item.seen;
     if (accuracy >= 0.6) {
