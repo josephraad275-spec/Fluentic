@@ -118,7 +118,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
     setTestQuestions(getLoadedQuestions(selectedVariant));
   }, [getLoadedQuestions, selectedVariant]);
 
-  const currentQuestion = testQuestions[adaptiveStep] || getLoadedQuestions()[adaptiveStep] || getLoadedQuestions()[0];
+  const currentQuestion = testQuestions.find((question) => !answeredQuestionIds.includes(question.id) && question.level.toUpperCase() === activeTier) || testQuestions.find((question) => !answeredQuestionIds.includes(question.id)) || testQuestions[adaptiveStep] || getLoadedQuestions()[0];
 
   // Step 1 -> Step 2: Start the 10-Question Standardized Placement Test
   const handleStartPlacementTest = () => {
