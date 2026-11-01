@@ -897,7 +897,14 @@ export class AICurriculumEngine {
       },
     ];
 
-    return questions;
+    return questions.map((question) => ({
+      ...question,
+      prompt_native: stripTransliteration(question.prompt_native || ''),
+      options: question.options.map((option) => ({
+        ...option,
+        text_native: stripTransliteration(option.text_native || option.text || ''),
+      })),
+    }));
   }
 
   /**
