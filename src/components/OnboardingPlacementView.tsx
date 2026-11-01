@@ -262,24 +262,9 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
       // Test Complete: Calculate official verified CEFR diagnostic score
       const finalScore = score + (selectedOptionKey === currentQuestion.correct_key && !isAnswerChecked ? 1 : 0);
       
-      // Determine highest sustained level where student performed correctly
-      const tiersHierarchy: CefrLevel[] = ['C2', 'C1', 'B2', 'B1', 'A2', 'A1'];
-      let calibratedTier: CefrLevel = 'A1';
-
-      for (const tier of tiersHierarchy) {
-        const correctAtTier = updatedHistory.filter((item) => item.level === tier && item.correct).length;
-        if (correctAtTier > 0) {
-          calibratedTier = tier;
-          break;
-        }
-      }
-
-      // If score is high across the adaptive ladder
-      if (finalScore >= 7) calibratedTier = 'C2';
-      else if (finalScore >= 6 && calibratedTier < 'C1') calibratedTier = 'C1';
-      else if (finalScore >= 5 && calibratedTier < 'B2') calibratedTier = 'B2';
-      else if (finalScore >= 3 && calibratedTier < 'B1') calibratedTier = 'B1';
-      else if (finalScore >= 2 && calibratedTier < 'A2') calibratedTier = 'A2';
+      // Calibrate to tier-by-tier evidence; total correct alone cannot award C1 or C2.
+      const evidenceResult = estimateLevelFromEvidence(updatedHistory);
+      const calibratedTier = evidenceResult.level as CefrLevel;
 
       const result = PlacementAssessmentEngine.calculateCefrPlacement(finalScore, nativeLanguageCode, calibratedTier);
 
