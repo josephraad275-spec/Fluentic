@@ -203,7 +203,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
     audioSynth.playGentleFeedback();
     setSelectedVariant(variant);
     setAdaptiveStep(0);
-    setActiveTier('A2');
+    setActiveTier('A1');
     setAnsweredQuestionIds([]);
     setTierPerformance([]);
     setSelectedOptionKey(null);
@@ -212,18 +212,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
   };
 
   // Dynamic Routing step transition
-  const getNextAdaptiveTier = (current: CefrLevel, wasCorrect: boolean): CefrLevel => {
-    const tiers: CefrLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-    const currentIdx = tiers.indexOf(current);
-
-    if (wasCorrect) {
-      // Step up in difficulty
-      return currentIdx < tiers.length - 1 ? tiers[currentIdx + 1] : 'C2';
-    } else {
-      // Step down in difficulty
-      return currentIdx > 0 ? tiers[currentIdx - 1] : 'A1';
-    }
-  };
+  const getNextAdaptiveTier = (current: CefrLevel, wasCorrect: boolean): CefrLevel => nextAdaptiveLevel(current as any, wasCorrect) as CefrLevel;
 
   // Check Answer
   const handleCheckAnswer = () => {
