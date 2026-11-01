@@ -97,6 +97,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           5000
         );
         if (!Array.isArray(result.questions) || result.questions.length !== count) throw new Error("Placement test generation was incomplete.");
+        result.questions = result.questions.map((question: any) => ({ ...question, prompt: stripTransliteration(String(question.prompt || "")) }));
         const presentTiers = new Set(result.questions.map((question: any) => String(question.level).toUpperCase()));
         if (CEFR_LEVELS.some((level) => !presentTiers.has(level))) throw new Error("Placement test must contain evidence for every CEFR tier from A1 to C2.");
         const invalidQuestion = result.questions.some((question: any) => !Array.isArray(question.options) || question.options.length !== 4 || !question.options.some((option: any) => option.key === question.correctKey));
