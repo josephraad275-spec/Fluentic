@@ -296,7 +296,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
 
     if (adaptiveStep + 1 < TOTAL_ADAPTIVE_QUESTIONS) {
       // Route difficulty adaptively based on accuracy
-      const nextTier = getNextAdaptiveTier(activeTier, wasCorrect);
+      const nextTier = getNextAdaptiveTier(currentQLevel, wasCorrect);
       setActiveTier(nextTier);
       setAdaptiveStep((prev) => prev + 1);
       setSelectedOptionKey(null);
