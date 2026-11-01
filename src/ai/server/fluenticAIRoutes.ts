@@ -151,6 +151,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           3500
         );
         if (!Array.isArray(result.steps) || result.steps.length < 4) throw new Error("The adaptive lesson did not contain a complete retrieval-to-transfer sequence.");
+        result.steps = result.steps.map((step: any) => ({ ...step, targetLanguageText: stripTransliteration(String(step.targetLanguageText || "")) }));
         return res.json({ success: true, action, ...result });
       }
 
@@ -169,7 +170,14 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           },
           config: { responseMimeType: "application/json", temperature: 0.15, maxOutputTokens: 1800 },
         });
-        return res.json({ success: true, action, ...parseJson(result.text || "") });
+        const analysis = parseJson(result.text || "");
+        analysis.transcript = stripTransliteration(String(analysis.transcript || ""));
+        analysis.corrections = Array.isArray(analysis.corrections) ? analysis.corrections.map((correction: any) => ({
+          ...correction,
+          heard: stripTransliteration(String(correction.heard || "")),
+          suggested: stripTransliteration(String(correction.suggested || "")),
+        })) : [];
+        return res.json({ success: true, action, ...analysis });
       }
 
       if (action === "voice-synthesis") {
