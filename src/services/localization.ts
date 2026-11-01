@@ -201,7 +201,7 @@ export interface TranslationDictionary {
   cefrEvaluationNotice: string;
   levelMustBeEarned: string;
   takeTestNow: string;
-  unlockedLevelResult: string;,
+  unlockedLevelResult: string;
 }
 
 export const DUTCH_TRANSLATIONS: TranslationDictionary = {
