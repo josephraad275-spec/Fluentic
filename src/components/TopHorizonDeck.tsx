@@ -46,6 +46,7 @@ interface TopHorizonDeckProps {
   isAITutorActive?: boolean;
   onRetakePlacement?: () => void;
   onSignOut?: () => void;
+  onOpenSignInPage?: () => void;
   onSelectNativeLanguage?: (langCode: string) => void;
 }
 
@@ -68,6 +69,7 @@ export const TopHorizonDeck: React.FC<TopHorizonDeckProps> = ({
   isAITutorActive = false,
   onRetakePlacement,
   onSignOut,
+  onOpenSignInPage,
   onSelectNativeLanguage,
 }) => {
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
@@ -111,11 +113,11 @@ export const TopHorizonDeck: React.FC<TopHorizonDeckProps> = ({
     <>
       <header
         id="fluentic-top-horizon-deck"
-        className="sticky top-0 z-30 w-full bg-white/90 backdrop-blur-xl border-b border-slate-200 shadow-xs transition-all"
+        className="sticky top-0 z-30 w-full bg-white/90 backdrop-blur-xl border-b border-slate-200 shadow-xs transition-all text-slate-900"
       >
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           {/* Brand & Language Selector */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
             <button
               id="fluentic-brand-logo-btn"
               onClick={onOpenSpotlight}
@@ -129,76 +131,42 @@ export const TopHorizonDeck: React.FC<TopHorizonDeckProps> = ({
             <button
               id="top-language-selector-btn"
               onClick={() => setIsLangModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-300 text-slate-900 transition-all text-xs sm:text-sm font-bold shadow-xs hover:border-blue-500 cursor-pointer"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-900 transition-all text-xs sm:text-sm font-semibold shadow-xs hover:border-blue-400 cursor-pointer"
             >
               <span className="text-base sm:text-lg leading-none">{activeLanguage.flag}</span>
-              <span className="max-w-[80px] sm:max-w-[120px] truncate">{activeLanguage.name}</span>
-              <span className="px-1.5 py-0.5 rounded bg-blue-100 text-[10px] sm:text-xs font-black text-blue-800 border border-blue-200">
+              <span className="max-w-[90px] sm:max-w-[130px] truncate">{activeLanguage.name}</span>
+              <span className="px-1.5 py-0.5 rounded bg-blue-50 text-[10px] sm:text-xs font-mono font-bold text-blue-700 border border-blue-200">
                 {activeCefr}
               </span>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </button>
-
-            {/* Native Language (UI & Translation Language) Badge & Switcher */}
-            <button
-              id="top-native-language-btn"
-              onClick={() => {
-                setMatrixTab('native');
-                setIsLangModalOpen(true);
-              }}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold transition-all hover:border-blue-500 cursor-pointer shadow-2xs"
-              title={
-                isArabic
-                  ? 'لغتي الأم: العربية (انقر للتغيير)'
-                  : isDutch 
-                  ? 'Mijn moedertaal: Nederlands (klik om te wijzigen)' 
-                  : 'My native language (click to change)'
-              }
-            >
-              <Globe className="w-3.5 h-3.5 text-blue-600" />
-              <span>{isArabic ? '🇸🇦 AR' : isDutch ? '🇳🇱 NL' : (user.nativeLanguageCode || 'en').toUpperCase()}</span>
-            </button>
-
-            {/* Dialect Selector Dropdown (if available) */}
-            {activeLanguage.dialects && activeLanguage.dialects.length > 0 && (
-              <div className="relative hidden md:block">
-                <button
-                  id="top-dialect-selector-btn"
-                  onClick={() => setIsDialectDropdownOpen(!isDialectDropdownOpen)}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 cursor-pointer"
-                >
-                  <span className="max-w-[110px] truncate">{activeDialect || activeLanguage.dialects[0]}</span>
-                  <ChevronDown className="w-3 h-3 text-slate-400" />
-                </button>
-
-                {isDialectDropdownOpen && (
-                  <div className="absolute left-0 mt-1 w-56 bg-white rounded-xl shadow-2xl border border-slate-200 py-1.5 z-40 text-slate-900">
-                    <p className="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                      {i18n.selectDialect}
-                    </p>
-                    {activeLanguage.dialects.map((d) => (
-                      <button
-                        key={d}
-                        onClick={() => {
-                          onSelectDialect(d);
-                          setIsDialectDropdownOpen(false);
-                        }}
-                        className="w-full flex items-center justify-between px-3 py-1.5 text-xs text-left hover:bg-blue-50 text-slate-700 hover:text-blue-900 cursor-pointer"
-                      >
-                        <span className="truncate">{d}</span>
-                        {(activeDialect === d || (!activeDialect && d === activeLanguage.dialects![0])) && (
-                          <Check className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
-          {/* Quick Placement Test Retake & Dedicated AI Tutor Button */}
-          <div className="flex items-center gap-2">
+          {/* Quick Spotlight Shortcut Pill */}
+          <button
+            onClick={onOpenSpotlight}
+            className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-xs text-slate-500 hover:text-slate-800 transition-all cursor-pointer font-medium"
+          >
+            <Search className="w-3.5 h-3.5 text-slate-400" />
+            <span>Search curriculum, scenarios, grammar...</span>
+            <kbd className="px-1.5 py-0.5 rounded bg-white text-[10px] font-mono text-slate-500 border border-slate-300">⌘K</kbd>
+          </button>
+
+          {/* Right Section: Streak, Gems, AI Tutor & Profile */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* Streak Counter */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
+              <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-pulse" />
+              <span>{user?.streakDays || 0}d</span>
+            </div>
+
+            {/* Gems Wallet */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold">
+              <Gem className="w-3.5 h-3.5 text-blue-600 fill-blue-600" />
+              <span>{user?.gems || 0}</span>
+            </div>
+
+            {/* Dedicated AI Tutor Button */}
             {onOpenAITutor && (
               <button
                 id="top-deck-ai-tutor-btn"
@@ -206,299 +174,51 @@ export const TopHorizonDeck: React.FC<TopHorizonDeckProps> = ({
                   audioSynth.playGentleFeedback();
                   onOpenAITutor();
                 }}
-                className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer font-bold ${
                   isAITutorActive
-                    ? 'bg-gradient-to-r from-[#1B365D] to-[#0F2137] text-[#D4AF37] border border-[#C5A059]/40 font-black shadow-xs scale-102'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200 font-bold shadow-2xs'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                    : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 shadow-2xs'
                 }`}
-                title="Open Fluentic AI Polyglot Tutor"
+                title="Open Fluentic AI Tutor"
               >
-                <Sparkles className={`w-3.5 h-3.5 ${
-                  isAITutorActive ? 'text-[#D4AF37] fill-[#D4AF37]/30' : 'text-[#C5A059]'
-                }`} />
-                <span>AI Tutor</span>
+                <Sparkles className={`w-3.5 h-3.5 ${isAITutorActive ? 'text-white' : 'text-blue-600'} animate-pulse`} />
+                <span className="hidden sm:inline">AI Tutor</span>
               </button>
             )}
 
-            {onRetakePlacement && (
+            {/* Direct Sign In Page Button */}
+            {onOpenSignInPage && (
               <button
-                onClick={() => onRetakePlacement()}
-                className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition-all cursor-pointer"
+                id="top-deck-signin-btn"
+                onClick={() => {
+                  audioSynth.playGentleFeedback();
+                  onOpenSignInPage();
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer"
+                title="Go to Sign In & Setup Page"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>{i18n.retakeTest}</span>
+                <User className="w-3.5 h-3.5" />
+                <span>{user?.name && user.name !== 'Explorer' && user.name !== 'Enter your name' ? 'Switch / Sign In' : 'Sign In'}</span>
               </button>
             )}
-          </div>
 
-          {/* Right Section: Pro Studio Link, Streak, Gems, Soundscape & Profile */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-            {/* Direct Pro Studio Link with Real Payment Plans */}
+            {/* Profile Avatar / Settings Button */}
             <button
-              id="top-deck-pro-studio-btn"
+              id="top-deck-auth-profile-btn"
               onClick={() => {
                 audioSynth.playGentleFeedback();
-                onOpenProModal();
+                onOpenAuthModal();
               }}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black shadow-sm transition-all hover:scale-102 active:scale-98 cursor-pointer border border-amber-400/40"
-              title="Open Fluentic Pro Studio & Real Payment Plans"
+              className="flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 transition-all cursor-pointer"
+              title="Account & Settings"
             >
-              <Crown className="w-3.5 h-3.5 fill-white text-white" />
-              <span>{isArabic ? 'استوديو Pro' : 'Pro Studio'}</span>
-              <span className="hidden sm:inline px-1 py-0.2 rounded bg-white/25 text-[10px] uppercase tracking-wider font-extrabold">
-                {isArabic ? 'الخطط' : 'Plans'}
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center">
+                {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <span className="hidden sm:inline text-xs font-bold text-slate-800 max-w-[80px] truncate">
+                {user?.name || 'Explorer'}
               </span>
             </button>
-
-            {/* Streak Counter with Interactive Usage Explanation */}
-            <div className="relative">
-              <button
-                type="button"
-                id="top-deck-streak-pill"
-                onClick={() => {
-                  setShowStreakInfo(!showStreakInfo);
-                  setShowGemsInfo(false);
-                }}
-                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-700 text-xs font-black shadow-2xs transition-colors cursor-pointer"
-                title={isArabic ? 'انقر لمعرفة فائدة سلسلة الأيام' : 'Click to see what Day Streak is used for'}
-              >
-                <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-500 fill-orange-500 animate-pulse" />
-                <span>{user?.streakDays || 0}{isArabic ? 'يوم' : 'd'}</span>
-              </button>
-
-              {showStreakInfo && (
-                <div
-                  className="absolute right-0 mt-2 w-64 p-3 rounded-2xl bg-white border border-orange-200 shadow-xl z-50 text-slate-900 animate-in fade-in zoom-in-95"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex items-center justify-between pb-1.5 border-b border-orange-100 text-xs font-black text-orange-800">
-                    <span className="flex items-center gap-1.5">
-                      <Flame className="w-4 h-4 fill-orange-500 text-orange-500" />
-                      {isArabic ? `سلسلة الأيام (${user?.streakDays || 0} يوم)` : `Day Streak (${user?.streakDays || 0} days)`}
-                    </span>
-                    <button
-                      onClick={() => setShowStreakInfo(false)}
-                      className="text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-slate-600 mt-2 leading-relaxed">
-                    <strong>{isArabic ? 'ما هي فائدتها؟' : 'What is it used for?'}</strong> {isArabic ? 'تتبع أيام الممارسة اللغوية المستمرة لترسيخ التعلم.' : 'Your streak tracks consecutive days of daily language practice.'}
-                  </p>
-                  <ul className="text-[11px] text-slate-600 mt-1.5 space-y-1 list-disc list-inside">
-                    <li>{isArabic ? 'فتح مكافآت وجواهر عند بلوغ 7 و14 و30 يوماً.' : 'Unlocks bonus gems at 7, 14, and 30-day milestones.'}</li>
-                    <li>{isArabic ? 'حماية الانضباط والمرونة العصبية في تثبيت اللغة.' : 'Protects your linguistic momentum and neuroplasticity.'}</li>
-                    <li>{isArabic ? 'حماية السلسلة (50 💎) تمنع فقدان تقدمك في حال الانشغال!' : 'If missed, a Streak Shield (50 💎) prevents it from resetting!'}</li>
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            {/* Cognitive Retention & CEFR Structural Mastery Indicator */}
-            <div className="relative">
-              <button
-                type="button"
-                id="top-deck-mastery-pill"
-                onClick={() => {
-                  setShowGemsInfo(!showGemsInfo);
-                  setShowStreakInfo(false);
-                }}
-                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-black shadow-2xs transition-colors cursor-pointer"
-                title="Cognitive Retention Science & CEFR Structural Mastery"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                <span>{user?.activeCefr || 'A1'} {isArabic ? 'إتقان' : isDutch ? 'Beheersing' : 'Mastery'}</span>
-              </button>
-
-              {showGemsInfo && (
-                <div
-                  className="absolute right-0 mt-2 w-72 p-3 rounded-2xl bg-white border border-blue-200 shadow-xl z-50 text-slate-900 animate-in fade-in zoom-in-95"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex items-center justify-between pb-1.5 border-b border-blue-100 text-xs font-black text-blue-900">
-                    <span className="flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4 text-blue-600" />
-                      {isArabic ? 'علم الاكتساب اللغوي والذاكرة' : isDutch ? 'Cognitieve Verwervingswetenschap' : 'Cognitive Retention Science'}
-                    </span>
-                    <button
-                      onClick={() => setShowGemsInfo(false)}
-                      className="text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-slate-600 mt-2 leading-relaxed">
-                    {isArabic 
-                      ? 'تعتمد Fluentic على علوم الذاكرة العصبية والتدرج المنهجي بدلاً من الألعاب السطحية:' 
-                      : isDutch
-                      ? 'Fluentic vervangt willekeurige gamescores door bewezen cognitieve leermethodologie:'
-                      : 'Fluentic eliminates arbitrary arcade scores in favor of cognitive linguistic science:'}
-                  </p>
-                  <div className="text-[11px] text-slate-600 mt-1.5 space-y-1.5">
-                    <div className="p-1.5 rounded-lg bg-blue-50/70 border border-blue-100">
-                      🧠 <strong>{isArabic ? 'التكرار المتباعد FSRS:' : isDutch ? 'FSRS Gespreide Herhaling:' : 'FSRS Spaced Retention:'}</strong> {isArabic ? 'فترات استدعاء ذكية لترسيخ المفردات في الذاكرة الدائمة.' : isDutch ? 'Actieve herinneringsintervallen voor langdurige neuronale opslag.' : 'Optimal active recall intervals to maximize long-term vocabulary retention.'}
-                    </div>
-                    <div className="p-1.5 rounded-lg bg-indigo-50/70 border border-indigo-100">
-                      📚 <strong>{isArabic ? 'التدرج المعياري CEFR:' : isDutch ? 'ERK Structurele Opbouw:' : 'CEFR Scaffolding:'}</strong> {isArabic ? 'تدرج حقيقي من أصوات الحروف (A1) إلى الخطاب الرسمي (C2).' : isDutch ? 'Doelgerichte progressie van klankregels (A1) tot formeel debat (C2).' : 'Graduated linguistic progression from sound mechanics (A1) to formal debate (C2).'}
-                    </div>
-                    <div className="p-1.5 rounded-lg bg-emerald-50/70 border border-emerald-100">
-                      🎯 <strong>{isArabic ? 'إتقان حقيقي بلا تشتيت:' : isDutch ? 'Geen Spelstress:' : 'Zero Fluff & Pure Mastery:'}</strong> {isArabic ? 'يقاس النجاح بالطلاقة الحقيقية والفهم العميق للمفاهيم.' : isDutch ? 'Succes wordt gemeten in echt begrip en vloeiende communicatie.' : 'Success measured purely by structural fluency and communicative depth.'}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Ambient Soundscape Controller */}
-            <div className="relative">
-              <button
-                id="top-deck-soundscape-btn"
-                onClick={() => setIsSoundMenuOpen(!isSoundMenuOpen)}
-                className={`p-2 rounded-xl transition-all border cursor-pointer ${
-                  soundscapeMode !== 'mute'
-                    ? 'bg-blue-100 border-blue-300 text-blue-800'
-                    : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-500'
-                }`}
-                title={i18n.soundscape}
-              >
-                {soundscapeMode !== 'mute' ? (
-                  <Headphones className="w-4 h-4 text-blue-600 animate-pulse" />
-                ) : (
-                  <VolumeX className="w-4 h-4" />
-                )}
-              </button>
-
-              {isSoundMenuOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 z-50 text-slate-900">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                      <Headphones className="w-3.5 h-3.5 text-blue-600" />
-                      {i18n.soundscape}
-                    </span>
-                    <button
-                      onClick={() => setIsSoundMenuOpen(false)}
-                      className="text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="space-y-1.5 pt-2">
-                    {[
-                      { id: 'mute', label: 'Stil / Gedempt' },
-                      { id: 'alpha', label: 'Binaurale Alpha Golven (10Hz)' },
-                      { id: 'cosmic', label: 'Kosmische Harmonie (432Hz)' },
-                      { id: 'rain', label: 'Warme Zachte Regen' },
-                    ].map((mode) => (
-                      <button
-                        key={mode.id}
-                        onClick={() => {
-                          audioSynth.playGentleFeedback();
-                          onSelectSoundscape(mode.id as any);
-                        }}
-                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-left transition-all cursor-pointer ${
-                          soundscapeMode === mode.id
-                            ? 'bg-blue-50 text-blue-900 font-bold'
-                            : 'hover:bg-slate-50 text-slate-700'
-                        }`}
-                      >
-                        <span>{mode.label}</span>
-                        {soundscapeMode === mode.id && <Check className="w-3.5 h-3.5 text-blue-600" />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Profile Avatar / Auth Trigger */}
-            <div className="relative">
-              <button
-                id="top-deck-profile-btn"
-                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 transition-all cursor-pointer"
-              >
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center">
-                  {user?.avatar || (user?.name || 'TL').slice(0, 2).toUpperCase()}
-                </div>
-                <span className="hidden sm:inline text-xs font-bold max-w-[90px] truncate">
-                  {user?.name || (isArabic ? 'أدخل اسمك' : i18n.guestUser)}
-                </span>
-              </button>
-
-              {/* Profile Dropdown Menu */}
-              {isProfileMenuOpen && (
-                <div 
-                  className="absolute right-0 mt-2 w-64 rounded-2xl bg-white border border-slate-200 shadow-xl p-3 z-50 text-slate-900 space-y-2 animate-in fade-in"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="pb-2 border-b border-slate-100">
-                    <div className="font-extrabold text-sm text-slate-900 truncate">
-                      {user?.name || (isArabic ? 'أدخل اسمك' : isDutch ? 'Gastgebruiker' : 'Guest Explorer')}
-                    </div>
-                    <div className="text-xs text-slate-500 truncate">
-                      {user?.email || 'explorer@fluentic.local'}
-                    </div>
-                    <div className="mt-1 flex items-center gap-1 text-[11px] text-blue-600 font-semibold">
-                      <span>{isArabic ? 'اللغة الأم:' : isDutch ? 'Moedertaal:' : 'Native Language:'}</span>
-                      <span className="uppercase font-bold">{user?.nativeLanguageCode || 'nl'}</span>
-                      <span>•</span>
-                      <span>{isArabic ? 'اللغة المستهدفة:' : isDutch ? 'Doeltaal:' : 'Target Language:'}</span>
-                      <span>{activeLanguage.flag} {activeLanguage.name}</span>
-                    </div>
-
-                    {/* Account Database Stats Pill */}
-                    <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-700">
-                      <span className="flex items-center gap-1 text-blue-600">
-                        💎 {user?.gems || 0}
-                      </span>
-                      <span className="flex items-center gap-1 text-orange-600">
-                        🔥 {user?.streakDays || 0}d
-                      </span>
-                      <span className="flex items-center gap-1 text-emerald-600">
-                        ⏱️ {user?.totalPracticeMinutes || 0}m
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <button
-                      onClick={() => {
-                        setIsProfileMenuOpen(false);
-                        if (onRetakePlacement) onRetakePlacement();
-                      }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer"
-                    >
-                      {isArabic ? '🎯 إعادة اختبار تحديد المستوى' : isDutch ? '🎯 Niveautest Opnieuw Doen' : '🎯 Retake Placement Test'}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setIsProfileMenuOpen(false);
-                        onOpenAuthModal();
-                      }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-                    >
-                      {isArabic ? '🔐 الحساب والأمان المشفر' : isDutch ? '🔐 Account & Versleuteling' : '🔐 Account & Encryption'}
-                    </button>
-
-                    {onSignOut && (
-                      <button
-                        onClick={() => {
-                          setIsProfileMenuOpen(false);
-                          onSignOut();
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer border-t border-slate-100 flex items-center justify-between"
-                      >
-                        <span>{isArabic ? '🔄 تبديل الحساب / تحديث البيانات' : isDutch ? '🔄 Wissel Account / Re-log Database' : '🔄 Switch Account / Re-log'}</span>
-                        <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-md font-extrabold">DB</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </header>

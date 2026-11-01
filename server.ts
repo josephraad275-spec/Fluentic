@@ -65,7 +65,8 @@ const CANDIDATE_MODELS = [
 
 async function generateContentWithFallback(
   ai: GoogleGenAI,
-  options: GenerateContentOptions
+  options: GenerateContentOptions,
+  timeoutMs: number = 6500
 ) {
   const preferred = options.preferredModel || "gemini-3.8-flash";
   const modelList = Array.from(new Set([preferred, ...CANDIDATE_MODELS]));
@@ -75,11 +76,16 @@ async function generateContentWithFallback(
   for (let i = 0; i < modelList.length; i++) {
     const model = modelList[i];
     try {
-      const response = await ai.models.generateContent({
+      const callPromise = ai.models.generateContent({
         model,
         contents: options.contents,
         config: options.config,
       });
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms on model ${model}`)), timeoutMs)
+      );
+
+      const response = await Promise.race([callPromise, timeoutPromise]);
       return response;
     } catch (err: any) {
       lastError = err;
@@ -93,11 +99,11 @@ async function generateContentWithFallback(
         errMsg.includes("429") ||
         errMsg.includes("high demand") ||
         errMsg.includes("UNAVAILABLE") ||
-        errMsg.includes("RESOURCE_EXHAUSTED");
+        errMsg.includes("RESOURCE_EXHAUSTED") ||
+        errMsg.includes("Timeout");
 
       if (isCapacityOrTransient && i < modelList.length - 1) {
-        console.warn(`[Gemini Failover] Model "${model}" hit capacity constraint (${errMsg.slice(0, 60)}...). Failing over to "${modelList[i + 1]}"...`);
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        console.warn(`[Gemini Failover] Model "${model}" issue (${errMsg.slice(0, 60)}...). Rapidly failing over to "${modelList[i + 1]}"...`);
         continue;
       }
 

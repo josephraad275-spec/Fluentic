@@ -21,6 +21,7 @@ import { LearningNode, Language, Exercise } from '../types';
 import { audioSynth } from '../services/audioSynthesizer';
 import { speechDetector } from '../services/speechDetectionService';
 import { isRtlLanguage, stripTransliteration } from '../services/languageTypography';
+import { OmniAppEngineClient } from '../services/omniEngineService';
 
 interface LessonModalProps {
   node: LearningNode;
@@ -43,6 +44,12 @@ export const LessonModal: React.FC<LessonModalProps> = ({
   const [stage, setStage] = useState<'concept' | 'practice' | 'assessment' | 'complete'>('concept');
   const [currentExIndex, setCurrentExIndex] = useState<number>(0);
   const [reviewedConcepts, setReviewedConcepts] = useState<Record<number, boolean>>({});
+
+  // AI Brain Lesson Insight State
+  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
+  const [isAiExplaining, setIsAiExplaining] = useState<boolean>(false);
+  const [aiAudioText, setAiAudioText] = useState<string | null>(null);
+  const [aiRegister, setAiRegister] = useState<string | null>(null);
 
   // Flexible Duration Selector (5m, 10m, 15m, or Custom) - ZERO visible running timers
   const [sessionMinutes, setSessionMinutes] = useState<number>(10);
@@ -163,6 +170,8 @@ export const LessonModal: React.FC<LessonModalProps> = ({
     setRecognizedSpeech('');
     setInterimSpeech('');
     setSpeechAccuracy(null);
+    setAiExplanation(null);
+    setAiAudioText(null);
     speechDetector.stopListening();
     setIsListening(false);
 
@@ -177,6 +186,38 @@ export const LessonModal: React.FC<LessonModalProps> = ({
       setAssembledTokens([]);
     }
   }, [currentExIndex, currentExercise.id]);
+
+  const handleAskAiLesson = async () => {
+    if (isAiExplaining) return;
+    audioSynth.playGentleFeedback();
+    setIsAiExplaining(true);
+
+    try {
+      const response = await OmniAppEngineClient.executeActiveChat({
+        userMessage: `Break down the grammar, pronunciation nuances, and native usage of: "${currentExercise.targetPhrase}" (${currentExercise.translation}) in ${activeLanguage.name}.`,
+        targetLanguage: activeLanguage.name,
+        targetLanguageCode: activeLanguage.code,
+        nativeLanguage: 'English',
+        nativeLanguageCode: 'en',
+        cefrLevel: node.cefr || 'A1',
+        learningIntent: 'conversational',
+      });
+
+      if (response?.tutor_turn) {
+        setAiExplanation(response.tutor_turn.reply);
+        setAiAudioText(response.tutor_turn.audioReadyText || response.tutor_turn.targetLanguageUtterance || currentExercise.targetPhrase);
+        setAiRegister(response.tutor_turn.registerNotes?.detectedRegister || 'neutral');
+        audioSynth.playSuccessChime();
+        return;
+      }
+      throw new Error('Fallback');
+    } catch {
+      setAiExplanation(`"${currentExercise.targetPhrase}" represents an essential CEFR ${node.cefr || 'A1'} formulation. Focus on clear vowel articulation, consistent rhythm, and natural cadence in ${activeLanguage.name}.`);
+      setAiAudioText(currentExercise.targetPhrase);
+    } finally {
+      setIsAiExplaining(false);
+    }
+  };
 
   const playAudio = (text: string, rate: number = 0.95) => {
     audioSynth.speakPhraseNative(text, activeLanguage.code);
@@ -645,26 +686,78 @@ export const LessonModal: React.FC<LessonModalProps> = ({
               {/* Step 2 Feedback Bar */}
               {isAnswerChecked && (
                 <div
-                  className={`p-4 rounded-2xl flex items-center gap-3 ${
+                  className={`p-4 rounded-2xl flex items-center justify-between gap-3 ${
                     isCorrect
                       ? 'bg-emerald-50 border border-emerald-200 text-emerald-900'
                       : 'bg-rose-50 border border-rose-200 text-rose-900'
                   }`}
                 >
-                  {isCorrect ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                  ) : (
-                    <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
-                  )}
-                  <div className="text-xs">
-                    <p className="font-bold">{isCorrect ? 'Outstanding!' : 'Keep Going!'}</p>
-                    <p className="opacity-90">{currentExercise.translation}</p>
+                  <div className="flex items-center gap-3 min-w-0">
+                    {isCorrect ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
+                    )}
+                    <div className="text-xs min-w-0">
+                      <p className="font-bold">{isCorrect ? 'Outstanding!' : 'Keep Going!'}</p>
+                      <p className="opacity-90 truncate">{currentExercise.translation}</p>
+                    </div>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAskAiLesson}
+                    disabled={isAiExplaining}
+                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-blue-50 border border-blue-200 text-blue-700 font-extrabold text-xs shadow-2xs flex items-center gap-1.5 shrink-0 cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                    <span>{isAiExplaining ? 'AI Analyzing...' : 'Ask AI Brain'}</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Dynamic AI Lesson Insight Drawer */}
+              {aiExplanation && (
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-50/90 via-indigo-50/50 to-white border border-blue-200 text-slate-800 text-xs space-y-2 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between border-b border-blue-100 pb-1.5">
+                    <div className="flex items-center gap-1.5 font-extrabold text-blue-900">
+                      <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Fluentic AI Neural Analysis</span>
+                    </div>
+                    {aiRegister && (
+                      <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[9px] font-black uppercase font-mono">
+                        {aiRegister}
+                      </span>
+                    )}
+                  </div>
+                  <p className="leading-relaxed whitespace-pre-wrap">{aiExplanation}</p>
+                  {aiAudioText && (
+                    <button
+                      type="button"
+                      onClick={() => playAudio(aiAudioText)}
+                      className="px-3 py-1 rounded-lg bg-white border border-blue-200 hover:bg-blue-50 text-blue-700 font-bold text-[11px] flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <Volume2 className="w-3.5 h-3.5" />
+                      <span>Listen to Native Articulation</span>
+                    </button>
+                  )}
                 </div>
               )}
 
               {/* Practice Actions */}
-              <div className="pt-2 flex justify-end">
+              <div className="pt-2 flex items-center justify-between gap-3">
+                {!isAnswerChecked && !aiExplanation ? (
+                  <button
+                    type="button"
+                    onClick={handleAskAiLesson}
+                    disabled={isAiExplaining}
+                    className="px-3.5 py-2.5 rounded-2xl bg-slate-100 hover:bg-blue-50 text-blue-700 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>{isAiExplaining ? 'AI Explaining...' : 'Ask AI Brain'}</span>
+                  </button>
+                ) : <div />}
+
                 {!isAnswerChecked ? (
                   <button
                     type="button"

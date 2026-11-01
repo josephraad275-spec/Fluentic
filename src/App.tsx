@@ -24,6 +24,7 @@ import { LessonModal } from './components/LessonModal';
 import { OnboardingPlacementView } from './components/OnboardingPlacementView';
 import { SignInView } from './components/SignInView';
 import { AITutorModal } from './components/AITutorModal';
+import { OmniAIBrainCopilot } from './components/OmniAIBrainCopilot';
 
 // Views
 import { HomeView } from './components/views/HomeView';
@@ -36,55 +37,67 @@ import { AITranslatorView } from './components/views/AITranslatorView';
 import { FocusAlphaWaveView } from './components/views/FocusAlphaWaveView';
 
 const DEFAULT_USER: UserProfile = {
-  id: 'usr-fresh-001',
-  name: '',
-  email: '',
-  avatar: 'FL',
-  isGuest: true,
-  isPro: false,
+  id: 'usr-explorer-001',
+  name: 'Explorer',
+  displayName: 'Explorer',
+  email: 'explorer@fluentic.ai',
+  avatar: 'EX',
+  isGuest: false,
+  isPro: true,
   hasCompletedOnboarding: true,
   nativeLanguageCode: 'en',
+  nativeLanguage: 'English',
   targetPace: 'dedicated',
-  placementScore: 0,
+  placementScore: 8,
+  structuralMastery: 85,
+  activeRecallRate: 90,
+  spacedErrorRecyclingCount: 2,
   xp: 0,
   level: 1,
-  gems: 0,
-  streakDays: 0,
-  speakingPunctuation: 0,
-  speakingScore: 0,
-  totalPracticeMinutes: 0,
-  streakShields: 0,
+  gems: 100,
+  streakDays: 3,
+  speakingPunctuation: 92,
+  speakingScore: 88,
+  totalPracticeMinutes: 45,
+  streakShields: 1,
   streakProtected: false,
-  activeLanguageCode: 'en',
-  activeCefr: 'A1',
-  completedNodeIds: [],
-  nodeCrowns: {},
+  activeLanguageCode: 'es',
+  activeLanguage: 'Spanish',
+  activeCefr: 'B1',
+  unlockedCefrLevels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
+  completedNodeIds: ['node-1'],
+  nodeCrowns: { 'node-1': 1 },
   dailyGoalMinutes: 15,
   dailyGoalCompleted: false,
-  weeklyActivity: [0, 0, 0, 0, 0, 0, 0],
-  unlockedAchievements: [],
-  claimedAchievements: [],
-  isSignedIn: false,
+  weeklyActivity: [15, 20, 25, 0, 0, 0, 0],
+  unlockedAchievements: ['first-step'],
+  claimedAchievements: ['first-step'],
+  isSignedIn: true,
   dailyQuests: [],
 };
 
 export function App() {
-  // Never load previous information (name, practices, progress) from persistent storage
-  const [user, setUser] = useState<UserProfile>(DEFAULT_USER);
-
-  // Always show the main entry login page on load
-  const [isSignedIn, setIsSignedIn] = useState<boolean>(false);
-
-  // Hard wipe of all previous records on application mount to guarantee strictly ephemeral session
-  useEffect(() => {
+  const [user, setUser] = useState<UserProfile>(() => {
     try {
-      localStorage.clear();
-      sessionStorage.clear();
-      AccountDatabase.clearDatabase();
+      const saved = localStorage.getItem('fluentic_user_session');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.name) return { ...DEFAULT_USER, ...parsed };
+      }
     } catch {
-      // Ignore storage errors
+      // fallback
     }
-  }, []);
+    return DEFAULT_USER;
+  });
+
+  // User session state
+  const [isSignedIn, setIsSignedIn] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('fluentic_signed_in') === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   const [activeLanguage, setActiveLanguage] = useState<Language>(() => {
     return (
@@ -201,12 +214,14 @@ export function App() {
 
         {/* Dedicated Main Entry Login Page with Language Configuration & Mandatory Placement Test */}
         <SignInView
-          initialName=""
-          initialEmail=""
+          initialName={user.name && user.name !== 'Explorer' ? user.name : ''}
+          initialEmail={user.email && user.email !== 'explorer@fluentic.ai' ? user.email : ''}
           initialNativeLanguageCode={user.nativeLanguageCode || 'en'}
           initialTargetLanguageCode={activeLanguage?.code || 'es'}
           initialLearningIntent={user.learningIntent || 'conversational'}
+          onBackToDashboard={() => setIsSignedIn(true)}
           onSignIn={(name, email, nativeLangCode, targetLangCode, intent) => {
+            try { localStorage.setItem('fluentic_signed_in', 'true'); } catch {}
             const targetLang = WORLD_LANGUAGES.find((l) => l.code === targetLangCode) || activeLanguage;
             setActiveLanguage(targetLang);
             const defaultName = nativeLangCode === 'ar' ? 'أدخل اسمك' : 'Enter your name';
@@ -238,6 +253,7 @@ export function App() {
             setIsSignedIn(true);
           }}
           onContinueGuest={(nativeLangCode, targetLangCode, intent) => {
+            try { localStorage.setItem('fluentic_signed_in', 'true'); } catch {}
             const targetLang = WORLD_LANGUAGES.find((l) => l.code === targetLangCode) || activeLanguage;
             setActiveLanguage(targetLang);
             const defaultName = nativeLangCode === 'ar' ? 'أدخل اسمك' : 'Enter your name';
@@ -265,6 +281,7 @@ export function App() {
             setIsSignedIn(true);
           }}
           onSkipTest={(nativeLangCode, targetLangCode, customName, intent) => {
+            try { localStorage.setItem('fluentic_signed_in', 'true'); } catch {}
             const targetLang = WORLD_LANGUAGES.find((l) => l.code === targetLangCode) || activeLanguage;
             setActiveLanguage(targetLang);
             setActiveCefr('A1');
@@ -355,6 +372,7 @@ export function App() {
         isAITutorActive={isAITutorOpen}
         onRetakePlacement={() => setIsRetakingPlacement(true)}
         onSignOut={handleSignOut}
+        onOpenSignInPage={() => setIsSignedIn(false)}
         onSelectNativeLanguage={(code) => handleUpdateUser({ ...user, nativeLanguageCode: code })}
       />
 
@@ -492,6 +510,14 @@ export function App() {
         activeLanguage={activeLanguage}
         activeCefr={activeCefr}
         user={user}
+      />
+
+      {/* Omnipresent Central AI Brain Copilot (Accessible everywhere) */}
+      <OmniAIBrainCopilot
+        activeLanguage={activeLanguage}
+        activeCefr={activeCefr}
+        user={user}
+        currentContext={activeTab}
       />
     </div>
   );

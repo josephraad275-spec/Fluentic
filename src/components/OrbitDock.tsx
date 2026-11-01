@@ -19,7 +19,7 @@ interface OrbitDockProps {
   onSelectTab: (tab: NavigationTab) => void;
   onOpenAITutor: () => void;
   isAITutorActive?: boolean;
-  isPro: boolean;
+  isPro?: boolean;
   nativeLanguageCode?: string;
   soundscapeMode?: 'alpha' | 'cosmic' | 'rain' | 'mute';
   onToggleSoundscape?: () => void;
@@ -30,13 +30,12 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
   onSelectTab,
   onOpenAITutor,
   isAITutorActive = false,
-  isPro,
-  nativeLanguageCode = 'nl',
+  isPro = false,
+  nativeLanguageCode = 'en',
   soundscapeMode = 'mute',
   onToggleSoundscape,
 }) => {
   const i18n = getI18n(nativeLanguageCode);
-  const isDutch = nativeLanguageCode === 'nl';
 
   // Keyboard shortcut listener (1 to 8)
   useEffect(() => {
@@ -100,7 +99,7 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
     <nav
       id="fluentic-spatial-orbit-dock"
       aria-label="Main navigation dock"
-      className="fixed bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 z-40 px-2 sm:px-3 py-1.5 rounded-2xl bg-[#0A1128]/95 backdrop-blur-xl border border-slate-800 shadow-2xl shadow-slate-950/40 flex items-center gap-1 sm:gap-1.5 max-w-[98vw] overflow-x-auto no-scrollbar scrollbar-none text-slate-200"
+      className="fixed bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 z-40 px-2 sm:px-3 py-1.5 rounded-2xl bg-[#0A1128]/95 backdrop-blur-xl border border-slate-800 shadow-2xl shadow-slate-950/60 flex items-center gap-1 sm:gap-1.5 max-w-[98vw] overflow-x-auto no-scrollbar text-slate-200"
     >
       {/* 1. Home */}
       <button
@@ -110,7 +109,7 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
           audioSynth.playGentleFeedback();
           onSelectTab('home');
         }}
-        className={`relative flex flex-col items-center justify-center min-w-[50px] sm:min-w-[60px] py-1.5 px-2 rounded-xl transition-all group cursor-pointer shrink-0 ${
+        className={`relative flex flex-col items-center justify-center min-w-[50px] sm:min-w-[58px] py-1.5 px-2 rounded-xl transition-all group cursor-pointer shrink-0 ${
           activeTab === 'home'
             ? 'bg-gradient-to-r from-[#1B365D] to-[#0F2137] text-[#D4AF37] font-black shadow-md border border-[#D4AF37]/50 scale-102 ring-1 ring-[#D4AF37]/30'
             : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
@@ -135,7 +134,7 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
           audioSynth.playGentleFeedback();
           onSelectTab('syllabus');
         }}
-        className={`relative flex flex-col items-center justify-center min-w-[50px] sm:min-w-[60px] py-1.5 px-2 rounded-xl transition-all group cursor-pointer shrink-0 ${
+        className={`relative flex flex-col items-center justify-center min-w-[50px] sm:min-w-[58px] py-1.5 px-2 rounded-xl transition-all group cursor-pointer shrink-0 ${
           activeTab === 'syllabus'
             ? 'bg-gradient-to-r from-[#1B365D] to-[#0F2137] text-[#D4AF37] font-black shadow-md border border-[#D4AF37]/50 scale-102 ring-1 ring-[#D4AF37]/30'
             : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
@@ -160,7 +159,7 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
           audioSynth.playGentleFeedback();
           onSelectTab('grammar-module');
         }}
-        className={`relative flex flex-col items-center justify-center min-w-[50px] sm:min-w-[60px] py-1.5 px-2 rounded-xl transition-all group cursor-pointer shrink-0 ${
+        className={`relative flex flex-col items-center justify-center min-w-[50px] sm:min-w-[58px] py-1.5 px-2 rounded-xl transition-all group cursor-pointer shrink-0 ${
           activeTab === 'grammar-module'
             ? 'bg-gradient-to-r from-[#1B365D] to-[#0F2137] text-[#D4AF37] font-black shadow-md border border-[#D4AF37]/50 scale-102 ring-1 ring-[#D4AF37]/30'
             : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
@@ -185,7 +184,7 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
           audioSynth.playGentleFeedback();
           onSelectTab('ai-translator');
         }}
-        className={`relative flex flex-col items-center justify-center min-w-[50px] sm:min-w-[60px] py-1.5 px-2 rounded-xl transition-all group cursor-pointer shrink-0 ${
+        className={`relative flex flex-col items-center justify-center min-w-[50px] sm:min-w-[58px] py-1.5 px-2 rounded-xl transition-all group cursor-pointer shrink-0 ${
           activeTab === 'ai-translator'
             ? 'bg-gradient-to-r from-[#1B365D] to-[#0F2137] text-[#D4AF37] font-black shadow-md border border-[#D4AF37]/50 scale-102 ring-1 ring-[#D4AF37]/30'
             : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
@@ -198,7 +197,7 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
         <span className={`text-[10px] sm:text-[11px] tracking-normal whitespace-nowrap text-center mt-0.5 ${
           activeTab === 'ai-translator' ? 'text-[#D4AF37] font-black' : 'text-slate-300 font-semibold'
         }`}>
-          {i18n.navTranslator || 'AI Translator'}
+          {i18n.navTranslator || 'Translate'}
         </span>
       </button>
 
@@ -210,7 +209,7 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
           audioSynth.playGentleFeedback();
           onSelectTab('pro-studio');
         }}
-        className={`relative flex flex-col items-center justify-center min-w-[50px] sm:min-w-[60px] py-1.5 px-2 rounded-xl transition-all group cursor-pointer shrink-0 ${
+        className={`relative flex flex-col items-center justify-center min-w-[50px] sm:min-w-[58px] py-1.5 px-2 rounded-xl transition-all group cursor-pointer shrink-0 ${
           activeTab === 'pro-studio'
             ? 'bg-gradient-to-r from-[#1B365D] to-[#0F2137] text-[#D4AF37] font-black shadow-md border border-[#D4AF37]/50 scale-102 ring-1 ring-[#D4AF37]/30'
             : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
@@ -226,11 +225,11 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
         <span className={`text-[10px] sm:text-[11px] tracking-normal whitespace-nowrap text-center mt-0.5 ${
           activeTab === 'pro-studio' ? 'text-[#D4AF37] font-black' : 'text-slate-300 font-semibold'
         }`}>
-          {i18n.navPro || 'Pro Studio'}
+          {i18n.navPro || 'Pro'}
         </span>
       </button>
 
-      {/* 6. AI Tutor: Neutral navy/slate (#1C2541) when inactive; Burnished Gold gradient (#D4AF37) ONLY when active */}
+      {/* 6. AI Tutor */}
       <button
         id="dock-tab-ai-tutor-btn"
         type="button"
@@ -238,7 +237,7 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
           audioSynth.playGentleFeedback();
           onOpenAITutor();
         }}
-        className={`relative flex flex-col items-center justify-center min-w-[54px] sm:min-w-[64px] py-1.5 px-2.5 rounded-xl transition-all group cursor-pointer shrink-0 ${
+        className={`relative flex flex-col items-center justify-center min-w-[54px] sm:min-w-[62px] py-1.5 px-2 rounded-xl transition-all group cursor-pointer shrink-0 ${
           isAITutorActive
             ? 'bg-gradient-to-r from-[#D4AF37] via-[#FFD700] to-[#C5A059] text-slate-950 font-black shadow-lg shadow-amber-400/25 border border-[#D4AF37] scale-105 ring-2 ring-amber-300/40'
             : 'bg-[#1C2541] hover:bg-[#253256] text-slate-200 hover:text-white border border-slate-700/80 shadow-xs'
@@ -247,7 +246,7 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
       >
         <div className="relative flex items-center justify-center">
           <Sparkles className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-transform group-hover:scale-110 ${
-            isAITutorActive ? 'text-slate-950 fill-slate-950/25' : 'text-slate-300 group-hover:text-white'
+            isAITutorActive ? 'text-slate-950 fill-slate-950/25' : 'text-amber-400 fill-amber-400/30'
           }`} />
           {isAITutorActive && (
             <span className="absolute -top-1 -right-1 flex h-2 w-2">
@@ -271,7 +270,7 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
           audioSynth.playGentleFeedback();
           onSelectTab('daily-disciplines');
         }}
-        className={`relative flex flex-col items-center justify-center min-w-[50px] sm:min-w-[60px] py-1.5 px-2 rounded-xl transition-all group cursor-pointer shrink-0 ${
+        className={`relative flex flex-col items-center justify-center min-w-[50px] sm:min-w-[58px] py-1.5 px-2 rounded-xl transition-all group cursor-pointer shrink-0 ${
           activeTab === 'daily-disciplines'
             ? 'bg-gradient-to-r from-[#1B365D] to-[#0F2137] text-[#D4AF37] font-black shadow-md border border-[#D4AF37]/50 scale-102 ring-1 ring-[#D4AF37]/30'
             : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
@@ -284,11 +283,11 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
         <span className={`text-[10px] sm:text-[11px] tracking-normal whitespace-nowrap text-center mt-0.5 ${
           activeTab === 'daily-disciplines' ? 'text-[#D4AF37] font-black' : 'text-slate-300 font-semibold'
         }`}>
-          {i18n.navDisciplines || 'Streaks & Goals'}
+          {i18n.navDisciplines || 'Goals'}
         </span>
       </button>
 
-      {/* 8. Focus (at the far end) */}
+      {/* 8. Focus */}
       <button
         id="dock-tab-focus-btn"
         type="button"
@@ -296,7 +295,7 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
           audioSynth.playGentleFeedback();
           onSelectTab('focus');
         }}
-        className={`relative flex flex-col items-center justify-center min-w-[50px] sm:min-w-[60px] py-1.5 px-2 rounded-xl transition-all group cursor-pointer shrink-0 ${
+        className={`relative flex flex-col items-center justify-center min-w-[50px] sm:min-w-[58px] py-1.5 px-2 rounded-xl transition-all group cursor-pointer shrink-0 ${
           activeTab === 'focus' || activeTab === 'dialogue-theatre'
             ? 'bg-gradient-to-r from-[#1B365D] to-[#0F2137] text-[#D4AF37] font-black shadow-md border border-[#D4AF37]/50 scale-102 ring-1 ring-[#D4AF37]/30'
             : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
@@ -313,9 +312,9 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
         </span>
       </button>
 
-      {/* Ambient Audio Toggle */}
+      {/* Audio Toggle */}
       {onToggleSoundscape && (
-        <div className="hidden lg:flex items-center pl-1 border-l border-slate-800 shrink-0">
+        <div className="hidden sm:flex items-center pl-1 border-l border-slate-800 shrink-0">
           <button
             id="dock-toggle-binaural-btn"
             type="button"
@@ -328,7 +327,7 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
                 ? `Focus Audio Active (${soundscapeMode}) • Tap to Mute`
                 : 'Toggle Focus Audio'
             }
-            className={`flex flex-col items-center justify-center min-w-[44px] py-1.5 px-1.5 rounded-xl transition-all cursor-pointer ${
+            className={`flex flex-col items-center justify-center min-w-[40px] py-1.5 px-1.5 rounded-xl transition-all cursor-pointer ${
               soundscapeMode && soundscapeMode !== 'mute'
                 ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/40'
                 : 'text-slate-400 hover:text-slate-200'

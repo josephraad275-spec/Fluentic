@@ -26,6 +26,7 @@ interface SignInViewProps {
   onSignIn: (name: string, email: string, nativeLanguageCode: string, targetLanguageCode: string, learningIntent: 'business' | 'travel' | 'academic' | 'conversational') => void;
   onContinueGuest: (nativeLanguageCode: string, targetLanguageCode: string, learningIntent: 'business' | 'travel' | 'academic' | 'conversational') => void;
   onSkipTest?: (nativeLanguageCode: string, targetLanguageCode: string, name?: string, learningIntent?: 'business' | 'travel' | 'academic' | 'conversational') => void;
+  onBackToDashboard?: () => void;
 }
 
 const POPULAR_TARGET_CODES = ['en', 'es', 'fr', 'de', 'it', 'ja', 'ar', 'zh', 'ru', 'lt', 'nl'];
@@ -39,6 +40,7 @@ export const SignInView: React.FC<SignInViewProps> = ({
   onSignIn,
   onContinueGuest,
   onSkipTest,
+  onBackToDashboard,
 }) => {
   const [name, setName] = useState(initialName || '');
   const [email, setEmail] = useState(initialEmail || '');
@@ -112,46 +114,61 @@ export const SignInView: React.FC<SignInViewProps> = ({
         <div className="flex items-center justify-between px-2">
           <FluenticLogo variant="horizontal" size="md" showTagline={true} />
 
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-white/80 backdrop-blur-md px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
-            <Globe2 className="w-3.5 h-3.5 text-blue-600" />
-            <button
-              type="button"
-              onClick={() => {
-                setNativeCode('ar');
-                audioSynth.playGentleFeedback();
-              }}
-              className={`px-2 py-0.5 rounded-lg transition-all ${
-                nativeCode === 'ar' ? 'bg-blue-600 text-white font-bold' : 'hover:text-slate-900'
-              }`}
-            >
-              AR 🇸🇦
-            </button>
-            <span className="text-slate-300">|</span>
-            <button
-              type="button"
-              onClick={() => {
-                setNativeCode('nl');
-                audioSynth.playGentleFeedback();
-              }}
-              className={`px-2 py-0.5 rounded-lg transition-all ${
-                nativeCode === 'nl' ? 'bg-blue-600 text-white font-bold' : 'hover:text-slate-900'
-              }`}
-            >
-              NL 🇳🇱
-            </button>
-            <span className="text-slate-300">|</span>
-            <button
-              type="button"
-              onClick={() => {
-                setNativeCode('en');
-                audioSynth.playGentleFeedback();
-              }}
-              className={`px-2 py-0.5 rounded-lg transition-all ${
-                nativeCode === 'en' ? 'bg-blue-600 text-white font-bold' : 'hover:text-slate-900'
-              }`}
-            >
-              EN 🇬🇧
-            </button>
+          <div className="flex items-center gap-2">
+            {onBackToDashboard && (
+              <button
+                type="button"
+                onClick={() => {
+                  audioSynth.playGentleFeedback();
+                  onBackToDashboard();
+                }}
+                className="text-xs font-bold text-slate-600 hover:text-blue-600 bg-white/80 hover:bg-white backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs transition-all cursor-pointer"
+              >
+                ← {isArabic ? 'العودة للرئيسية' : isDutch ? 'Naar Dashboard' : 'Dashboard'}
+              </button>
+            )}
+
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-white/80 backdrop-blur-md px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
+              <Globe2 className="w-3.5 h-3.5 text-blue-600" />
+              <button
+                type="button"
+                onClick={() => {
+                  setNativeCode('ar');
+                  audioSynth.playGentleFeedback();
+                }}
+                className={`px-2 py-0.5 rounded-lg transition-all ${
+                  nativeCode === 'ar' ? 'bg-blue-600 text-white font-bold' : 'hover:text-slate-900'
+                }`}
+              >
+                AR 🇸🇦
+              </button>
+              <span className="text-slate-300">|</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setNativeCode('nl');
+                  audioSynth.playGentleFeedback();
+                }}
+                className={`px-2 py-0.5 rounded-lg transition-all ${
+                  nativeCode === 'nl' ? 'bg-blue-600 text-white font-bold' : 'hover:text-slate-900'
+                }`}
+              >
+                NL 🇳🇱
+              </button>
+              <span className="text-slate-300">|</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setNativeCode('en');
+                  audioSynth.playGentleFeedback();
+                }}
+                className={`px-2 py-0.5 rounded-lg transition-all ${
+                  nativeCode === 'en' ? 'bg-blue-600 text-white font-bold' : 'hover:text-slate-900'
+                }`}
+              >
+                EN 🇬🇧
+              </button>
+            </div>
           </div>
         </div>
 

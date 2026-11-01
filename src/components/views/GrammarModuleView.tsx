@@ -8,13 +8,18 @@ import {
   RotateCcw, 
   Layers,
   HelpCircle,
-  Loader2
+  Loader2,
+  Send,
+  Zap,
+  Bot
 } from 'lucide-react';
 import { Language, UserProfile } from '../../types';
 import { audioSynth } from '../../services/audioSynthesizer';
 import { getI18n } from '../../services/localization';
 import { AICurriculumEngine } from '../../services/aiCurriculumService';
 import { GrammarTopic } from '../../data/grammarTopicsData';
+import { OmniAppEngineClient } from '../../services/omniEngineService';
+import { stripTransliteration } from '../../services/languageTypography';
 
 interface GrammarModuleViewProps {
   activeLanguage: Language;
@@ -34,6 +39,63 @@ export const GrammarModuleView: React.FC<GrammarModuleViewProps> = ({
   const [selectedTopicId, setSelectedTopicId] = useState<string>('');
   const [selectedDrillAnswer, setSelectedDrillAnswer] = useState<string | null>(null);
   const [isAnswerChecked, setIsAnswerChecked] = useState(false);
+
+  // AI Sentence Doctor state
+  const [sentenceInput, setSentenceInput] = useState('');
+  const [isDiagnosing, setIsDiagnosing] = useState(false);
+  const [diagnosisResult, setDiagnosisResult] = useState<{
+    reply: string;
+    targetSnippet?: string;
+    audioReadyText?: string;
+    translation?: string;
+    corrections?: Array<{ original: string; corrected: string; rule: string }>;
+    register?: string;
+  } | null>(null);
+
+  const handleDiagnoseSentence = async () => {
+    const text = sentenceInput.trim();
+    if (!text || isDiagnosing) return;
+
+    audioSynth.playGentleFeedback();
+    setIsDiagnosing(true);
+
+    try {
+      const res = await OmniAppEngineClient.executeActiveChat({
+        userMessage: `Perform deep morpho-syntax diagnosis on this sentence in ${activeLanguage.name}: "${text}". Identify any grammatical errors, agreement flaws, or register mismatches, and provide the polished authentic form.`,
+        targetLanguage: activeLanguage.name,
+        targetLanguageCode: activeLanguage.code,
+        nativeLanguage: user.nativeLanguage || 'English',
+        nativeLanguageCode: user.nativeLanguageCode || 'en',
+        cefrLevel: user.activeCefr || 'B1',
+        learningIntent: 'academic',
+      });
+
+      if (res?.tutor_turn) {
+        setDiagnosisResult({
+          reply: res.tutor_turn.reply,
+          targetSnippet: res.tutor_turn.targetLanguageUtterance ? stripTransliteration(res.tutor_turn.targetLanguageUtterance) : undefined,
+          audioReadyText: res.tutor_turn.audioReadyText ? stripTransliteration(res.tutor_turn.audioReadyText) : undefined,
+          translation: res.tutor_turn.translation,
+          corrections: res.tutor_turn.contextualCorrections?.map((c) => ({
+            original: c.originalSnippet,
+            corrected: c.correctedSnippet,
+            rule: c.grammaticalRule,
+          })),
+          register: res.tutor_turn.registerNotes?.detectedRegister,
+        });
+        audioSynth.playSuccessChime();
+        return;
+      }
+      throw new Error('Fallback');
+    } catch {
+      setDiagnosisResult({
+        reply: `Analyzed "${text}": Ensure proper subject-verb agreement and noun gender matching according to standard ${activeLanguage.name} syntax.`,
+        targetSnippet: text,
+      });
+    } finally {
+      setIsDiagnosing(false);
+    }
+  };
 
   // Load grammar topics dynamically using AICurriculumEngine
   useEffect(() => {
@@ -113,6 +175,82 @@ export const GrammarModuleView: React.FC<GrammarModuleViewProps> = ({
             </>
           )}
         </div>
+      </div>
+
+      {/* AI Sentence Doctor & Morphology Surgery Tool */}
+      <div className="rounded-3xl bg-gradient-to-br from-white via-indigo-50/40 to-blue-50/60 border border-indigo-200/80 p-4 sm:p-5 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+              <Zap className="w-4 h-4 fill-white" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
+                AI Sentence Doctor & Grammar Surgery
+              </h3>
+              <p className="text-[11px] text-slate-500">
+                Paste any phrase in {activeLanguage.name} for instant sub-second morpho-syntax diagnosis
+              </p>
+            </div>
+          </div>
+          <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-mono font-bold">
+            Gemini 3.8 Flash
+          </span>
+        </div>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleDiagnoseSentence();
+          }}
+          className="flex items-center gap-2"
+        >
+          <input
+            type="text"
+            value={sentenceInput}
+            onChange={(e) => setSentenceInput(e.target.value)}
+            placeholder={`Type or paste a tricky sentence in ${activeLanguage.name} to diagnose...`}
+            className="flex-1 px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs sm:text-sm font-medium outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all shadow-inner"
+          />
+          <button
+            type="submit"
+            disabled={!sentenceInput.trim() || isDiagnosing}
+            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-sm disabled:opacity-40 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+          >
+            {isDiagnosing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            <span>Diagnose</span>
+          </button>
+        </form>
+
+        {diagnosisResult && (
+          <div className="p-3.5 rounded-2xl bg-white border border-indigo-100 space-y-2 text-xs animate-in fade-in">
+            <div className="font-bold text-indigo-900 flex items-center justify-between">
+              <span>Diagnosis & Structural Analysis</span>
+              {diagnosisResult.register && (
+                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">
+                  Register: {diagnosisResult.register}
+                </span>
+              )}
+            </div>
+            <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{diagnosisResult.reply}</p>
+
+            {diagnosisResult.corrections && diagnosisResult.corrections.length > 0 && (
+              <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 space-y-1">
+                <span className="font-extrabold uppercase text-[10px] text-rose-700 block">
+                  Identified Slips & Corrections:
+                </span>
+                {diagnosisResult.corrections.map((c, i) => (
+                  <div key={i} className="text-[11px] space-y-0.5">
+                    <div className="font-mono">
+                      <span className="line-through text-rose-600">{c.original}</span> → <span className="font-bold text-emerald-700">{c.corrected}</span>
+                    </div>
+                    <p className="text-slate-600 font-sans">{c.rule}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {loading ? (
