@@ -769,7 +769,7 @@ export class AICurriculumEngine {
       // Q3: A3 Navigation
       {
         id: 3,
-        level: 'A3',
+        level: 'A2',
         target_skill: 'Wayfinding & Urban Transit',
         prompt_native: profile.transitPhrases[0]?.native || targetLang.name,
         prompt_translation: `${prompts.askDirections} "${profile.transitPhrases[0]?.translationEn || 'Where is the station?'}"`,
@@ -817,7 +817,7 @@ export class AICurriculumEngine {
       // Q6: B3 Commercial Inquiries
       {
         id: 6,
-        level: 'B3',
+        level: 'B2',
         target_skill: 'Transactions & Account Balancing',
         prompt_native: profile.cafePhrases[1]?.native || targetLang.name,
         prompt_translation: `${prompts.completeSentence} "${profile.cafePhrases[1]?.translationEn || 'The bill please'}"`,
@@ -865,13 +865,13 @@ export class AICurriculumEngine {
       // Q9: C3 Literary Inversions
       {
         id: 9,
-        level: 'C3',
+        level: 'C1',
         target_skill: 'Stylistic Mastery & Morphology',
-        prompt_native: profile.grammarTopics[0]?.example || profile.greetings[0]?.native,
+        prompt_native: profile.advancedPhrases[0]?.native || profile.grammarTopics[0]?.example || profile.greetings[0]?.native,
         prompt_translation: `Syntactic agreement rule: "${profile.grammarTopics[0]?.titleEn || 'Grammar'}"`,
         options: [
           { key: 'A', text_native: profile.cafePhrases[0]?.native || 'Option A', text_translation: profile.cafePhrases[0]?.translationEn || '' },
-          { key: 'B', text_native: profile.grammarTopics[0]?.example || 'Option B', text_translation: profile.grammarTopics[0]?.titleEn || '' },
+          { key: 'B', text_native: profile.advancedPhrases[0]?.native || profile.grammarTopics[0]?.example || 'Option B', text_translation: profile.grammarTopics[0]?.titleEn || '' },
           { key: 'C', text_native: profile.greetings[2]?.native || 'Option C', text_translation: profile.greetings[2]?.translationEn || '' },
           { key: 'D', text_native: profile.transitPhrases[0]?.native || 'Option D', text_translation: profile.transitPhrases[0]?.translationEn || '' },
         ],
@@ -881,15 +881,15 @@ export class AICurriculumEngine {
       // Q10: C3+ Native Pragmatic Nuance
       {
         id: 10,
-        level: 'C3+',
+        level: 'C2',
         target_skill: 'Native Pragmatic Nuances & Etymology',
-        prompt_native: profile.grammarTopics[1]?.example || profile.advancedPhrases[0]?.native,
+        prompt_native: profile.advancedPhrases[1]?.native || profile.advancedPhrases[0]?.native || profile.grammarTopics[1]?.example,
         prompt_translation: `Native nuance and subtle register shift: "${profile.grammarTopics[1]?.titleEn || 'Advanced Mastery'}"`,
         options: [
           { key: 'A', text_native: profile.greetings[0]?.native || 'Option A', text_translation: profile.greetings[0]?.translationEn || '' },
           { key: 'B', text_native: profile.transitPhrases[1]?.native || 'Option B', text_translation: profile.transitPhrases[1]?.translationEn || '' },
           { key: 'C', text_native: profile.cafePhrases[2]?.native || 'Option C', text_translation: profile.cafePhrases[2]?.translationEn || '' },
-          { key: 'D', text_native: profile.grammarTopics[1]?.example || 'Option D', text_translation: profile.grammarTopics[1]?.titleEn || '' },
+          { key: 'D', text_native: profile.advancedPhrases[1]?.native || profile.grammarTopics[1]?.example || 'Option D', text_translation: profile.grammarTopics[1]?.titleEn || '' },
         ],
         correct_key: 'D',
         explanation_translation: prompts.correctExplanation,
