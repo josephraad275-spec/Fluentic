@@ -23,6 +23,7 @@ import { audioSynth } from '../services/audioSynthesizer';
 import { speechDetector } from '../services/speechDetectionService';
 import { stripTransliteration } from '../services/languageTypography';
 import { OmniAppEngineClient } from '../services/omniEngineService';
+import { fluenticVoice } from '../ai';
 
 interface OmniAIBrainCopilotProps {
   activeLanguage: Language;
@@ -105,6 +106,24 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
       onEnd: () => setIsListening(false),
     });
     if (!started) setIsListening(false);
+  };
+
+  // Use Fluentic's consistent server-generated tutor voice for target-language examples.
+  // Fall back to the browser voice if the API is unavailable or audio playback is blocked.
+  const playTutorVoice = async (phrase: string) => {
+    try {
+      const generated = await fluenticVoice.synthesize(
+        phrase,
+        activeLanguage.name,
+        "Kore",
+        "Warm, confident, encouraging language tutor; clear articulation and natural conversational pacing."
+      );
+      const audio = new Audio(`data:${generated.mimeType || "audio/wav"};base64,${generated.audioBase64}`);
+      await audio.play();
+    } catch (error) {
+      console.warn("[Fluentic voice] Falling back to the device voice.", error);
+      await audioSynth.speakPhraseNative(phrase, activeLanguage.code);
+    }
   };
 
   // Send message to ultra-fast backend engine
@@ -396,7 +415,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                           </div>
                           <button
                             type="button"
-                            onClick={() => audioSynth.speakPhraseNative(m.audioReadyText || m.targetSnippet!, activeLanguage.code)}
+                            onClick={() => void playTutorVoice(m.audioReadyText || m.targetSnippet!)}
                             className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors shrink-0 cursor-pointer"
                             title="Play Native Pronunciation"
                           >
