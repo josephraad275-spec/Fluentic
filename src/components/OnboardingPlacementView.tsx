@@ -14,6 +14,7 @@ import {
 } from '../services/placementTestService';
 import { OmniAppEngineClient, DiagnosticData } from '../services/omniEngineService';
 import { getI18n } from '../services/localization';
+import { fluenticAssessment } from '../ai';
 import { FLUENTIC_CEFR_LEVELS, estimateLevelFromEvidence, nextAdaptiveLevel } from '../ai/pedagogy';
 import { isRtlLanguage, resolveDirection, hasRtlCharacters, stripTransliteration } from '../services/languageTypography';
 import { 
@@ -121,18 +122,49 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
   const currentQuestion = testQuestions.find((question) => !answeredQuestionIds.includes(question.id) && question.level.toUpperCase() === activeTier) || testQuestions.find((question) => !answeredQuestionIds.includes(question.id)) || testQuestions[adaptiveStep] || getLoadedQuestions()[0];
 
   // Step 1 -> Step 2: Start the 10-Question Standardized Placement Test
-  const handleStartPlacementTest = () => {
+  const handleStartPlacementTest = async () => {
     if (!name.trim()) {
       setName(nativeLanguageCode === 'nl' ? 'Taalstudent' : 'Polyglot Explorer');
     }
     audioSynth.playSuccessChime();
     PlacementAssessmentEngine.clearTestCache();
-    const fresh = PlacementAssessmentEngine.getPlacementTest(
+    let fresh = PlacementAssessmentEngine.getPlacementTest(
       targetLanguage.code,
       targetLanguage.name,
       selectedVariant,
       nativeLanguageCode
     ).questions;
+    try {
+      const nativeName = WORLD_LANGUAGES.find((language) => language.code === nativeLanguageCode)?.name || 'English';
+      const generated = await fluenticAssessment.createPlacementTest(targetLanguage.name, nativeName, 10, initialProfile?.learningIntent || 'conversational');
+      const generatedQuestions = generated.questions as any[];
+      const tiers = new Set(generatedQuestions.map((question) => String(question.level || '').toUpperCase()));
+      const valid = generatedQuestions.length === 10 && FLUENTIC_CEFR_LEVELS.every((level) => tiers.has(level)) && generatedQuestions.every((question) => Array.isArray(question.options) && question.options.length === 4 && question.options.some((option) => option.key === question.correctKey));
+      if (valid) {
+        const mapped: PlacementTestQuestion[] = generatedQuestions.map((question, index) => ({
+          id: Number(question.id) || index + 1,
+          level: String(question.level).toUpperCase(),
+          target_skill: String(question.skill || 'Language proficiency'),
+          instruction: String(question.instruction || ''),
+          prompt: String(question.prompt || ''),
+          prompt_native: String(question.prompt || ''),
+          prompt_translation: String(question.instruction || ''),
+          options: question.options.map((option, optionIndex) => ({
+            key: (option.key || ['A', 'B', 'C', 'D'][optionIndex]) as 'A' | 'B' | 'C' | 'D',
+            text: String(option.text || ''),
+            text_native: String(option.text || ''),
+            text_translation: String(option.text || ''),
+          })),
+          correct_key: question.correctKey as 'A' | 'B' | 'C' | 'D',
+          explanation: String(question.explanation || ''),
+          explanation_translation: String(question.explanation || ''),
+          audioText: String(question.prompt || ''),
+        }));
+        fresh = PlacementAssessmentEngine.scrambleQuestionOptions(mapped);
+      }
+    } catch (error) {
+      console.warn('[Fluentic placement] AI diagnostic unavailable; using curated assessment.', error);
+    }
     setTestQuestions(fresh);
     setAdaptiveStep(0);
     setActiveTier('A1');
