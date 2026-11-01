@@ -64,11 +64,54 @@ export const fluenticLearning = {
   }) => fluenticAI("personal-lesson", payload),
 };
 
+export interface FluenticVoiceStreamEvent {
+  type: "audio" | "done" | "error";
+  data?: string;
+  mimeType?: string;
+  sampleRate?: number;
+  error?: string;
+}
+
+async function* streamFluenticVoice(text: string, language: string, voiceName = "Kore", style?: string, signal?: AbortSignal): AsyncGenerator<FluenticVoiceStreamEvent> {
+  const response = await fetch("/api/fluentic-ai/voice-stream", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Accept": "text/event-stream" },
+    body: JSON.stringify({ text, language, voiceName, style }),
+    signal,
+  });
+  if (!response.ok || !response.body) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || `Fluentic voice stream failed (${response.status}).`);
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  try {
+    while (true) {
+      const chunk = await reader.read();
+      buffer += decoder.decode(chunk.value || new Uint8Array(), { stream: !chunk.done });
+      const events = buffer.split("\n\n");
+      buffer = events.pop() || "";
+      for (const eventText of events) {
+        const dataLine = eventText.split("\n").find((line) => line.startsWith("data:"));
+        if (!dataLine) continue;
+        const event = JSON.parse(dataLine.slice(5).trim()) as FluenticVoiceStreamEvent;
+        if (event.type === "error") throw new Error(event.error || "Fluentic voice stream failed.");
+        yield event;
+      }
+      if (chunk.done) break;
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
 export const fluenticVoice = {
   analyzeSpeech: (audioBase64: string, mimeType: string, targetLanguage: string, nativeLanguage: string) =>
     fluenticAI("speech-analysis", { audioBase64, mimeType, targetLanguage, nativeLanguage }),
   synthesize: (text: string, language: string, voiceName = "Kore", style?: string) =>
     fluenticAI<{ audioBase64: string; mimeType: string; voiceName: string; note: string }>(
       "voice-synthesis", { text, language, voiceName, style },
-    ),
+    ),,
+  synthesizeStream: (text: string, language: string, voiceName = "Kore", style?: string, signal?: AbortSignal) =>
+    streamFluenticVoice(text, language, voiceName, style, signal),
 };
