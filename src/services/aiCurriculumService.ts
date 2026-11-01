@@ -628,10 +628,10 @@ export class AICurriculumEngine {
             id: `ex-${targetLang.code}-${cefr}-2`,
             type: 'speech-pronounce',
             prompt: prompts.speakClearPrompt,
-            targetPhrase: phraseForLevel.native,
+            targetPhrase: stripTransliteration(phraseForLevel.native),
             translation: phraseForLevel.translationEn,
             phoneticIpa: phraseForLevel.ipa,
-            correctAnswer: phraseForLevel.native,
+            correctAnswer: stripTransliteration(phraseForLevel.native),
             culturalNote: prompts.culturalNote,
           },
         ]
@@ -664,10 +664,10 @@ export class AICurriculumEngine {
             id: `ex-${targetLang.code}-${cefr}-4`,
             type: 'speech-pronounce',
             prompt: prompts.speakClearPrompt,
-            targetPhrase: contextPhrase.native,
+            targetPhrase: stripTransliteration(contextPhrase.native),
             translation: contextPhrase.translationEn,
             phoneticIpa: contextPhrase.ipa,
-            correctAnswer: contextPhrase.native,
+            correctAnswer: stripTransliteration(contextPhrase.native),
           }
         ]
       }
