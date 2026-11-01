@@ -94,7 +94,11 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           { learnerGoal: cleanString(payload.goal, "general fluency"), knownLevel: cleanString(payload.currentLevel, "unknown") },
           5000
         );
-        if (!Array.isArray(result.questions) || result.questions.length < 8) throw new Error("Placement test generation was incomplete.");
+        if (!Array.isArray(result.questions) || result.questions.length !== count) throw new Error("Placement test generation was incomplete.");
+        const presentTiers = new Set(result.questions.map((question: any) => String(question.level).toUpperCase()));
+        if (CEFR_LEVELS.some((level) => !presentTiers.has(level))) throw new Error("Placement test must contain evidence for every CEFR tier from A1 to C2.");
+        const invalidQuestion = result.questions.some((question: any) => !Array.isArray(question.options) || question.options.length !== 4 || !question.options.some((option: any) => option.key === question.correctKey));
+        if (invalidQuestion) throw new Error("Placement test contains an invalid four-option answer set.");
         return res.json({ success: true, action, ...result });
       }
 
