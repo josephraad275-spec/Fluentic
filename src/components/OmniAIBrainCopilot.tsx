@@ -166,7 +166,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
     setIsLoading(true);
 
     try {
-      const wantsStructuredLesson = /\\b(lesson|study plan|practice plan|learning plan|guided practice)\\b/i.test(text);
+      const wantsStructuredLesson = /\b(lesson|study plan|practice plan|learning plan|guided practice)\b/i.test(text);
       if (wantsStructuredLesson) {
         try {
           const lesson = await fluenticLearning.createPersonalLesson({
@@ -190,9 +190,9 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                 stripTransliteration(String(step.targetLanguageText || '')),
                 String(step.meaning || ''),
                 step.expectedAnswer ? `Recall: ${step.expectedAnswer}` : '',
-              ].filter(Boolean).join('\\n')),
+              ].filter(Boolean).join('\n')),
               Array.isArray(lesson.masteryCriteria) ? `Mastery: ${lesson.masteryCriteria.join('; ')}` : '',
-            ].filter(Boolean).join('\\n\\n');
+            ].filter(Boolean).join('\n\n');
             const aiMsg: AIMessage = {
               id: `ai-lesson-${Date.now()}`,
               sender: 'ai',
