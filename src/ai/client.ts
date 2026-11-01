@@ -40,9 +40,9 @@ export const fluenticTranslator = {
 };
 
 export const fluenticAssessment = {
-  createPlacementTest: (targetLanguage: string, nativeLanguage: string, questionCount = 15) =>
+  createPlacementTest: (targetLanguage: string, nativeLanguage: string, questionCount = 15, learningIntent?: "travel" | "business" | "academic" | "conversational" | "culture") =>
     fluenticAI<{ language: string; questions: Array<Record<string, unknown>> }>(
-      "placement", { targetLanguage, nativeLanguage, questionCount },
+      "placement", { targetLanguage, nativeLanguage, questionCount, learningIntent },
     ),
   analyzeLevel: (targetLanguage: string, answers: unknown[], selfReportedLevel?: string, goal?: string) =>
     fluenticAI<{ estimatedLevel: string; confidence: number; skillLevels: Record<string, string>; strengths: string[]; priorityGaps: string[] }>(
