@@ -220,4 +220,42 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
       return res.status(400).json({ success: false, error: message });
     }
   });
+  app.post("/api/fluentic-ai/voice-stream", async (req: Request, res: Response) => {
+    const ai = getAI();
+    if (!ai) return res.status(503).json({ success: false, error: "Fluentic AI is not configured." });
+    try {
+      const payload = req.body?.payload && typeof req.body.payload === "object" ? req.body.payload : req.body;
+      const text = requireText(payload.text, "text", 5000);
+      const voiceName = cleanString(payload.voiceName, "Kore");
+      const style = cleanString(payload.style, "Warm, clear, encouraging Fluentic language tutor. Speak the exact transcript with native pronunciation and natural conversational cadence.");
+      res.status(200);
+      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("Connection", "keep-alive");
+      res.flushHeaders?.();
+      const stream = await ai.interactions.create({
+        model: TTS_MODEL,
+        input: [{ type: "user_input", content: [{ type: "text", text, annotations: [{ type: "speech_metadata", style }] }] }],
+        response_format: { type: "audio", mime_type: "audio/l16", sample_rate: 24000 },
+        generation_config: { speech_config: [{ voice: voiceName }] },
+        stream: true,
+      } as any);
+      for await (const event of stream as any) {
+        if (event?.event_type === "step.delta" && event.delta?.type === "audio" && event.delta.data) {
+          res.write("data: " + JSON.stringify({ type: "audio", mimeType: "audio/l16", sampleRate: 24000, data: event.delta.data }) + "\n\n");
+        }
+      }
+      res.write("data: " + JSON.stringify({ type: "done" }) + "\n\n");
+      res.end();
+    } catch (error: any) {
+      const message = error?.message || "Fluentic voice stream failed.";
+      if (res.headersSent) {
+        res.write("data: " + JSON.stringify({ type: "error", error: message }) + "\n\n");
+        res.end();
+      } else {
+        res.status(502).json({ success: false, error: message });
+      }
+    }
+  });
+
 }
