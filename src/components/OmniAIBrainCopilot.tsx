@@ -108,24 +108,45 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
     if (!started) setIsListening(false);
   };
 
-  // Use Fluentic's consistent server-generated tutor voice for target-language examples.
-  // Fall back to the browser voice if the API is unavailable or audio playback is blocked.
+  // Stream Fluentic's consistent tutor voice as 24 kHz PCM; keep the browser voice as fallback.
   const playTutorVoice = async (phrase: string) => {
+    let context: AudioContext | null = null;
     try {
-      const generated = await fluenticVoice.synthesize(
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      context = new AudioContextClass();
+      if (context.state === 'suspended') await context.resume();
+      let scheduledAt = context.currentTime;
+      for await (const event of fluenticVoice.synthesizeStream(
         phrase,
         activeLanguage.name,
-        "Kore",
-        "Warm, confident, encouraging language tutor; clear articulation and natural conversational pacing."
-      );
-      const audio = new Audio(`data:${generated.mimeType || "audio/wav"};base64,${generated.audioBase64}`);
-      await audio.play();
+        'Kore',
+        'Fluentic tutor persona: warm, confident, encouraging, calm, articulate. Native pronunciation, natural sentence stress and conversational pacing.',
+      )) {
+        if (event.type !== 'audio' || !event.data) continue;
+        const binary = atob(event.data);
+        const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+        const pcm = new Int16Array(bytes.buffer, bytes.byteOffset, Math.floor(bytes.byteLength / 2));
+        if (!pcm.length) continue;
+        const sampleRate = event.sampleRate || 24000;
+        const audioBuffer = context.createBuffer(1, pcm.length, sampleRate);
+        const channel = audioBuffer.getChannelData(0);
+        for (let index = 0; index < pcm.length; index += 1) channel[index] = pcm[index] / 32768;
+        const source = context.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(context.destination);
+        const startAt = Math.max(context.currentTime, scheduledAt);
+        source.start(startAt);
+        scheduledAt = startAt + audioBuffer.duration;
+      }
+      const remainingMs = Math.max(0, (scheduledAt - context.currentTime) * 1000);
+      if (remainingMs > 0) await new Promise((resolve) => window.setTimeout(resolve, remainingMs));
     } catch (error) {
-      console.warn("[Fluentic voice] Falling back to the device voice.", error);
+      console.warn('[Fluentic voice] Falling back to the device voice.', error);
       await audioSynth.speakPhraseNative(phrase, activeLanguage.code);
+    } finally {
+      if (context && context.state !== 'closed') await context.close().catch(() => undefined);
     }
   };
-
   // Send message to ultra-fast backend engine
   const handleSend = async (customPrompt?: string) => {
     const text = (customPrompt || inputText).trim();
