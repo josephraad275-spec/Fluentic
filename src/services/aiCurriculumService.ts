@@ -581,6 +581,8 @@ export class AICurriculumEngine {
     const cafe1 = profile.cafePhrases[0];
     const transit1 = profile.transitPhrases[0];
     const advanced1 = profile.advancedPhrases[0] || profile.socialPhrases[0];
+    const isAdvanced = cefr === 'C1' || cefr === 'C2';
+    const contextPhrase = cefr === 'A1' ? greeting2 : cefr === 'A2' ? cafe1 : cefr === 'A3' ? transit1 : profile.advancedPhrases[1] || advanced1;
 
     const phraseForLevel = 
       cefr === 'A1' ? greeting1 :
@@ -588,9 +590,9 @@ export class AICurriculumEngine {
       cefr === 'A3' ? transit1 :
       advanced1;
 
-    const alt1 = profile.greetings[2]?.native || profile.cafePhrases[1]?.native || '---';
-    const alt2 = profile.transitPhrases[1]?.native || profile.cafePhrases[2]?.native || '---';
-    const alt3 = profile.socialPhrases[0]?.native || '---';
+    const alt1 = isAdvanced ? profile.advancedPhrases[1]?.native || advanced1.native : profile.greetings[2]?.native || profile.cafePhrases[1]?.native || '---';
+    const alt2 = isAdvanced ? profile.advancedPhrases[0]?.native || advanced1.native : profile.transitPhrases[1]?.native || profile.cafePhrases[2]?.native || '---';
+    const alt3 = isAdvanced ? profile.grammarTopics[0]?.example || advanced1.native : profile.socialPhrases[0]?.native || '---';
 
     return [
       {
@@ -599,7 +601,7 @@ export class AICurriculumEngine {
         nativeTitle: phraseForLevel.native,
         category: cefr === 'A1' ? 'Foundations' : cefr === 'A2' || cefr === 'A3' ? 'Conversation' : 'Advanced Mastery',
         cefr: cefr,
-        description: `${prompts.chooseGreeting} Master authentic phrasing and native script articulation.`,
+        description: isAdvanced ? prompts.correctExplanation : `${prompts.chooseGreeting} Master authentic phrasing and native script articulation.`,
         xpReward: 60,
         gemReward: 12,
         targetDurationMinutes: 5,
@@ -609,7 +611,7 @@ export class AICurriculumEngine {
           {
             id: `ex-${targetLang.code}-${cefr}-1`,
             type: 'multiple-choice',
-            prompt: prompts.chooseGreeting,
+            prompt: isAdvanced ? prompts.completeSentence : prompts.chooseGreeting,
             targetPhrase: phraseForLevel.native,
             translation: phraseForLevel.translationEn,
             phoneticIpa: phraseForLevel.ipa,
@@ -632,11 +634,11 @@ export class AICurriculumEngine {
       },
       {
         id: `${targetLang.code}-${cefr.toLowerCase()}-2`,
-        title: `${targetLang.name} • Real-World Context`,
-        nativeTitle: (cefr === 'A1' ? greeting2 : cafe1).native,
-        category: 'Conversation',
+        title: `${targetLang.name} • ${isAdvanced ? 'Formal Discourse & Synthesis' : 'Real-World Context'}`,
+        nativeTitle: contextPhrase.native,
+        category: isAdvanced ? 'Advanced Mastery' : 'Conversation',
         cefr: cefr,
-        description: prompts.orderCoffee,
+        description: isAdvanced ? prompts.correctExplanation : prompts.orderCoffee,
         xpReward: 70,
         gemReward: 15,
         targetDurationMinutes: 5,
@@ -646,10 +648,10 @@ export class AICurriculumEngine {
           {
             id: `ex-${targetLang.code}-${cefr}-3`,
             type: 'multiple-choice',
-            prompt: cefr === 'A1' ? prompts.introduceSelf : prompts.orderCoffee,
-            targetPhrase: (cefr === 'A1' ? greeting2 : cafe1).native,
-            translation: (cefr === 'A1' ? greeting2 : cafe1).translationEn,
-            phoneticIpa: (cefr === 'A1' ? greeting2 : cafe1).ipa,
+            prompt: isAdvanced ? prompts.completeSentence : cefr === 'A1' ? prompts.introduceSelf : prompts.orderCoffee,
+            targetPhrase: contextPhrase.native,
+            translation: contextPhrase.translationEn,
+            phoneticIpa: contextPhrase.ipa,
             options: [(cefr === 'A1' ? greeting2 : cafe1).native, alt1, alt2, alt3].sort(() => 0.5 - Math.random()),
             correctAnswer: (cefr === 'A1' ? greeting2 : cafe1).native,
             grammarTip: prompts.grammarTip,
