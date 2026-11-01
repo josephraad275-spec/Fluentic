@@ -582,17 +582,21 @@ export class AICurriculumEngine {
     const transit1 = profile.transitPhrases[0];
     const advanced1 = profile.advancedPhrases[0] || profile.socialPhrases[0];
     const isAdvanced = cefr === 'C1' || cefr === 'C2';
-    const contextPhrase = cefr === 'A1' ? greeting2 : cefr === 'A2' ? cafe1 : cefr === 'A3' ? transit1 : profile.advancedPhrases[1] || advanced1;
+    const isIntermediate = cefr === 'B1' || cefr === 'B2';
+    const contextPhrase = cefr === 'A1' ? greeting2 : cefr === 'A2' ? cafe1 : cefr === 'A3' ? transit1 : cefr === 'B1' ? profile.socialPhrases[0] || transit1 : cefr === 'B2' ? profile.socialPhrases[1] || profile.transitPhrases[1] || profile.socialPhrases[0] || transit1 : profile.advancedPhrases[1] || advanced1;
 
-    const phraseForLevel = 
+    const phraseForLevel =
       cefr === 'A1' ? greeting1 :
       cefr === 'A2' ? cafe1 :
       cefr === 'A3' ? transit1 :
+      cefr === 'B1' ? profile.socialPhrases[0] || transit1 :
+      cefr === 'B2' ? profile.socialPhrases[1] || profile.transitPhrases[1] || profile.socialPhrases[0] || transit1 :
+      cefr === 'C2' ? profile.advancedPhrases[1] || advanced1 :
       advanced1;
 
-    const alt1 = isAdvanced ? profile.advancedPhrases[1]?.native || advanced1.native : profile.greetings[2]?.native || profile.cafePhrases[1]?.native || '---';
-    const alt2 = isAdvanced ? profile.advancedPhrases[0]?.native || advanced1.native : profile.transitPhrases[1]?.native || profile.cafePhrases[2]?.native || '---';
-    const alt3 = isAdvanced ? profile.grammarTopics[0]?.example || advanced1.native : profile.socialPhrases[0]?.native || '---';
+    const alt1 = isAdvanced ? profile.advancedPhrases[1]?.native || advanced1.native : isIntermediate ? profile.socialPhrases[1]?.native || profile.transitPhrases[1]?.native || '---' : profile.greetings[2]?.native || profile.cafePhrases[1]?.native || '---';
+    const alt2 = isAdvanced ? profile.advancedPhrases[0]?.native || advanced1.native : isIntermediate ? profile.transitPhrases[1]?.native || profile.advancedPhrases[0]?.native || '---' : profile.transitPhrases[1]?.native || profile.cafePhrases[2]?.native || '---';
+    const alt3 = isAdvanced ? profile.grammarTopics[0]?.example || advanced1.native : isIntermediate ? profile.advancedPhrases[0]?.native || profile.socialPhrases[0]?.native || '---' : profile.socialPhrases[0]?.native || '---';
 
     return [
       {
@@ -601,7 +605,7 @@ export class AICurriculumEngine {
         nativeTitle: phraseForLevel.native,
         category: cefr === 'A1' ? 'Foundations' : cefr === 'A2' || cefr === 'A3' ? 'Conversation' : 'Advanced Mastery',
         cefr: cefr,
-        description: isAdvanced ? prompts.correctExplanation : `${prompts.chooseGreeting} Master authentic phrasing and native script articulation.`,
+        description: isAdvanced || isIntermediate ? prompts.correctExplanation : `${prompts.chooseGreeting} Master authentic phrasing and native script articulation.`,
         xpReward: 60,
         gemReward: 12,
         targetDurationMinutes: 5,
@@ -611,7 +615,7 @@ export class AICurriculumEngine {
           {
             id: `ex-${targetLang.code}-${cefr}-1`,
             type: 'multiple-choice',
-            prompt: isAdvanced ? prompts.completeSentence : prompts.chooseGreeting,
+            prompt: isAdvanced || isIntermediate ? prompts.completeSentence : prompts.chooseGreeting,
             targetPhrase: phraseForLevel.native,
             translation: phraseForLevel.translationEn,
             phoneticIpa: phraseForLevel.ipa,
@@ -638,7 +642,7 @@ export class AICurriculumEngine {
         nativeTitle: contextPhrase.native,
         category: isAdvanced ? 'Advanced Mastery' : 'Conversation',
         cefr: cefr,
-        description: isAdvanced ? prompts.correctExplanation : prompts.orderCoffee,
+        description: isAdvanced || isIntermediate ? prompts.correctExplanation : prompts.orderCoffee,
         xpReward: 70,
         gemReward: 15,
         targetDurationMinutes: 5,
@@ -648,7 +652,7 @@ export class AICurriculumEngine {
           {
             id: `ex-${targetLang.code}-${cefr}-3`,
             type: 'multiple-choice',
-            prompt: isAdvanced ? prompts.completeSentence : cefr === 'A1' ? prompts.introduceSelf : prompts.orderCoffee,
+            prompt: isAdvanced || isIntermediate ? prompts.completeSentence : cefr === 'A1' ? prompts.introduceSelf : prompts.orderCoffee,
             targetPhrase: contextPhrase.native,
             translation: contextPhrase.translationEn,
             phoneticIpa: contextPhrase.ipa,
