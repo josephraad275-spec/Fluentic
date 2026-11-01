@@ -14,6 +14,7 @@ import {
 } from '../services/placementTestService';
 import { OmniAppEngineClient, DiagnosticData } from '../services/omniEngineService';
 import { getI18n } from '../services/localization';
+import { FLUENTIC_CEFR_LEVELS, estimateLevelFromEvidence, nextAdaptiveLevel } from '../ai/pedagogy';
 import { isRtlLanguage, resolveDirection, hasRtlCharacters, stripTransliteration } from '../services/languageTypography';
 import { 
   Sparkles, 
