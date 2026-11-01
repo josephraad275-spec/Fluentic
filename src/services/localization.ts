@@ -45,41 +45,41 @@ export interface TranslationDictionary {
   navVault: string;
   navDisciplines: string;
   navPro: string;
-  navFocus?: string;
-  navAITutor?: string;
+  navFocus: string;
+  navAITutor: string;
 
   // Intent-Driven Learning ("The Why")
-  whyPromptTitle?: string;
-  whyPromptSubtitle?: string;
-  intentBusiness?: string;
-  intentTravel?: string;
-  intentAcademic?: string;
-  intentConversational?: string;
-  intentCulture?: string;
-  changeGoal?: string;
-  tailoredFor?: string;
+  whyPromptTitle: string;
+  whyPromptSubtitle: string;
+  intentBusiness: string;
+  intentTravel: string;
+  intentAcademic: string;
+  intentConversational: string;
+  intentCulture: string;
+  changeGoal: string;
+  tailoredFor: string;
 
   // Focus Mode Alpha Soundwaves
-  focusTitle?: string;
-  focusSubtitle?: string;
-  startSoundwave?: string;
-  stopSoundwave?: string;
-  soundwaveActive?: string;
-  frequencyControl?: string;
-  volumeControl?: string;
-  focusPresets?: string;
-  presetAlpha?: string;
-  presetTheta?: string;
-  presetGamma?: string;
-  presetPinkNoise?: string;
+  focusTitle: string;
+  focusSubtitle: string;
+  startSoundwave: string;
+  stopSoundwave: string;
+  soundwaveActive: string;
+  frequencyControl: string;
+  volumeControl: string;
+  focusPresets: string;
+  presetAlpha: string;
+  presetTheta: string;
+  presetGamma: string;
+  presetPinkNoise: string;
 
   // Pricing & Pro
-  proMonthlyTitle?: string;
-  proMonthlyPrice?: string;
-  proAnnualTitle?: string;
-  proAnnualPrice?: string;
-  mostPopularBadge?: string;
-  billedAnnuallyNotice?: string;
+  proMonthlyTitle: string;
+  proMonthlyPrice: string;
+  proAnnualTitle: string;
+  proAnnualPrice: string;
+  mostPopularBadge: string;
+  billedAnnuallyNotice: string;
 
   // Header
   selectLanguage: string;
