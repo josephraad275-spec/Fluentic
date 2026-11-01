@@ -697,17 +697,17 @@ export class AICurriculumEngine {
         if (data.questions && Array.isArray(data.questions) && data.questions.length >= 5) {
           const questions: PlacementTestQuestion[] = data.questions.map((q: any, idx: number) => ({
             id: idx + 1,
-            level: q.level || (idx < 3 ? 'A1' : idx < 6 ? 'B1' : 'C1'),
+            level: (['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].includes(String(q.level).toUpperCase()) ? String(q.level).toUpperCase() : (idx < 2 ? 'A1' : idx < 4 ? 'A2' : idx < 6 ? 'B1' : idx < 8 ? 'B2' : idx === 8 ? 'C1' : 'C2')),
             target_skill: q.target_skill || `Diagnostic Assessment Q${idx + 1}`,
-            prompt_native: q.prompt_native || targetLang.name,
-            prompt_translation: q.prompt_translation || `Question ${idx + 1}`,
+            prompt_native: q.prompt_native || q.prompt || targetLang.name,
+            prompt_translation: q.prompt_translation || q.instruction || `Question ${idx + 1}`,
             options: (q.options || []).map((opt: any, oIdx: number) => ({
               key: (['A', 'B', 'C', 'D'][oIdx] || 'A') as 'A' | 'B' | 'C' | 'D',
-              text_native: opt.text_native || opt,
-              text_translation: opt.text_translation || '',
+              text_native: typeof opt === 'string' ? opt : opt.text_native || opt.text || '',
+              text_translation: typeof opt === 'string' ? '' : opt.text_translation || opt.translation || '',
             })),
-            correct_key: (q.correct_key || 'A') as 'A' | 'B' | 'C' | 'D',
-            explanation_translation: q.explanation_translation || 'Evaluates grammatical precision and vocabulary depth.'
+            correct_key: (q.correct_key || q.correctKey || 'A') as 'A' | 'B' | 'C' | 'D',
+            explanation_translation: q.explanation_translation || q.explanation || 'Evaluates grammatical precision and vocabulary depth.'
           }));
 
           this.placementTestCache.set(cacheKey, questions);
