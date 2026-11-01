@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from "express";
 import type { GoogleGenAI } from "@google/genai";
 import { FLUENTIC_CEFR_LEVELS, buildPlacementAuthoringInstruction, buildPersonalLessonInstruction, estimateLevelFromEvidence, normalizeLearningIntent } from "../pedagogy";
+import { stripTransliteration } from "../../services/languageTypography";
 
 type AIClientProvider = () => GoogleGenAI | null;
 
@@ -81,6 +82,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           1200
         );
         if (!cleanString(result.translation)) throw new Error("Translation response was empty.");
+        result.translation = stripTransliteration(result.translation);
         return res.json({ success: true, action, ...result });
       }
 
