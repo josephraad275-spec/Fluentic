@@ -53,7 +53,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
     res.json({
       name: "Fluentic AI",
       status: process.env.GEMINI_API_KEY ? "configured" : "missing_api_key",
-      capabilities: ["translation", "placement", "level-analysis", "personal-lessons", "speech-analysis", "voice-synthesis"],
+      capabilities: ["translation", "placement", "level-analysis", "personal-lessons", "speech-analysis", "voice-synthesis", "voice-streaming"],
       uiChanges: false,
     });
   });
