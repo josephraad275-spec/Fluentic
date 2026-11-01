@@ -113,6 +113,17 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           2200
         );
         if (!CEFR_LEVELS.includes(result.estimatedLevel)) throw new Error("The level assessor returned an invalid CEFR level.");
+        const evidenceAnswers = answers.map((answer: any) => ({
+          level: answer?.level,
+          correct: typeof answer?.correct === "boolean" ? answer.correct : answer?.selectedKey === answer?.correctKey,
+        }));
+        const hasTierEvidence = evidenceAnswers.some((answer: any) => CEFR_LEVELS.includes(String(answer.level).toUpperCase() as any));
+        if (hasTierEvidence) {
+          const evidence = estimateLevelFromEvidence(evidenceAnswers);
+          if (CEFR_LEVELS.indexOf(result.estimatedLevel) > CEFR_LEVELS.indexOf(evidence.level)) result.estimatedLevel = evidence.level;
+          result.confidence = Math.min(100, Math.max(0, Math.min(Number(result.confidence) || 0, evidence.confidence)));
+          result.evidenceByTier = evidence.evidence;
+        }
         return res.json({ success: true, action, ...result });
       }
 
