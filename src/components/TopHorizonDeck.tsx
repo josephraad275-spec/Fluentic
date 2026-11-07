@@ -115,16 +115,17 @@ export const TopHorizonDeck: React.FC<TopHorizonDeckProps> = ({
         id="fluentic-top-horizon-deck"
         className="sticky top-0 z-30 w-full bg-white/90 backdrop-blur-xl border-b border-slate-200 shadow-xs transition-all text-slate-900"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
           {/* Brand & Language Selector */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               id="fluentic-brand-logo-btn"
               onClick={onOpenSpotlight}
               className="flex items-center group cursor-pointer focus:outline-none"
               title="Fluentic"
             >
-              <FluenticLogo variant="horizontal" size="sm" showBadge={false} />
+              <span className="sm:hidden"><FluenticLogo variant="icon" size="sm" /></span>
+              <span className="hidden sm:inline"><FluenticLogo variant="horizontal" size="sm" showTagline={false} /></span>
             </button>
 
             {/* Target Language Button */}
@@ -134,7 +135,7 @@ export const TopHorizonDeck: React.FC<TopHorizonDeckProps> = ({
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-900 transition-all text-xs sm:text-sm font-semibold shadow-xs hover:border-blue-400 cursor-pointer"
             >
               <span className="text-base sm:text-lg leading-none">{activeLanguage.flag}</span>
-              <span className="max-w-[90px] sm:max-w-[130px] truncate">{activeLanguage.name}</span>
+              <span className="hidden sm:inline max-w-[130px] truncate">{activeLanguage.name}</span>
               <span className="px-1.5 py-0.5 rounded bg-blue-50 text-[10px] sm:text-xs font-mono font-bold text-blue-700 border border-blue-200">
                 {activeCefr}
               </span>
@@ -155,13 +156,13 @@ export const TopHorizonDeck: React.FC<TopHorizonDeckProps> = ({
           {/* Right Section: Streak, Gems, AI Tutor & Profile */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Streak Counter */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
               <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-pulse" />
               <span>{user?.streakDays || 0}d</span>
             </div>
 
             {/* Gems Wallet */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold">
               <Gem className="w-3.5 h-3.5 text-blue-600 fill-blue-600" />
               <span>{user?.gems || 0}</span>
             </div>
@@ -198,7 +199,7 @@ export const TopHorizonDeck: React.FC<TopHorizonDeckProps> = ({
                 title="Go to Sign In & Setup Page"
               >
                 <User className="w-3.5 h-3.5" />
-                <span>{user?.name && user.name !== 'Explorer' && user.name !== 'Enter your name' ? 'Switch / Sign In' : 'Sign In'}</span>
+                <span className="hidden sm:inline">{user?.name && user.name !== 'Explorer' && user.name !== 'Enter your name' ? 'Switch / Sign In' : 'Sign In'}</span>
               </button>
             )}
 
