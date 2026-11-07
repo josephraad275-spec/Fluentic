@@ -22,7 +22,7 @@ export async function fluenticAI<T = Record<string, unknown>>(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action, payload }),
-    signal: options.signal,
+    signal: options.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(65000)]) : AbortSignal.timeout(65000),
   });
 
   const data = await response.json().catch(() => ({}));

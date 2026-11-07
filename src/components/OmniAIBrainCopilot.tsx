@@ -60,7 +60,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [lastLatency, setLastLatency] = useState<number>(140);
+  const [lastLatency, setLastLatency] = useState<number>(0);
 
   const [messages, setMessages] = useState<AIMessage[]>([
     {
@@ -174,11 +174,11 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
             targetLanguage: activeLanguage.name,
             nativeLanguage: user.nativeLanguage || WORLD_LANGUAGES.find((language) => language.code === user.nativeLanguageCode)?.name || 'English',
             cefrLevel: activeCefr,
-            goal: user.learningIntent || 'conversational',
+            goal: text,
             learningIntent: user.learningIntent || 'conversational',
             weaknesses: (user.recycledErrors || []).map((error) => error.concept).slice(0, 8),
             recentPerformance: user.conceptProgress || {},
-            minutesAvailable: 15,
+            minutesAvailable: user.dailyGoalMinutes || 15,
           });
           const steps = Array.isArray(lesson.steps) ? lesson.steps as any[] : [];
           if (steps.length >= 4) {
@@ -265,20 +265,9 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
     } catch {
       const elapsed = Math.round(performance.now() - startTime);
       setLastLatency(elapsed);
-      const cleanGreeting = stripTransliteration(activeLanguage.sampleGreeting || 'Hello');
       const fallbackMsg: AIMessage = {
-        id: `ai-${Date.now()}`,
-        sender: 'ai',
-        text: `Understood! In ${activeLanguage.name} at CEFR Level ${activeCefr}, grammatical precision and active recall are fundamental. Let us anchor with high-frequency structures.`,
-        targetSnippet: cleanGreeting,
-        audioReadyText: cleanGreeting,
-        translation: `High-frequency phrasing in ${activeLanguage.name}`,
-        register: 'neutral',
-        latencyMs: elapsed,
-        suggestedDrills: [
-          `Translate: "I would like to order a warm drink"`,
-          `How do I say "See you tomorrow" politely?`,
-        ],
+        id: `ai-${Date.now()}`, sender: 'ai',
+        text: 'The AI tutor is temporarily unavailable. Please retry, or continue with your existing lessons.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, fallbackMsg]);
@@ -312,7 +301,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
               <span>Fluentic AI Brain</span>
             </div>
             <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-mono tracking-tight">
-              {lastLatency}ms
+              {lastLatency ? `${lastLatency}ms` : 'Ready'}
             </span>
           </button>
         </div>
@@ -344,7 +333,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                   </span>
                 </div>
                 <p className="text-[10px] text-blue-100 truncate">
-                  {activeLanguage.flag} {activeLanguage.name} • CEFR {activeCefr} • {lastLatency}ms Ultra-Fast
+                  {activeLanguage.flag} {activeLanguage.name} • CEFR {activeCefr} • {lastLatency ? `${lastLatency}ms` : 'Ready'}
                 </p>
               </div>
             </div>

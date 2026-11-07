@@ -214,30 +214,9 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
 
       throw new Error('Omni Engine returned empty turn, falling back');
     } catch {
-      // Direct high-fidelity pedagogical fallback adhering strictly to target script purity
-      const cleanSnippet = stripTransliteration(activeLanguage.sampleGreeting || '');
       const botMsg: Message = {
-        id: `b-${Date.now()}`,
-        sender: 'tutor',
-        text: `Great focus on ${activeLanguage.name} at CEFR ${activeCefr}! Real fluency is acquired through active recall, contextual nuance, and spaced repetition.`,
-        targetSnippet: cleanSnippet,
-        audioReadyText: cleanSnippet,
-        translation: `Core expression in ${activeLanguage.name}`,
-        grammarAnatomy: 'Structural formulation with high communicative frequency in authentic native contexts.',
-        mnemonic: 'Anchor the speech pattern with rhythm and natural intonation.',
-        registerNotes: {
-          detectedRegister: 'neutral',
-          appropriateForContext: true,
-          recommendation: 'Appropriate for standard situational dialogues and everyday communication.',
-        },
-        tips: [
-          `Focus on rhythm and musical cadence in ${activeLanguage.name}.`,
-          'Practice shadow-reading the authentic native script aloud.'
-        ],
-        followUps: [
-          `How would a native speaker rephrase this formally in ${activeLanguage.name}?`,
-          `Give me an authentic idiomatic expression for this situation`
-        ],
+        id: `b-${Date.now()}`, sender: 'tutor',
+        text: 'The AI tutor is temporarily unavailable. Please retry, or continue with your existing lessons.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, botMsg]);

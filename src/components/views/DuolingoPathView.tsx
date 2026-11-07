@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Sparkles, 
   Check, 
@@ -19,6 +19,7 @@ import {
 import { LearningNode, UserProfile, Language, CefrLevel } from '../../types';
 import { audioSynth } from '../../services/audioSynthesizer';
 import { getI18n } from '../../services/localization';
+import { AICurriculumEngine } from '../../services/aiCurriculumService';
 import { WORLD_LANGUAGES } from '../../data/languages';
 
 interface DuolingoPathViewProps {
@@ -1464,7 +1465,21 @@ export const DuolingoPathView: React.FC<DuolingoPathViewProps> = ({
   const [isChoosingIntent, setIsChoosingIntent] = useState<boolean>(!user.learningIntent);
   const activeIntent = user.learningIntent || 'conversational';
 
-  const units = getDuolingoUnits(activeLanguage, nativeCode, activeLevel, activeIntent);
+  const fallbackUnits = useMemo(() => getDuolingoUnits(activeLanguage, nativeCode, activeLevel, activeIntent), [activeLanguage, nativeCode, activeLevel, activeIntent]);
+  const [personalNodes, setPersonalNodes] = useState<LearningNode[] | null>(null);
+  const [personalStatus, setPersonalStatus] = useState('');
+  const [planRetry, setPlanRetry] = useState(0);
+  const needsKey = JSON.stringify({ errors: user.recycledErrors || [], progress: user.conceptProgress || {} });
+  useEffect(() => {
+    let active = true;
+    setPersonalNodes(null);
+    setPersonalStatus('Preparing lessons for your level and learning goal…');
+    AICurriculumEngine.getCurriculum(activeLanguage, nativeCode, activeLevel, user).then(nodes => {
+      if (active) { setPersonalNodes(nodes); setPersonalStatus(''); }
+    }).catch(() => { if (active) setPersonalStatus('Personalized AI lessons are unavailable. You can use the existing path or retry.'); });
+    return () => { active = false; };
+  }, [activeLanguage.code, nativeCode, activeLevel, activeIntent, user.dailyGoalMinutes, needsKey, planRetry]);
+  const units: PathUnit[] = personalNodes ? [{ ...fallbackUnits[0], id: `personal-${activeLanguage.code}-${activeLevel}-${activeIntent}`, title: personalNodes[0].title, nodes: personalNodes }] : fallbackUnits;
   const completedIds = new Set(user.completedNodeIds || []);
 
   let foundFirstActive = false;
@@ -1538,6 +1553,10 @@ export const DuolingoPathView: React.FC<DuolingoPathViewProps> = ({
       dir={isRtl ? 'rtl' : 'ltr'}
       className="relative w-full max-w-xl mx-auto px-4 pt-4 pb-32 flex flex-col items-center select-none"
     >
+      {personalStatus && <div role="status" className="w-full mb-4 rounded-xl bg-blue-50 border border-blue-100 p-3 text-sm text-blue-900">
+        {personalStatus}
+        {personalStatus.includes('unavailable') && <button onClick={() => setPlanRetry(value => value + 1)} className="ml-2 underline font-semibold">Retry</button>}
+      </div>}
       {/* Top Header Card */}
       <div className="w-full text-center mb-6 space-y-2 z-10">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/95 border border-slate-200 text-xs font-bold text-slate-700 shadow-xs backdrop-blur-sm">

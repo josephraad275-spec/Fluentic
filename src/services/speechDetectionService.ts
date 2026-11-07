@@ -80,7 +80,6 @@ class SpeechDetectionService {
    * Start 16kHz direct audio stream capture with Gemini processing
    */
   public async startListening(options: SpeechDetectionOptions): Promise<boolean> {
-    this.stopListening();
     this.isListening = true;
 
     try {
