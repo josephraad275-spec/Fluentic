@@ -42,36 +42,36 @@ const DEFAULT_USER: UserProfile = {
   displayName: 'Explorer',
   email: 'explorer@fluentic.ai',
   avatar: 'EX',
-  isGuest: false,
-  isPro: true,
-  hasCompletedOnboarding: true,
+  isGuest: true,
+  isPro: false,
+  hasCompletedOnboarding: false,
   nativeLanguageCode: 'en',
   nativeLanguage: 'English',
   targetPace: 'dedicated',
-  placementScore: 8,
-  structuralMastery: 85,
-  activeRecallRate: 90,
-  spacedErrorRecyclingCount: 2,
+  placementScore: 0,
+  structuralMastery: 0,
+  activeRecallRate: 0,
+  spacedErrorRecyclingCount: 0,
   xp: 0,
   level: 1,
-  gems: 100,
-  streakDays: 3,
-  speakingPunctuation: 92,
-  speakingScore: 88,
-  totalPracticeMinutes: 45,
-  streakShields: 1,
+  gems: 0,
+  streakDays: 0,
+  speakingPunctuation: 0,
+  speakingScore: 0,
+  totalPracticeMinutes: 0,
+  streakShields: 0,
   streakProtected: false,
   activeLanguageCode: 'es',
   activeLanguage: 'Spanish',
-  activeCefr: 'B1',
-  unlockedCefrLevels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
-  completedNodeIds: ['node-1'],
-  nodeCrowns: { 'node-1': 1 },
+  activeCefr: 'A1',
+  unlockedCefrLevels: ['A1'],
+  completedNodeIds: [],
+  nodeCrowns: {},
   dailyGoalMinutes: 15,
   dailyGoalCompleted: false,
-  weeklyActivity: [15, 20, 25, 0, 0, 0, 0],
-  unlockedAchievements: ['first-step'],
-  claimedAchievements: ['first-step'],
+  weeklyActivity: [0, 0, 0, 0, 0, 0, 0],
+  unlockedAchievements: [],
+  claimedAchievements: [],
   isSignedIn: true,
   dailyQuests: [],
 };
@@ -98,6 +98,11 @@ export function App() {
       return false;
     }
   });
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    try { localStorage.setItem('fluentic_user_session', JSON.stringify(user)); localStorage.setItem('fluentic_signed_in', 'true'); } catch { /* Storage may be unavailable in private browsing. */ }
+  }, [user, isSignedIn]);
 
   const [activeLanguage, setActiveLanguage] = useState<Language>(() => {
     return (
@@ -126,9 +131,15 @@ export function App() {
 
   const handleSelectLanguage = (lang: Language) => {
     setActiveLanguage(lang);
+    const savedLevel = user.languageLevels?.[lang.code];
+    const level = lang.code === user.activeLanguageCode ? activeCefr : savedLevel?.level || 'A1';
+    setActiveCefr(level);
     setActiveDialect(lang.dialects && lang.dialects.length > 0 ? lang.dialects[0] : '');
     handleUpdateUser({
       ...user,
+      languageLevels: { ...user.languageLevels, [activeLanguage.code]: { level: activeCefr, unlocked: user.unlockedCefrLevels || ['A1'] } },
+      activeCefr: level,
+      unlockedCefrLevels: lang.code === user.activeLanguageCode ? user.unlockedCefrLevels : savedLevel?.unlocked || ['A1'],
       activeLanguageCode: lang.code,
       activeLanguage: lang.name,
     });
@@ -197,8 +208,8 @@ export function App() {
     setUser(DEFAULT_USER);
     setIsSignedIn(false);
     try {
-      localStorage.clear();
-      sessionStorage.clear();
+      for (const key of Object.keys(localStorage)) if (key.startsWith('fluentic_')) localStorage.removeItem(key);
+      for (const key of Object.keys(sessionStorage)) if (key.startsWith('fluentic_')) sessionStorage.removeItem(key);
       AccountDatabase.clearDatabase();
     } catch {
       // Ignore
@@ -235,6 +246,7 @@ export function App() {
               name: finalName,
               email: email.trim() || `${finalName.toLowerCase().replace(/\s+/g, '.')}@fluentic.local`,
               avatar: (finalName || 'FL').slice(0, 2).toUpperCase(),
+              nativeLanguage: WORLD_LANGUAGES.find(language => language.code === nativeLangCode)?.name || 'English',
               nativeLanguageCode: nativeLangCode,
               activeLanguageCode: targetLang.code,
               activeLanguage: targetLang.name,
@@ -263,6 +275,7 @@ export function App() {
               name: defaultName,
               email: 'guest@fluentic.local',
               avatar: 'FL',
+              nativeLanguage: WORLD_LANGUAGES.find(language => language.code === nativeLangCode)?.name || 'English',
               nativeLanguageCode: nativeLangCode,
               activeLanguageCode: targetLang.code,
               activeLanguage: targetLang.name,
@@ -293,6 +306,7 @@ export function App() {
               name: finalName,
               email: 'explorer@fluentic.local',
               avatar: (finalName || 'FL').slice(0, 2).toUpperCase(),
+              nativeLanguage: WORLD_LANGUAGES.find(language => language.code === nativeLangCode)?.name || 'English',
               nativeLanguageCode: nativeLangCode,
               activeLanguageCode: targetLang.code,
               activeLanguage: targetLang.name,
@@ -373,7 +387,7 @@ export function App() {
         onRetakePlacement={() => setIsRetakingPlacement(true)}
         onSignOut={handleSignOut}
         onOpenSignInPage={() => setIsSignedIn(false)}
-        onSelectNativeLanguage={(code) => handleUpdateUser({ ...user, nativeLanguageCode: code })}
+        onSelectNativeLanguage={(code) => handleUpdateUser({ ...user, nativeLanguageCode: code, nativeLanguage: WORLD_LANGUAGES.find(language => language.code === code)?.name || 'English' })}
       />
 
       {/* Main View Area */}
@@ -491,6 +505,7 @@ export function App() {
       {/* Lesson Exercise Modal */}
       {activeLessonNode && (
         <LessonModal
+          user={user}
           node={activeLessonNode}
           activeLanguage={activeLanguage}
           onClose={() => setActiveLessonNode(null)}

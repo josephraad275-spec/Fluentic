@@ -1,3 +1,4 @@
+import { estimateLevelFromEvidence } from "../ai/pedagogy";
 import { CefrLevel, Language, UserProfile } from '../types';
 import { getI18n, TranslationDictionary } from './localization';
 import { stripTransliteration } from './languageTypography';
@@ -134,6 +135,7 @@ export class OmniAppEngineClient {
     try {
       const response = await fetch('/api/engine', {
         method: 'POST',
+        signal: AbortSignal.timeout(65000),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: 'onboarding',
@@ -203,6 +205,7 @@ export class OmniAppEngineClient {
     try {
       const response = await fetch('/api/engine', {
         method: 'POST',
+        signal: AbortSignal.timeout(65000),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: 'placement_test',
@@ -232,12 +235,9 @@ export class OmniAppEngineClient {
     const correctCount = params.userAnswers.filter((a) => a.selectedKey === a.correctKey).length;
     const accuracyPct = Math.round((correctCount / total) * 100);
 
-    let assessedLevel: CefrLevel = 'A1';
-    if (correctCount >= 9) assessedLevel = 'C2';
-    else if (correctCount >= 7) assessedLevel = 'C1';
-    else if (correctCount >= 5) assessedLevel = 'B2';
-    else if (correctCount >= 3) assessedLevel = 'B1';
-    else if (correctCount >= 2) assessedLevel = 'A2';
+    const assessedLevel = estimateLevelFromEvidence(params.userAnswers.map(answer => ({
+      level: answer.level, correct: ['A','B','C','D'].includes(answer.selectedKey) && answer.selectedKey === answer.correctKey,
+    }))).level;
 
     const errors = params.userAnswers.filter((a) => a.selectedKey !== a.correctKey);
 
@@ -246,7 +246,7 @@ export class OmniAppEngineClient {
       calibratedScore: correctCount,
       totalEvaluated: total,
       structuralMasteryPercentage: accuracyPct,
-      activeRecallRetentionRate: Math.max(60, accuracyPct),
+      activeRecallRetentionRate: accuracyPct,
       spacedErrorRecycling: {
         recycledErrorCount: errors.length,
         flaggedConcepts: errors.map((e) => e.targetSkill),
@@ -282,6 +282,7 @@ export class OmniAppEngineClient {
     try {
       const response = await fetch('/api/engine', {
         method: 'POST',
+        signal: AbortSignal.timeout(65000),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: 'active_chat',
@@ -308,30 +309,6 @@ export class OmniAppEngineClient {
       console.warn('[Omni-Engine Chat Notice] Calling direct fallback tutor:', e);
     }
 
-    // Procedural Fallback adhering to Target Script Purity & zero Latin transliterations
-    const cleanSample = stripTransliteration(params.userMessage || '');
-    return {
-      status: 'fallback',
-      mode: 'active_chat',
-      tutor_turn: {
-        reply: isArabic
-          ? `ممتاز! في مستوى ${params.cefrLevel} لتعلم ${params.targetLanguage}، يعتمد الإتقان على التكرار المتباعد وفهم بنية الجملة.`
-          : `Excellent practice! At CEFR ${params.cefrLevel} for ${params.targetLanguage}, structural fluency relies on active recall and morphological precision.`,
-        targetLanguageUtterance: cleanSample,
-        audioReadyText: cleanSample,
-        translation: isArabic ? 'تعبير تواصلي مباشر' : 'Natural communicative phrasing',
-        contextualCorrections: [],
-        idiomBreakdowns: [],
-        registerNotes: {
-          detectedRegister: 'neutral',
-          appropriateForContext: true,
-          recommendation: isArabic ? 'أسلوب طبيعي ومناسب للمحادثات اليومية.' : 'Natural register appropriate for standard conversation.',
-        },
-        pedagogicalNextPrompts: [
-          isArabic ? 'كيف أصيغ هذا التعبير بأسلوب رسمي؟' : 'How would a native speaker rephrase this formally?',
-          isArabic ? 'أعطني مثلاً شائعاً مرتبطاً بهذا السياق' : 'Teach me an idiomatic expression in this context',
-        ],
-      },
-    };
+    throw new Error('The AI tutor is temporarily unavailable. Please retry.');
   }
 }

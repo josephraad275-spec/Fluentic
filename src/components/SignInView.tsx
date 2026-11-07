@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { 
-  Sparkles, 
-  ArrowRight, 
-  ShieldCheck, 
-  Mail, 
-  User, 
-  Globe2, 
-  Target, 
-  CheckCircle2, 
+import {
+  Sparkles,
+  ArrowRight,
+  ShieldCheck,
+  Mail,
+  User,
+  Globe2,
+  Target,
+  CheckCircle2,
   Award,
   BookOpen
 } from 'lucide-react';
@@ -54,9 +54,9 @@ export const SignInView: React.FC<SignInViewProps> = ({
   const isArabic = nativeCode === 'ar';
   const isRtl = isArabic;
 
-  const selectedTargetLanguage = 
-    WORLD_LANGUAGES.find((l) => l.code === targetCode) || 
-    WORLD_LANGUAGES.find((l) => l.code === 'es') || 
+  const selectedTargetLanguage =
+    WORLD_LANGUAGES.find((l) => l.code === targetCode) ||
+    WORLD_LANGUAGES.find((l) => l.code === 'es') ||
     WORLD_LANGUAGES[0];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -82,7 +82,7 @@ export const SignInView: React.FC<SignInViewProps> = ({
     setTimeout(() => {
       setIsLoading(false);
       onSignIn(
-        finalDisplayName, 
+        finalDisplayName,
         trimmedEmail || `${finalDisplayName.toLowerCase().replace(/\s+/g, '.')}@fluentic.local`,
         nativeCode,
         targetCode,
@@ -176,18 +176,18 @@ export const SignInView: React.FC<SignInViewProps> = ({
         <div className="rounded-3xl bg-white/95 backdrop-blur-2xl border border-blue-200/90 shadow-[0_20px_50px_rgba(30,58,138,0.08)] p-6 sm:p-8 space-y-5">
           <div className="text-center space-y-1">
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-              {isArabic 
-                ? 'اختر لغاتك وابدأ اختبار تحديد المستوى' 
-                : isDutch 
-                ? 'Kies je Talen & Start de Niveautest' 
+              {isArabic
+                ? 'اختر لغاتك وابدأ اختبار تحديد المستوى'
+                : isDutch
+                ? 'Kies je Talen & Start de Niveautest'
                 : 'Select Languages & Begin Placement'}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
               {isArabic
                 ? 'حدد لغتك الأم واللغة التي ترغب في إتقانها. يبدأ كل متعلم باختبار قياسي دقيق من 10 أسئلة (A1–C2).'
-                : isDutch 
+                : isDutch
                 ? 'Stel je moedertaal en doeltaal in via het wereldtalenmenu. Iedereen start met een 10-vragen niveautest (A1–C2).'
-                : 'Configure your native language and target language with dynamic AI curricula. All learners begin with a 10-question placement test (A1–C2).'}
+                : 'Configure your native language and target language with dynamic AI curricula. Use a 10-question placement estimate (A1–C2), or start as a beginner.'}
             </p>
           </div>
 
@@ -196,17 +196,17 @@ export const SignInView: React.FC<SignInViewProps> = ({
             <Award className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div className="text-xs text-amber-900 leading-relaxed">
               <span className="font-extrabold text-amber-950 block text-[13px] mb-0.5">
-                {isArabic 
-                  ? 'اختبار تحديد المستوى القياسي CEFR (إلزامي)' 
-                  : isDutch 
-                  ? 'Verplichte CEFR Niveautest (Instaptoets)' 
-                  : 'Mandatory CEFR Placement Test'}
+                {isArabic
+                  ? 'تقدير المستوى وفق CEFR'
+                  : isDutch
+                  ? 'CEFR-niveauschatting'
+                  : 'CEFR Placement Estimate'}
               </span>
               {isArabic
-                ? 'لا يمكن الدخول المباشر دون اختبار تحديد المستوى لضمان تعيين مستواك اللغوي الحقيقي بدقة تامة من A1 إلى C2.'
+                ? 'يساعد الاختبار القصير في تقدير مستواك. يمكنك تخطيه والبدء من A1. يحتاج التحدث والكتابة إلى تقييم منفصل.'
                 : isDutch
-                ? 'Niemand heeft directe toegang zonder de instaptest. Zo wordt jouw werkelijke taalniveau (A1 t/m C2) exact vastgesteld.'
-                : 'No one enters the platform without the placement test. This calibrates your exact starting level from A1 to C2.'}
+                ? 'Maak een korte toets voor een schatting van je niveau, of begin direct bij A1. Spreken en schrijven vragen aparte beoordeling.'
+                : 'Take a short test to estimate your starting level, or skip it and begin at A1. Speaking and writing need separate assessment.'}
             </div>
           </div>
 
@@ -270,8 +270,8 @@ export const SignInView: React.FC<SignInViewProps> = ({
                         audioSynth.playGentleFeedback();
                       }}
                       className={`flex items-center gap-1 py-1 px-2.5 rounded-xl text-xs font-bold transition-all border shrink-0 cursor-pointer ${
-                        isSelected 
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs' 
+                        isSelected
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
                           : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
                       }`}
                     >
@@ -389,10 +389,10 @@ export const SignInView: React.FC<SignInViewProps> = ({
             >
               <Sparkles className="w-4 h-4 fill-white" />
               <span>
-                {isArabic 
-                  ? `بدء اختبار تحديد المستوى في ${selectedTargetLanguage.name} (10 أسئلة)` 
-                  : isDutch 
-                  ? `Start Niveautest ${selectedTargetLanguage.name} (10 Vragen)` 
+                {isArabic
+                  ? `بدء اختبار تحديد المستوى في ${selectedTargetLanguage.name} (10 أسئلة)`
+                  : isDutch
+                  ? `Start Niveautest ${selectedTargetLanguage.name} (10 Vragen)`
                   : `Start Placement Test in ${selectedTargetLanguage.name} (10 Questions)`}
               </span>
               <ArrowRight className="w-4 h-4" />
@@ -414,10 +414,10 @@ export const SignInView: React.FC<SignInViewProps> = ({
             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-xs hover:border-slate-300 transition-all cursor-pointer"
           >
             <span>
-              {isArabic 
-                ? 'المتابعة كضيف إلى اختبار تحديد المستوى' 
-                : isDutch 
-                ? 'Direct Verder als Gast naar Niveautest' 
+              {isArabic
+                ? 'المتابعة كضيف إلى اختبار تحديد المستوى'
+                : isDutch
+                ? 'Direct Verder als Gast naar Niveautest'
                 : 'Continue as Guest to Placement Test'}
             </span>
           </button>
@@ -437,10 +437,10 @@ export const SignInView: React.FC<SignInViewProps> = ({
             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-amber-300/80 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs shadow-xs transition-all cursor-pointer"
           >
             <span>
-              {isArabic 
-                ? '⚡ تخطي الاختبار والبدء مباشرة (مستوى A1 المبتدئ)' 
-                : isDutch 
-                ? '⚡ Niveautest Overslaan & Direct Beginnen (A1)' 
+              {isArabic
+                ? '⚡ تخطي الاختبار والبدء مباشرة (مستوى A1 المبتدئ)'
+                : isDutch
+                ? '⚡ Niveautest Overslaan & Direct Beginnen (A1)'
                 : '⚡ Skip Placement Test & Start Directly (A1 Beginner)'}
             </span>
           </button>
@@ -453,10 +453,10 @@ export const SignInView: React.FC<SignInViewProps> = ({
                 {isArabic ? 'حماية الخصوصية: ' : isDutch ? 'Privacy & Sessiegeheugen: ' : 'Privacy First: '}
               </span>
               {isArabic
-                ? 'لا يتم حفظ بياناتك على القرص الصلب. جميع الجلسات تعمل في الذاكرة المؤقتة لمتصفحك فقط.'
-                : isDutch 
-                ? 'Jouw naam en oefensessies worden niet bewaard op schijf. Alles draait in het vluchtig werkgeheugen van deze browsersessie.'
-                : 'Your name and practice sessions are never stored to disk. Everything runs transiently in-memory for this session.'}
+                ? 'يُحفظ ملفك وتقدمك في هذا المتصفح. تُرسل نصوص أو تسجيلات التدريب إلى مزود الذكاء الاصطناعي. سجّل الخروج لمسح بيانات Fluentic المحلية.'
+                : isDutch
+                ? 'Je profiel en voortgang worden in deze browser opgeslagen. AI-verzoeken sturen oefentekst of audio naar de ingestelde AI-provider. Uitloggen wist lokale Fluentic-gegevens.'
+                : 'Your profile and progress are saved in this browser. AI requests send your practice text or audio to the configured AI provider. Sign out to clear local Fluentic data.'}
             </div>
           </div>
         </div>

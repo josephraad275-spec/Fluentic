@@ -46,7 +46,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
   // Step 1: Profile & Language Setup, Step 2: 10-Question Placement Test, Step 3: Assessment Results
   // If the user already provided their name from SignInView, start right at the placement test!
   const [step, setStep] = useState<1 | 2 | 3>(
-    initialProfile?.name && initialProfile.name.trim().length > 0 ? 2 : 1
+    1
   );
 
   // User details - default to English
@@ -64,6 +64,8 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
   }, [initialProfile]);
 
   // Placement Test State & Dynamic Adaptive Routing (Strict 10-Question Standardized CEFR Assessment)
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [hasAIQuestions, setHasAIQuestions] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<'A' | 'B' | 'C' | 'D'>('A');
   const [adaptiveStep, setAdaptiveStep] = useState(0); // 0 to 9 (10 questions across A1-C2)
   const TOTAL_ADAPTIVE_QUESTIONS = 10;
@@ -134,6 +136,9 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
 
   // Step 1 -> Step 2: Start the 10-Question Standardized Placement Test
   const handleStartPlacementTest = async () => {
+    if (isGenerating) return;
+    setIsGenerating(true);
+    setHasAIQuestions(false);
     if (!name.trim()) {
       setName(i18n.guestUser);
     }
@@ -172,10 +177,13 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
           audioText: String(question.prompt || ''),
         }));
         fresh = PlacementAssessmentEngine.scrambleQuestionOptions(mapped);
+        setHasAIQuestions(true);
       }
     } catch (error) {
       console.warn('[Fluentic placement] AI diagnostic unavailable; using curated assessment.', error);
     }
+    setUserAnswerRecords([]);
+    setDiagnosticData(null);
     setTestQuestions(fresh);
     setAdaptiveStep(0);
     setActiveTier('A1');
@@ -184,6 +192,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
     setSelectedOptionKey(null);
     setIsAnswerChecked(false);
     setScore(0);
+    setIsGenerating(false);
     setStep(2);
   };
 
@@ -192,14 +201,16 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
     audioSynth.playGentleFeedback();
     const defaultName = i18n.guestUser;
     const cleanProfile: UserProfile = {
+      ...initialProfile,
       id: initialProfile?.id || `usr-${Date.now().toString(36)}`,
       name: name.trim() || defaultName,
       email: initialProfile?.email || 'explorer@fluentic.local',
       avatar: (name.trim() || 'FL').slice(0, 2).toUpperCase(),
-      isGuest: true,
-      isPro: false,
+      isGuest: initialProfile?.isGuest ?? true,
+      isPro: initialProfile?.isPro ?? false,
       hasCompletedOnboarding: true,
       nativeLanguageCode,
+      nativeLanguage: WORLD_LANGUAGES.find(language => language.code === nativeLanguageCode)?.name || 'English',
       targetPace,
       learningIntent: initialProfile?.learningIntent || 'conversational',
       placementScore: 0,
@@ -274,6 +285,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
 
   // Next Question with Dynamic Adaptive Routing
   const handleNextQuestion = () => {
+    if (!isAnswerChecked || !selectedOptionKey) return;
     audioSynth.playGentleFeedback();
 
     const wasCorrect = selectedOptionKey === currentQuestion.correct_key;
@@ -307,7 +319,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
       
       // Calibrate to tier-by-tier evidence; total correct alone cannot award C1 or C2.
       const evidenceResult = estimateLevelFromEvidence(updatedHistory);
-      const calibratedTier = evidenceResult.level as CefrLevel;
+      const calibratedTier = (!hasAIQuestions && ['C1', 'C2'].includes(evidenceResult.level) ? 'B2' : evidenceResult.level) as CefrLevel;
 
       const result = PlacementAssessmentEngine.calculateCefrPlacement(finalScore, nativeLanguageCode, calibratedTier);
 
@@ -315,7 +327,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
       setAssessedLevel(result.level);
       setUnlockedLevels(result.unlockedLevels);
       setDiagnosisText(result.diagnosis);
-      setOfficialScoreText(result.officialScoreText);
+      setOfficialScoreText(result.officialScoreText.replace("Verified Level:", "Estimated level:"));
 
       // Trigger Central Omni-App Engine V24 Diagnostic Evaluation
       OmniAppEngineClient.evaluatePlacementDiagnostic({
@@ -326,7 +338,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
         userAnswers: updatedRecords,
       }).then((diag) => {
         setDiagnosticData(diag);
-        if (diag.assessedLevel) setAssessedLevel(diag.assessedLevel);
+        // The local evidence-based level is authoritative; enrichment must not change it.
         if (diag.realtimeGrammarFeedback) setDiagnosisText(diag.realtimeGrammarFeedback);
       }).catch((e) => console.warn(e));
 
@@ -343,15 +355,17 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
     const accuracy = diagnosticData?.structuralMasteryPercentage ?? Math.round((score / 10) * 100);
 
     const finalProfile: UserProfile = {
+      ...initialProfile,
       id: initialProfile?.id || `usr-${Date.now().toString(36)}`,
       name: name.trim() || defaultName,
       displayName: name.trim() || defaultName,
       email: initialProfile?.email || 'explorer@fluentic.local',
       avatar: (name.trim() || 'FL').slice(0, 2).toUpperCase(),
-      isGuest: true,
-      isPro: false,
+      isGuest: initialProfile?.isGuest ?? true,
+      isPro: initialProfile?.isPro ?? false,
       hasCompletedOnboarding: true,
       nativeLanguageCode,
+      nativeLanguage: WORLD_LANGUAGES.find(language => language.code === nativeLanguageCode)?.name || 'English',
       targetPace,
       learningIntent: initialProfile?.learningIntent || 'conversational',
       placementScore: score,
@@ -547,10 +561,12 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
               <button
                 type="button"
                 id="onboarding-start-placement-btn"
+                disabled={isGenerating}
+                aria-busy={isGenerating}
                 onClick={handleStartPlacementTest}
                 className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-sm shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition-all transform active:scale-95 cursor-pointer"
               >
-                <span>{nativeLanguageCode === 'nl' ? 'Start Niveautest (10 Vragen)' : 'Begin Placement Test (10Q)'}</span>
+                <span>{isGenerating ? (nativeLanguageCode === 'nl' ? 'Toets voorbereiden…' : 'Preparing your test…') : (nativeLanguageCode === 'nl' ? 'Start Niveautest (10 Vragen)' : 'Begin Placement Test (10Q)')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -863,6 +879,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
         {/* STEP 3: Assessment Results & Level Unlocked */}
         {step === 3 && (
           <div className="p-6 sm:p-8 md:p-10 space-y-6 text-center">
+            <p role="note" className="text-sm text-slate-600">This short test estimates recognition skills. Speaking and writing need separate assessment.{!hasAIQuestions && ' The offline question bank cannot establish C1/C2; advanced placement requires a follow-up assessment.'}</p>
             <div className="w-16 h-16 rounded-3xl bg-blue-100 text-blue-600 flex items-center justify-center mx-auto shadow-inner">
               <Award className="w-8 h-8" />
             </div>

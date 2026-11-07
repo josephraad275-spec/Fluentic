@@ -56,7 +56,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
   const i18n = getI18n(user.nativeLanguageCode || 'en');
-  const streak = user.streakDays || user.currentStreak || 1;
+  const streak = user.streakDays ?? user.currentStreak ?? 0;
   const activeCefr = user.activeCefr || 'A1';
 
   const showToast = (msg: string) => {
@@ -78,7 +78,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         targetLanguageCode: activeLanguage.code,
         nativeLanguage: user.nativeLanguage || 'English',
         nativeLanguageCode: user.nativeLanguageCode || 'en',
-        cefrLevel: user.activeCefr || 'B1',
+        cefrLevel: user.activeCefr || 'A1',
         learningIntent: user.learningIntent || 'conversational',
       });
 
@@ -103,10 +103,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
       throw new Error('No response');
     } catch {
       setAiResponseData({
-        reply: `Excellent query on ${activeLanguage.name}! Fluency is developed through active recall, continuous exposure, and practical usage.`,
-        targetSnippet: stripTransliteration(activeLanguage.sampleGreeting),
-        audioReadyText: stripTransliteration(activeLanguage.sampleGreeting),
-        translation: `Core expression in ${activeLanguage.name}`,
+        reply: 'The AI tutor is temporarily unavailable. Please retry, or continue with your existing lessons.',
+
         register: 'neutral',
       });
       audioSynth.playSuccessChime();
@@ -460,8 +458,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
               <span className="text-blue-600 font-bold shrink-0">{user.totalPracticeMinutes || 0}/15m</span>
             </div>
             <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200">
-              <span className="text-slate-700 truncate">Phonetic Formant Calibration</span>
-              <span className="text-emerald-600 font-bold shrink-0">98% Verified</span>
+              <span className="text-slate-700 truncate">Speaking practice</span>
+              <span className="text-emerald-600 font-bold shrink-0">{user.speakingScore ? `${user.speakingScore}% last score` : 'Not assessed'}</span>
             </div>
           </div>
 

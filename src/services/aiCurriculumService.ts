@@ -1,4 +1,4 @@
-import { LearningNode, Exercise, CefrLevel, Language } from '../types';
+import { LearningNode, Exercise, CefrLevel, Language, UserProfile } from '../types';
 import { PlacementTestQuestion } from './placementTestService';
 import { GrammarTopic } from '../data/grammarTopicsData';
 import { SpeechScenario } from '../data/speechScenariosData';
@@ -500,9 +500,11 @@ export class AICurriculumEngine {
   public static async getCurriculum(
     targetLang: Language,
     nativeLangCode: string,
-    cefr: CefrLevel
+    cefr: CefrLevel,
+    profile?: UserProfile
   ): Promise<LearningNode[]> {
-    const cacheKey = `${targetLang.code}_${nativeLangCode}_${cefr}`;
+    const personalNeeds = profile ? { learningIntent: profile.learningIntent || 'conversational', minutesAvailable: profile.dailyGoalMinutes || 15, weaknesses: (profile.recycledErrors || []).map(error => error.concept).slice(0, 8), recentPerformance: profile.conceptProgress || {} } : {};
+    const cacheKey = `${targetLang.code}_${nativeLangCode}_${cefr}_${JSON.stringify(personalNeeds)}`;
     if (this.curriculumCache.has(cacheKey)) {
       return this.curriculumCache.get(cacheKey)!;
     }
@@ -511,6 +513,7 @@ export class AICurriculumEngine {
     try {
       const nativeLangObj = WORLD_LANGUAGES.find((l) => l.code === nativeLangCode);
       const res = await fetch('/api/gemini/curriculum', {
+        signal: AbortSignal.timeout(60000),
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -519,6 +522,7 @@ export class AICurriculumEngine {
           nativeLanguage: nativeLangObj?.name || 'English',
           nativeLanguageCode: nativeLangCode,
           cefrLevel: cefr,
+          ...personalNeeds,
         }),
       });
 
@@ -526,7 +530,7 @@ export class AICurriculumEngine {
         const data = await res.json();
         if (data.nodes && Array.isArray(data.nodes) && data.nodes.length > 0) {
           const mappedNodes: LearningNode[] = data.nodes.map((n: any, idx: number) => ({
-            id: n.id || `${targetLang.code}-${cefr.toLowerCase()}-${idx + 1}`,
+            id: `${targetLang.code}-${cefr}-${profile?.learningIntent || "general"}-ai-${idx + 1}`,
             title: n.title || `Unit ${idx + 1}`,
             nativeTitle: n.nativeTitle || targetLang.name,
             category: n.category || 'Conversation',
@@ -551,6 +555,12 @@ export class AICurriculumEngine {
             }))
           }));
 
+          const valid = mappedNodes.every(node => node.exercises.length >= 2 && node.exercises.every(ex =>
+            typeof ex.prompt === 'string' && ex.prompt.trim() && typeof ex.targetPhrase === 'string' && ex.targetPhrase.trim() &&
+            ['multiple-choice', 'speech-pronounce', 'sentence-scramble', 'fill-blank', 'translation', 'listening-comprehension'].includes(ex.type) &&
+            (ex.type !== 'multiple-choice' || (ex.options.length === 4 && new Set(ex.options).size === 4 && ex.options.includes(ex.correctAnswer as string)))
+          ));
+          if (!valid) throw new Error('Incomplete lesson exercises.');
           this.curriculumCache.set(cacheKey, mappedNodes);
           return mappedNodes;
         }
@@ -558,6 +568,8 @@ export class AICurriculumEngine {
     } catch {
       // Graceful fallback to procedural generator below
     }
+
+    if (profile) throw new Error("Personalized lessons are temporarily unavailable. Your existing lessons are still available.");
 
     // Procedural generation fallback using authentic native scripts
     const fallbackNodes = this.generateProceduralNodes(targetLang, nativeLangCode, cefr);

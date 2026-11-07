@@ -17,7 +17,7 @@ import {
   MicOff,
   RotateCcw,
 } from 'lucide-react';
-import { LearningNode, Language, Exercise } from '../types';
+import { LearningNode, Language, Exercise, UserProfile } from '../types';
 import { audioSynth } from '../services/audioSynthesizer';
 import { speechDetector } from '../services/speechDetectionService';
 import { isRtlLanguage, stripTransliteration } from '../services/languageTypography';
@@ -25,6 +25,7 @@ import { OmniAppEngineClient } from '../services/omniEngineService';
 
 interface LessonModalProps {
   node: LearningNode;
+  user?: UserProfile;
   activeLanguage: Language;
   onClose: () => void;
   onComplete: (earnedXp: number, earnedGems: number) => void;
@@ -32,6 +33,7 @@ interface LessonModalProps {
 
 export const LessonModal: React.FC<LessonModalProps> = ({
   node,
+  user,
   activeLanguage,
   onClose,
   onComplete,
@@ -83,13 +85,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
       [allOpts[i], allOpts[j]] = [allOpts[j], allOpts[i]];
     }
 
-    // Strictly ensure correct answer key does not default to A or B
-    let correctIdx = allOpts.indexOf(correctText);
-    if (correctIdx === 0 || correctIdx === 1) {
-      const swapWith = Math.random() < 0.5 ? 2 : 3;
-      [allOpts[correctIdx], allOpts[swapWith]] = [allOpts[swapWith], allOpts[correctIdx]];
-      correctIdx = swapWith;
-    }
+    const correctIdx = allOpts.indexOf(correctText);
 
     return {
       prompt: `Assessment: Which expression correctly matches "${translation}" in authentic ${activeLanguage.name}?`,
@@ -197,10 +193,10 @@ export const LessonModal: React.FC<LessonModalProps> = ({
         userMessage: `Break down the grammar, pronunciation nuances, and native usage of: "${currentExercise.targetPhrase}" (${currentExercise.translation}) in ${activeLanguage.name}.`,
         targetLanguage: activeLanguage.name,
         targetLanguageCode: activeLanguage.code,
-        nativeLanguage: 'English',
-        nativeLanguageCode: 'en',
+        nativeLanguage: user?.nativeLanguage || 'English',
+        nativeLanguageCode: user?.nativeLanguageCode || 'en',
         cefrLevel: node.cefr || 'A1',
-        learningIntent: 'conversational',
+        learningIntent: user?.learningIntent || 'conversational',
       });
 
       if (response?.tutor_turn) {

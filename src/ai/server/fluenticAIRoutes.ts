@@ -1,3 +1,4 @@
+import { AI_MODELS, generateWithFallback } from "./modelRuntime";
 import type { Express, Request, Response } from "express";
 import type { GoogleGenAI } from "@google/genai";
 import { FLUENTIC_CEFR_LEVELS, buildPlacementAuthoringInstruction, buildPersonalLessonInstruction, estimateLevelFromEvidence, normalizeLearningIntent } from "../pedagogy";
@@ -5,9 +6,7 @@ import { stripTransliteration } from "../../services/languageTypography";
 
 type AIClientProvider = () => GoogleGenAI | null;
 
-const CORE_MODEL = "gemini-3.8-flash";
-const TRANSCRIPTION_MODEL = "gemini-3.5-transcribe";
-const TTS_MODEL = "gemini-3.8-flash-tts";
+const TTS_MODEL = AI_MODELS.speech;
 const MAX_TEXT_LENGTH = 12000;
 const CEFR_LEVELS = FLUENTIC_CEFR_LEVELS;
 
@@ -28,8 +27,7 @@ function parseJson(text: string): any {
 }
 
 async function generateJson(ai: GoogleGenAI, systemInstruction: string, input: unknown, maxOutputTokens = 1800) {
-  const result = await ai.models.generateContent({
-    model: CORE_MODEL,
+  const result = await generateWithFallback(ai, {
     contents: typeof input === "string" ? input : JSON.stringify(input),
     config: {
       systemInstruction,
@@ -54,7 +52,8 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
       name: "Fluentic AI",
       status: process.env.GEMINI_API_KEY ? "configured" : "missing_api_key",
       capabilities: ["translation", "placement", "level-analysis", "personal-lessons", "speech-analysis", "voice-synthesis", "voice-streaming"],
-      uiChanges: false,
+      models: AI_MODELS,
+      readinessVerified: false,
     });
   });
 
@@ -89,18 +88,20 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
       if (action === "placement") {
         const targetLanguage = requireText(payload.targetLanguage, "targetLanguage", 100);
         const nativeLanguage = cleanString(payload.nativeLanguage, "English");
-        const count = Math.max(8, Math.min(30, Number(payload.questionCount) || 15));
+        const count = Math.max(8, Math.min(30, Math.floor(Number(payload.questionCount)) || 15));
         const result = await generateJson(
           ai,
           buildPlacementAuthoringInstruction(targetLanguage, nativeLanguage, count),
-          { learnerGoal: cleanString(payload.goal, "general fluency"), knownLevel: cleanString(payload.currentLevel, "unknown") },
+          { learnerGoal: cleanString(payload.goal, cleanString(payload.learningIntent, "general fluency")), knownLevel: cleanString(payload.currentLevel, "unknown") },
           5000
         );
         if (!Array.isArray(result.questions) || result.questions.length !== count) throw new Error("Placement test generation was incomplete.");
         result.questions = result.questions.map((question: any) => ({ ...question, prompt: stripTransliteration(String(question.prompt || "")) }));
+        const ids = result.questions.map((question: any) => question.id);
+        if (new Set(ids).size !== count) throw new Error("Placement questions must have unique IDs.");
         const presentTiers = new Set(result.questions.map((question: any) => String(question.level).toUpperCase()));
         if (CEFR_LEVELS.some((level) => !presentTiers.has(level))) throw new Error("Placement test must contain evidence for every CEFR tier from A1 to C2.");
-        const invalidQuestion = result.questions.some((question: any) => !Array.isArray(question.options) || question.options.length !== 4 || !question.options.some((option: any) => option.key === question.correctKey));
+        const invalidQuestion = result.questions.some((question: any) => !Array.isArray(question.options) || question.options.length !== 4 || !question.prompt || !question.instruction || new Set(question.options.map((option: any) => option.key)).size !== 4 || new Set(question.options.map((option: any) => String(option.text).trim())).size !== 4 || question.options.some((option: any) => !['A','B','C','D'].includes(option.key) || !cleanString(option.text)) || !question.options.some((option: any) => option.key === question.correctKey));
         if (invalidQuestion) throw new Error("Placement test contains an invalid four-option answer set.");
         return res.json({ success: true, action, ...result });
       }
@@ -112,13 +113,13 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
         const result = await generateJson(
           ai,
           `You are Fluentic's cautious CEFR assessor for ${targetLanguage}. Estimate the learner's level using only the supplied evidence. Distinguish demonstrated ability from uncertainty; never overstate precision. C1/C2 require advanced academic discourse, formal debate, complex literary/rhetorical analysis, inference and synthesis; elementary phrase recognition cannot support an advanced result. Evaluate grammar, vocabulary, reading, writing and communication where evidence exists. Return JSON: {"estimatedLevel":"A1|A2|B1|B2|C1|C2","confidence":0-100,"skillLevels":{"grammar":"...","vocabulary":"...","reading":"...","writing":"...","communication":"..."},"strengths":["..."],"priorityGaps":["..."],"reasoning":"...","recommendedNextStep":"..."}.`,
-          { answers, selfReportedLevel: cleanString(payload.selfReportedLevel, "unknown"), learnerGoal: cleanString(payload.goal, "general fluency") },
+          { answers, selfReportedLevel: cleanString(payload.selfReportedLevel, "unknown"), learnerGoal: cleanString(payload.goal, cleanString(payload.learningIntent, "general fluency")) },
           2200
         );
         if (!CEFR_LEVELS.includes(result.estimatedLevel)) throw new Error("The level assessor returned an invalid CEFR level.");
         const evidenceAnswers = answers.map((answer: any) => ({
           level: answer?.level,
-          correct: typeof answer?.correct === "boolean" ? answer.correct : answer?.selectedKey === answer?.correctKey,
+          correct: typeof answer?.correct === "boolean" ? answer.correct : typeof answer?.selectedKey === 'string' && ['A','B','C','D'].includes(answer.selectedKey) && answer.selectedKey === answer.correctKey,
         }));
         const hasTierEvidence = evidenceAnswers.some((answer: any) => CEFR_LEVELS.includes(String(answer.level).toUpperCase() as any));
         if (hasTierEvidence) {
@@ -150,7 +151,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           },
           3500
         );
-        if (!Array.isArray(result.steps) || result.steps.length < 4) throw new Error("The adaptive lesson did not contain a complete retrieval-to-transfer sequence.");
+        if (result.level !== level || result.intent !== intent || !Array.isArray(result.steps) || !['retrieve', 'construct', 'feedback', 'transfer', 'review'].every(type => result.steps.some((step: any) => step.type === type && cleanString(step.instruction)))) throw new Error("The adaptive lesson did not contain a complete retrieval-to-transfer sequence.");
         result.steps = result.steps.map((step: any) => ({ ...step, targetLanguageText: stripTransliteration(String(step.targetLanguageText || "")) }));
         return res.json({ success: true, action, ...result });
       }
@@ -160,8 +161,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
         const mimeType = cleanString(payload.mimeType, "audio/webm");
         const targetLanguage = cleanString(payload.targetLanguage, "auto");
         const nativeLanguage = cleanString(payload.nativeLanguage, "English");
-        const result = await ai.models.generateContent({
-          model: TRANSCRIPTION_MODEL,
+        const result = await generateWithFallback(ai, {
           contents: {
             parts: [
               { inlineData: { mimeType, data: audioBase64 } },
@@ -201,18 +201,18 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
               annotations: [{ type: "speech_metadata", style }],
             }],
           }],
-          response_format: { type: "audio" },
+          response_format: { type: "audio", mime_type: "audio/wav" },
           generation_config: {
             speech_config: [{ voice: voiceName }],
           },
-        } as any);
+        } as any, { timeout: 45000, maxRetries: 0 });
 
         const audioBase64 = (interaction as any).output_audio?.data;
         if (!audioBase64) throw new Error("Voice synthesis returned no audio.");
         return res.json({
           success: true,
           action,
-          mimeType: "audio/wav",
+          mimeType: (interaction as any).output_audio?.mime_type || "audio/wav",
           audioBase64,
           voiceName,
           language,
@@ -228,7 +228,8 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
     } catch (error: any) {
       const message = error?.message || "Fluentic AI request failed.";
       console.error("[Fluentic AI]", message);
-      return res.status(400).json({ success: false, error: message });
+      const status = /required|exceeds|At least/.test(message) ? 400 : Number(error?.status) === 429 ? 429 : 502;
+      return res.status(status).json({ success: false, error: status === 400 ? message : 'The AI service is temporarily unavailable. Please try again.', code: status === 400 ? 'INVALID_INPUT' : 'AI_UNAVAILABLE' });
     }
   });
   app.post("/api/fluentic-ai/voice-stream", async (req: Request, res: Response) => {
@@ -250,8 +251,9 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
         response_format: { type: "audio", mime_type: "audio/l16", sample_rate: 24000 },
         generation_config: { speech_config: [{ voice: voiceName }] },
         stream: true,
-      } as any);
+      } as any, { timeout: 45000, maxRetries: 0 });
       for await (const event of stream as any) {
+        if (res.destroyed) break;
         if (event?.event_type === "step.delta" && event.delta?.type === "audio" && event.delta.data) {
           res.write("data: " + JSON.stringify({ type: "audio", mimeType: "audio/l16", sampleRate: 24000, data: event.delta.data }) + "\n\n");
         }

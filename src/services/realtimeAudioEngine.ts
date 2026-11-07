@@ -1,9 +1,4 @@
-/**
- * Real-Time AI Voice Engine (16kHz 16-bit PCM Audio + WebSocket / Multimodal Streaming)
- * Directly replaces standard browser SpeechRecognition with 16kHz PCM audio stream capture
- * and Gemini multimodal speech processing.
- */
-
+/** Microphone capture shared by Safari/iOS, Android Chrome, and desktop browsers. */
 export interface LiveVoiceSessionOptions {
   sourceLanguage?: string;
   targetLanguage?: string;
@@ -18,252 +13,136 @@ export class RealtimeAudioEngine {
   private mediaStream: MediaStream | null = null;
   private processorNode: ScriptProcessorNode | null = null;
   private sourceNode: MediaStreamAudioSourceNode | null = null;
-  private ws: WebSocket | null = null;
-  private isRecording: boolean = false;
+  private isRecording = false;
+  private starting = false;
   private pcmChunks: Int16Array[] = [];
   private options: LiveVoiceSessionOptions | null = null;
+  private sampleRate = 16000;
+  private speechDetected = false;
+  private limitTimer: ReturnType<typeof setTimeout> | null = null;
+  private request: AbortController | null = null;
+  private generation = 0;
 
-  /**
-   * Start 16kHz 16-bit PCM audio capture and streaming session
-   */
   public async startSession(options: LiveVoiceSessionOptions): Promise<boolean> {
-    this.stopSession();
+    if (this.starting) return false;
+    this.starting = true;
+    this.generation += 1;
+    const generation = this.generation;
+    this.request?.abort();
+    await this.releaseCapture();
     this.options = options;
-    this.options.onStatusChange?.('connecting');
-
+    this.pcmChunks = [];
+    this.speechDetected = false;
+    options.onStatusChange?.('connecting');
     try {
-      // 1. Request microphone stream with clean audio constraints
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          channelCount: 1,
-          sampleRate: 16000,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
-
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error('Microphone access requires HTTPS and a supported browser.');
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) throw new Error('Audio recording is unavailable in this browser.');
+      // Create/resume inside the user gesture, before the microphone permission await (iOS).
+      const context = new AudioCtx() as AudioContext;
+      this.audioContext = context;
+      await context.resume();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: {
+        channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true,
+      } });
+      if (generation !== this.generation) { stream.getTracks().forEach(track => track.stop()); return false; }
       this.mediaStream = stream;
-
-      // 2. Setup Web Audio API at 16kHz
-      const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      this.audioContext = new AudioCtxClass({ sampleRate: 16000 });
-      if (this.audioContext.state === 'suspended') {
-        await this.audioContext.resume();
-      }
-
-      this.sourceNode = this.audioContext.createMediaStreamSource(stream);
-      // 4096 buffer size at 16kHz provides ~256ms chunk intervals
-      this.processorNode = this.audioContext.createScriptProcessor(4096, 1, 1);
-      this.pcmChunks = [];
+      // Send the actual hardware rate; Safari may capture at 44.1 or 48 kHz.
+      this.sampleRate = context.sampleRate;
+      this.sourceNode = context.createMediaStreamSource(stream);
+      this.processorNode = context.createScriptProcessor(4096, 1, 1);
       this.isRecording = true;
-
-      // 3. Connect to WebSocket stream if available
-      this.connectWebSocket(options);
-
-      // 4. Capture 16-bit PCM and calculate live Voice Activity Detection (VAD)
-      this.processorNode.onaudioprocess = (e: AudioProcessingEvent) => {
+      this.processorNode.onaudioprocess = event => {
         if (!this.isRecording) return;
-        const inputData = e.inputBuffer.getChannelData(0);
-        const pcm16 = new Int16Array(inputData.length);
-
-        let sumSquares = 0;
-        for (let i = 0; i < inputData.length; i++) {
-          const s = Math.max(-1, Math.min(1, inputData[i]));
-          pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-          sumSquares += s * s;
+        const input = event.inputBuffer.getChannelData(0);
+        const pcm = new Int16Array(input.length);
+        let energy = 0;
+        for (let i = 0; i < input.length; i++) {
+          const sample = Math.max(-1, Math.min(1, input[i]));
+          pcm[i] = sample < 0 ? sample * 32768 : sample * 32767;
+          energy += sample * sample;
         }
-
-        const rms = Math.sqrt(sumSquares / inputData.length);
-        const vadLevel = Math.min(1, rms * 5.5);
-        const isSpeech = rms > 0.015;
-
-        // Visual VAD callback
-        this.options?.onVadLevel?.(vadLevel, isSpeech);
-
-        // Store PCM chunk for final aggregation
-        this.pcmChunks.push(pcm16);
-
-        // Stream chunk over WebSocket if open
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-          const base64 = this.int16ToBase64(pcm16);
-          this.ws.send(JSON.stringify({
-            type: 'chunk',
-            pcmBase64: base64,
-          }));
-        }
+        const rms = Math.sqrt(energy / input.length);
+        const isSpeech = rms > 0.008;
+        this.speechDetected ||= isSpeech;
+        options.onVadLevel?.(Math.min(1, rms * 6), isSpeech);
+        this.pcmChunks.push(pcm);
+        // Explicit silence output prevents microphone feedback.
+        event.outputBuffer.getChannelData(0).fill(0);
       };
-
       this.sourceNode.connect(this.processorNode);
-      this.processorNode.connect(this.audioContext.destination);
-
-      this.options.onStatusChange?.('listening');
+      this.processorNode.connect(context.destination);
+      this.limitTimer = setTimeout(() => void this.stopSession(), 60000);
+      options.onStatusChange?.('listening');
       return true;
-    } catch (err: any) {
-      console.error('[RealtimeAudioEngine] Mic capture error:', err);
-      this.options.onError?.(err?.message || 'Could not access microphone');
-      this.stopSession();
+    } catch (error: any) {
+      await this.releaseCapture();
+      options.onError?.(error?.name === 'NotAllowedError' ? 'Allow microphone access in your browser settings, then try again.' : error.message || 'Could not start recording.');
+      options.onStatusChange?.('idle');
       return false;
-    }
+    } finally { this.starting = false; }
   }
 
-  /**
-   * Stop session and finalize audio stream with Gemini
-   */
-  public async stopSession(): Promise<void> {
-    if (!this.isRecording && !this.audioContext) return;
+  private async releaseCapture(): Promise<void> {
     this.isRecording = false;
-    this.options?.onStatusChange?.('processing');
-
-    // Disconnect audio nodes cleanly
-    try {
-      if (this.processorNode) {
-        this.processorNode.disconnect();
-        this.processorNode = null;
-      }
-      if (this.sourceNode) {
-        this.sourceNode.disconnect();
-        this.sourceNode = null;
-      }
-      if (this.audioContext) {
-        await this.audioContext.close();
-        this.audioContext = null;
-      }
-      if (this.mediaStream) {
-        this.mediaStream.getTracks().forEach((t) => t.stop());
-        this.mediaStream = null;
-      }
-    } catch {
-      // Ignore cleanup error
-    }
-
-    // If WebSocket is open, send finish
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      try {
-        this.ws.send(JSON.stringify({ type: 'finish' }));
-      } catch {
-        // Fallback to REST
-        await this.fallbackProcessAudio();
-      }
-    } else {
-      // Process via REST fallback
-      await this.fallbackProcessAudio();
-    }
+    if (this.limitTimer) clearTimeout(this.limitTimer);
+    this.limitTimer = null;
+    if (this.processorNode) { this.processorNode.onaudioprocess = null; this.processorNode.disconnect(); }
+    this.sourceNode?.disconnect();
+    this.mediaStream?.getTracks().forEach(track => track.stop());
+    const context = this.audioContext;
+    this.processorNode = null;
+    this.sourceNode = null;
+    this.mediaStream = null;
+    this.audioContext = null;
+    if (context && context.state !== 'closed') await context.close().catch(() => undefined);
   }
 
-  /**
-   * Direct fallback to POST /api/gemini/live-audio-stream
-   */
-  private async fallbackProcessAudio(): Promise<void> {
-    if (!this.pcmChunks.length) {
-      this.options?.onStatusChange?.('idle');
+  public async stopSession(): Promise<void> {
+    if (this.starting && !this.isRecording) { this.generation += 1; await this.releaseCapture(); return; }
+    if (!this.isRecording) return;
+    const options = this.options;
+    const generation = this.generation;
+    const chunks = this.pcmChunks;
+    const sampleRate = this.sampleRate;
+    const hasSpeech = this.speechDetected;
+    this.pcmChunks = [];
+    await this.releaseCapture();
+    if (!hasSpeech || !chunks.length) {
+      options?.onError?.('No speech detected. Move closer to the microphone and try again.');
+      options?.onStatusChange?.('idle');
       return;
     }
-
+    options?.onStatusChange?.('processing');
+    const controller = new AbortController();
+    this.request = controller;
+    const timeout = setTimeout(() => controller.abort(), 90000);
     try {
-      // Concatenate all Int16 chunks
-      const totalLength = this.pcmChunks.reduce((acc, c) => acc + c.length, 0);
-      const combined = new Int16Array(totalLength);
+      const pcm = new Int16Array(chunks.reduce((size, chunk) => size + chunk.length, 0));
       let offset = 0;
-      for (const chunk of this.pcmChunks) {
-        combined.set(chunk, offset);
-        offset += chunk.length;
-      }
-
-      const pcmBase64 = this.int16ToBase64(combined);
-
-      const res = await fetch('/api/gemini/live-audio-stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          audioPcmBase64: pcmBase64,
-          sampleRate: 16000,
-          sourceLanguage: this.options?.sourceLanguage || 'auto',
-          targetLanguage: this.options?.targetLanguage || 'English',
-        }),
+      for (const chunk of chunks) { pcm.set(chunk, offset); offset += chunk.length; }
+      const bytes = new Uint8Array(pcm.buffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+      // One complete upload avoids socket connection gaps, duplicate billing, and proxy WS restrictions.
+      const response = await fetch('/api/gemini/live-audio-stream', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal,
+        body: JSON.stringify({ audioPcmBase64: btoa(binary), sampleRate,
+          sourceLanguage: options?.sourceLanguage || 'auto', targetLanguage: options?.targetLanguage || 'English' }),
       });
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-
-      const data = await res.json();
-      if (data.transcription || data.translation) {
-        this.options?.onTranscript(
-          data.transcription || '',
-          data.translation || '',
-          data.detectedSource
-        );
-      }
-    } catch (err: any) {
-      console.warn('[RealtimeAudioEngine] REST Fallback Error:', err);
-      this.options?.onError?.(err?.message || 'Speech processing failed');
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || `Speech service unavailable (${response.status}).`);
+      if (generation !== this.generation) return;
+      if (!data.transcription) throw new Error('No clear speech recognized. Please try again.');
+      options?.onTranscript(data.transcription, data.translation || '', data.detectedSource);
+    } catch (error: any) {
+      if (generation === this.generation) options?.onError?.(error.name === 'AbortError' ? 'Speech processing timed out. Please try a shorter recording.' : error.message);
     } finally {
-      this.options?.onStatusChange?.('idle');
-      this.pcmChunks = [];
+      clearTimeout(timeout);
+      if (generation === this.generation) { this.request = null; options?.onStatusChange?.('idle'); }
     }
   }
 
-  private connectWebSocket(options: LiveVoiceSessionOptions) {
-    try {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/api/ws/voice-stream`;
-      const socket = new WebSocket(wsUrl);
-
-      socket.onopen = () => {
-        socket.send(JSON.stringify({
-          type: 'start',
-          sourceLanguage: options.sourceLanguage || 'auto',
-          targetLanguage: options.targetLanguage || 'English',
-          sampleRate: 16000,
-        }));
-      };
-
-      socket.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data);
-          if (msg.type === 'vad' && options.onVadLevel) {
-            options.onVadLevel(msg.level || 0, Boolean(msg.isSpeech));
-          } else if (msg.type === 'result') {
-            options.onTranscript(
-              msg.transcription || '',
-              msg.translation || '',
-              msg.detectedSource
-            );
-            options.onStatusChange?.('idle');
-            socket.close();
-          } else if (msg.type === 'error') {
-            options.onError?.(msg.message || 'Stream error');
-            options.onStatusChange?.('idle');
-          }
-        } catch {
-          // ignore
-        }
-      };
-
-      socket.onerror = () => {
-        // Will seamlessly fallback to REST upon stopSession()
-      };
-
-      this.ws = socket;
-    } catch {
-      this.ws = null;
-    }
-  }
-
-  private int16ToBase64(int16Array: Int16Array): string {
-    const bytes = new Uint8Array(int16Array.buffer, int16Array.byteOffset, int16Array.byteLength);
-    let binary = '';
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-  }
-
-  public getIsActive(): boolean {
-    return this.isRecording;
-  }
+  public getIsActive(): boolean { return this.isRecording; }
 }
-
 export const realtimeAudio = new RealtimeAudioEngine();

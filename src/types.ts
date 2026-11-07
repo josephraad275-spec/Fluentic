@@ -102,6 +102,7 @@ export interface UserProfile {
   activeLanguage?: string;
   activeDialect?: string;
   activeCefr?: CefrLevel;
+  languageLevels?: Record<string, { level: CefrLevel; unlocked: CefrLevel[] }>;
   cefrLevel?: CefrLevel;
   unlockedCefrLevels?: CefrLevel[];
   soundscapeMode?: 'alpha' | 'cosmic' | 'rain' | 'mute';

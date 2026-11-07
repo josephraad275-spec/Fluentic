@@ -93,28 +93,27 @@ export function estimateLevelFromEvidence(
 
   for (const answer of answers) {
     const level = String(answer.level || "").toUpperCase() as FluenticCefrLevel;
-    if (!FLUENTIC_CEFR_LEVELS.includes(level)) continue;
+    if (!FLUENTIC_CEFR_LEVELS.includes(level) || typeof answer.correct !== "boolean") continue;
     evidence[level].seen += 1;
     if (answer.correct === true) evidence[level].correct += 1;
   }
 
   let estimated: FluenticCefrLevel = "A1";
-  let evaluated = 0;
-  let passed = 0;
   for (const level of FLUENTIC_CEFR_LEVELS) {
     const item = evidence[level];
     if (!item.seen) break;
-    evaluated += item.seen;
     const accuracy = item.correct / item.seen;
     if (accuracy >= 0.6) {
       estimated = level;
-      passed += item.correct;
     } else {
       break;
     }
   }
 
-  const confidence = evaluated === 0 ? 0 : Math.round(Math.min(95, 45 + (passed / evaluated) * 45 + Math.min(evaluated, 10)));
+  // A short recognition test is a provisional estimate, not certification.
+  const totalSeen = Object.values(evidence).reduce((sum, item) => sum + item.seen, 0);
+  const coverage = Object.values(evidence).filter(item => item.seen >= 2).length / 6;
+  const confidence = totalSeen === 0 ? 0 : Math.round(Math.min(85, 20 + Math.min(totalSeen, 24) * 1.5 + coverage * 25));
   return { level: estimated, confidence, evidence };
 }
 
