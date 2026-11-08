@@ -38,7 +38,11 @@ async function generateJson(ai: GoogleGenAI, systemInstruction: string, input: u
       maxOutputTokens,
     },
   });
-  return parseJson(result.text || "");
+  const parsed = parseJson(result.text || "");
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("The AI returned an invalid structured response object.");
+  }
+  return parsed;
 }
 
 function requireText(value: unknown, field: string, max = MAX_TEXT_LENGTH): string {
@@ -89,7 +93,10 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
       if (action === "placement") {
         const targetLanguage = requireText(payload.targetLanguage, "targetLanguage", 100);
         const nativeLanguage = cleanString(payload.nativeLanguage, "English");
-        const count = Math.max(8, Math.min(30, Number(payload.questionCount) || 15));
+        const requestedCount = Number(payload.questionCount);
+        const count = Number.isFinite(requestedCount) && requestedCount > 0
+          ? Math.max(8, Math.min(30, Math.floor(requestedCount)))
+          : 15;
         const result = await generateJson(
           ai,
           buildPlacementAuthoringInstruction(targetLanguage, nativeLanguage, count),
@@ -118,7 +125,12 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
       if (action === "level-analysis") {
         const targetLanguage = requireText(payload.targetLanguage, "targetLanguage", 100);
         const answers = payload.answers;
-        if (!Array.isArray(answers) || answers.length < 3) throw new Error("At least three assessment answers are required.");
+        if (!Array.isArray(answers) || answers.length < 3 || answers.length > 60) {
+          throw new Error("Assessment requires between 3 and 60 answers.");
+        }
+        if (JSON.stringify(answers).length > 50000) {
+          throw new Error("Assessment answers exceed the maximum payload size.");
+        }
         const result = await generateJson(
           ai,
           `You are Fluentic's cautious CEFR assessor for ${targetLanguage}. Estimate the learner's level using only the supplied evidence. Distinguish demonstrated ability from uncertainty; never overstate precision. C1/C2 require advanced academic discourse, formal debate, complex literary/rhetorical analysis, inference and synthesis; elementary phrase recognition cannot support an advanced result. Evaluate grammar, vocabulary, reading, writing and communication where evidence exists. Return JSON: {"estimatedLevel":"A1|A2|B1|B2|C1|C2","confidence":0-100,"skillLevels":{"grammar":"...","vocabulary":"...","reading":"...","writing":"...","communication":"..."},"strengths":["..."],"priorityGaps":["..."],"reasoning":"...","recommendedNextStep":"..."}.`,
