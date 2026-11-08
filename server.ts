@@ -2,7 +2,6 @@ import express from "express";
 import http from "http";
 import path from "path";
 import { WebSocketServer, WebSocket } from "ws";
-import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { getI18n } from "./src/services/localization.ts";
@@ -400,9 +399,8 @@ function getFallbackPlacementQuestions(
   };
 }
 
-async function startServer() {
+export async function createFluenticServer({ development = false } = {}) {
   const app = express();
-  const PORT = Number(process.env.PORT) || 3000;
 
   app.disable("x-powered-by");
   app.use(express.json({ limit: "10mb" }));
@@ -1900,7 +1898,8 @@ Return valid JSON matching this schema:
   app.use('/api', (_req, res) => res.status(404).json({ success: false, error: 'API route not found.' }));
 
   // Vite middleware setup
-  if (process.env.NODE_ENV !== "production") {
+  if (development) {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -1917,7 +1916,7 @@ Return valid JSON matching this schema:
   const server = http.createServer(app);
 
   // WebSocket Server for Real-Time Streaming Audio (16kHz 16-bit PCM Audio)
-  const wss = new WebSocketServer({ server, path: "/api/ws/voice-stream" });
+  const wss = new WebSocketServer({ server, path: "/api/ws/voice-stream", maxPayload: 1024 * 1024 });
 
   wss.on("connection", (ws: WebSocket) => {
     let session = {
@@ -1926,21 +1925,41 @@ Return valid JSON matching this schema:
       sampleRate: 16000,
       audioChunks: [] as Buffer[],
       isActive: true,
+      bufferedBytes: 0,
+      processing: false,
     };
 
-    ws.on("message", async (data: Buffer | string) => {
+    const appendAudio = (chunk: Buffer) => {
+      if (chunk.length % 2 !== 0 || session.bufferedBytes + chunk.length > 8 * 1024 * 1024) {
+        session.audioChunks = [];
+        session.bufferedBytes = 0;
+        ws.close(1009, 'Audio buffer exceeds limit or contains incomplete PCM samples.');
+        return false;
+      }
+      session.bufferedBytes += chunk.length;
+      session.audioChunks.push(chunk);
+      return true;
+    };
+    ws.on("error", () => { ws.terminate(); });
+    ws.on("message", async (data: Buffer, isBinary: boolean) => {
+      if (session.processing) return;
       try {
-        if (typeof data === "string" || (Buffer.isBuffer(data) && data[0] === 123 /* '{' */)) {
+        if (!isBinary) {
           const msg = JSON.parse(data.toString());
           if (msg.type === "start") {
             session.sourceLanguage = msg.sourceLanguage || "auto";
             session.targetLanguage = msg.targetLanguage || "Arabic";
+            if (msg.sampleRate !== undefined && ![8000, 16000, 24000, 44100, 48000].includes(msg.sampleRate)) {
+              ws.close(1008, 'Unsupported sample rate.');
+              return;
+            }
             session.sampleRate = msg.sampleRate || 16000;
+            session.bufferedBytes = 0;
             session.audioChunks = [];
             ws.send(JSON.stringify({ type: "ready", status: "listening" }));
           } else if (msg.type === "chunk" && msg.pcmBase64) {
             const chunk = Buffer.from(msg.pcmBase64, "base64");
-            session.audioChunks.push(chunk);
+            if (!appendAudio(chunk)) return;
 
             // Compute real-time RMS for Voice Activity Detection (VAD)
             const sampleCount = Math.floor(chunk.length / 2);
@@ -1969,7 +1988,10 @@ Return valid JSON matching this schema:
               return;
             }
 
+            session.processing = true;
             const fullPcm = Buffer.concat(session.audioChunks);
+            session.audioChunks = [];
+            session.bufferedBytes = 0;
             const wavBuffer = pcm16ToWav(fullPcm, session.sampleRate, 1);
             const result = await processAudioWithGemini(
               wavBuffer.toString("base64"),
@@ -1986,11 +2008,13 @@ Return valid JSON matching this schema:
           }
         } else if (Buffer.isBuffer(data)) {
           // Direct binary PCM chunk
-          session.audioChunks.push(data);
+          appendAudio(data);
         }
       } catch (err: any) {
         console.warn("[Voice Stream WS Warning]", err);
-        ws.send(JSON.stringify({ type: "error", message: err?.message || "Stream processing error" }));
+        if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "error", message: "Stream processing failed." }));
+      } finally {
+        session.processing = false;
       }
     });
 
@@ -2000,9 +2024,5 @@ Return valid JSON matching this schema:
     });
   });
 
-  server.listen(PORT, "0.0.0.0", () => {
-    console.log(`Fluentic Omni-Studio server with Live Audio Streaming running on http://0.0.0.0:${PORT}`);
-  });
+  return server;
 }
-
-startServer();

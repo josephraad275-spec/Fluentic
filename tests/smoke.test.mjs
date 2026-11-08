@@ -1,3 +1,4 @@
+import WebSocket from 'ws';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -38,6 +39,25 @@ test('production server serves UI, isolates API errors and never publishes serve
     assert.equal((await payment.json()).success,false);
     const ai=await fetch(`${url}/api/fluentic-ai`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'translate',payload:{text:'Hello',targetLanguage:'French'}})});
     assert.equal(ai.status,503);
+    // Validate the transport without making paid AI requests.
+    const wsUrl=`ws://127.0.0.1:${port}/api/ws/voice-stream`;
+    const ws=new WebSocket(wsUrl);
+    await once(ws,'open');
+    let message=once(ws,'message');
+    ws.send(JSON.stringify({type:'start',sampleRate:16000}));
+    assert.equal(JSON.parse((await message)[0].toString()).type,'ready');
+    message=once(ws,'message');
+    ws.send(JSON.stringify({type:'finish'}));
+    assert.equal(JSON.parse((await message)[0].toString()).type,'result');
+    let closed=once(ws,'close');
+    ws.send(JSON.stringify({type:'start',sampleRate:-1}));
+    assert.equal((await closed)[0],1008);
+    const oversized=new WebSocket(wsUrl);
+    await once(oversized,'open');
+    closed=once(oversized,'close');
+    oversized.send(Buffer.alloc(1024*1024+2));
+    assert.equal((await closed)[0],1009);
+    assert.equal((await fetch(`${url}/api/health`)).status,200);
     for(const path of ['/server.cjs','/server.cjs.map']) {
       const response=await fetch(url+path);
       assert.ok(response.headers.get('content-type').includes('text/html'));
