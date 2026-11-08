@@ -1884,66 +1884,15 @@ Return valid JSON matching this schema:
     }
   });
 
-  // Enterprise Payment Gateway (PayPal, Visa/Mastercard, Google Pay, Apple Pay)
-  app.post("/api/payment/checkout", async (req, res) => {
-    try {
-      const { planId, paymentMethod, cardDetails, buyerEmail } = req.body;
-      
-      // Simulate enterprise TLS 1.3 verification & tokenization
-      const transactionId = `FLT-TXN-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
-
-      // Validate payment methods
-      const validMethods = ["paypal", "credit-card", "google-pay", "apple-pay"];
-      if (!validMethods.includes(paymentMethod)) {
-        return res.status(400).json({ error: "Invalid payment method" });
-      }
-
-      let grantedGems = 0;
-      let isProGranted = false;
-      let proDurationMonths = 0;
-
-      switch (planId) {
-        case "gems-100":
-          grantedGems = 100;
-          break;
-        case "gems-500":
-          grantedGems = 500;
-          break;
-        case "gems-2000":
-          grantedGems = 2000;
-          break;
-        case "pro-monthly":
-          isProGranted = true;
-          proDurationMonths = 1;
-          break;
-        case "pro-6month":
-          isProGranted = true;
-          proDurationMonths = 6;
-          break;
-        case "pro-1year":
-          isProGranted = true;
-          proDurationMonths = 12;
-          break;
-        default:
-          return res.status(400).json({ error: "Invalid plan identifier" });
-      }
-
-      res.json({
-        success: true,
-        transactionId,
-        paymentMethod,
-        planId,
-        grantedGems,
-        isProGranted,
-        proDurationMonths,
-        timestamp: new Date().toISOString(),
-        receiptUrl: `https://fluentech.ai/receipts/${transactionId}`,
-        message: "Payment processed successfully via encrypted gateway."
-      });
-    } catch (error: any) {
-      console.error("Payment Error:", error);
-      res.status(500).json({ error: error.message || "Payment processing failed" });
-    }
+  // No paid entitlement can be granted until a real payment provider confirms
+  // payment through a server-verified webhook and durable, idempotent ledger.
+  // The previous endpoint fabricated successful transactions without charging.
+  app.post("/api/payment/checkout", (_req, res) => {
+    res.status(503).json({
+      success: false,
+      code: "PAYMENT_PROVIDER_NOT_CONFIGURED",
+      error: "Payments are unavailable until a verified payment provider is connected.",
+    });
   });
 
   // Vite middleware setup
