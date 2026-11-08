@@ -100,8 +100,18 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
         result.questions = result.questions.map((question: any) => ({ ...question, prompt: stripTransliteration(String(question.prompt || "")) }));
         const presentTiers = new Set(result.questions.map((question: any) => String(question.level).toUpperCase()));
         if (CEFR_LEVELS.some((level) => !presentTiers.has(level))) throw new Error("Placement test must contain evidence for every CEFR tier from A1 to C2.");
-        const invalidQuestion = result.questions.some((question: any) => !Array.isArray(question.options) || question.options.length !== 4 || !question.options.some((option: any) => option.key === question.correctKey));
-        if (invalidQuestion) throw new Error("Placement test contains an invalid four-option answer set.");
+        const invalidQuestion = result.questions.some((question: any) => {
+          if (!question || typeof question !== "object") return true;
+          if (!CEFR_LEVELS.includes(String(question.level).toUpperCase() as typeof CEFR_LEVELS[number])) return true;
+          if (!cleanString(question.prompt)) return true;
+          if (!Array.isArray(question.options) || question.options.length !== 4) return true;
+          const keys = question.options.map((option: any) => option?.key);
+          if (new Set(keys).size !== 4 || !["A", "B", "C", "D"].every(key => keys.includes(key))) return true;
+          if (!keys.includes(question.correctKey)) return true;
+          const answers = question.options.map((option: any) => cleanString(option?.text || option?.text_native));
+          return answers.some((answer: string) => !answer) || new Set(answers.map((answer: string) => answer.toLocaleLowerCase())).size !== 4;
+        });
+        if (invalidQuestion) throw new Error("Placement test contains invalid, duplicate, or incomplete answer options.");
         return res.json({ success: true, action, ...result });
       }
 
