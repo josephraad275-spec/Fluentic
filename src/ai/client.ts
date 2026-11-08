@@ -18,18 +18,41 @@ export async function fluenticAI<T = Record<string, unknown>>(
   payload: Record<string, unknown>,
   options: { signal?: AbortSignal } = {},
 ): Promise<T & FluenticAIResponse> {
-  const response = await fetch("/api/fluentic-ai", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action, payload }),
-    signal: options.signal,
-  });
+  const maxAttempts = 3;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    let response: Response;
+    try {
+      response = await fetch("/api/fluentic-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, payload }),
+        signal: options.signal,
+      });
+    } catch (error) {
+      if (options.signal?.aborted) throw error;
+      if (attempt === maxAttempts - 1) throw new Error("Network unavailable. Please check your connection and retry.");
+      await new Promise<void>((resolve) => setTimeout(resolve, 400 * 2 ** attempt));
+      continue;
+    }
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || !data.success) {
-    throw new Error(data.error || `Fluentic AI request failed (${response.status}).`);
+    const data: unknown = await response.json().catch(() => null);
+    const body = data !== null && typeof data === "object" && !Array.isArray(data)
+      ? data as Record<string, unknown> : {};
+    if (response.ok && body.success === true && body.action === action) {
+      return body as T & FluenticAIResponse;
+    }
+    const retryable = response.status === 429 || response.status >= 500;
+    if (retryable && attempt < maxAttempts - 1) {
+      const retryAfter = Number(response.headers.get("Retry-After"));
+      const delay = Number.isFinite(retryAfter) && retryAfter > 0
+        ? Math.min(retryAfter * 1000, 5000) : 400 * 2 ** attempt;
+      await new Promise<void>((resolve) => setTimeout(resolve, delay));
+      continue;
+    }
+    const error = typeof body.error === "string" ? body.error : `Fluentic AI request failed (${response.status}).`;
+    throw new Error(error);
   }
-  return data as T & FluenticAIResponse;
+  throw new Error("Fluentic AI request could not be completed.");
 }
 
 export const fluenticTranslator = {
