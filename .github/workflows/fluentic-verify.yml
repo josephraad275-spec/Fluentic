@@ -32,3 +32,5 @@ jobs:
         run: bun run build
       - name: Production HTTP smoke tests
         run: npm run test:smoke
+      - name: Sync native scaffolds
+        run: npx cap sync
