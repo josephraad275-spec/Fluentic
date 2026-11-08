@@ -106,7 +106,10 @@ export function estimateLevelFromEvidence(
     if (!item.seen) break;
     evaluated += item.seen;
     const accuracy = item.correct / item.seen;
-    if (accuracy >= 0.6) {
+    // A single lucky multiple-choice answer is not evidence of advanced proficiency.
+    // Require at least two independently correct items at C1 and C2 before promotion.
+    const advancedTier = level === "C1" || level === "C2";
+    if (accuracy >= 0.6 && (!advancedTier || (item.seen >= 2 && item.correct >= 2))) {
       estimated = level;
       passed += item.correct;
     } else {
