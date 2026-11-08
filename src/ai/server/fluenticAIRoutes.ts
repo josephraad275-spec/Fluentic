@@ -161,6 +161,14 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           3500
         );
         if (!Array.isArray(result.steps) || result.steps.length < 4) throw new Error("The adaptive lesson did not contain a complete retrieval-to-transfer sequence.");
+        const allowedStepTypes = new Set(["retrieve", "construct", "feedback", "transfer", "review"]);
+        const stepTypes = new Set(result.steps.map((step: any) => step?.type));
+        if (result.steps.some((step: any) => !step || !allowedStepTypes.has(step.type) || !cleanString(step.instruction))) {
+          throw new Error("The adaptive lesson contains malformed learning steps.");
+        }
+        if (!["retrieve", "construct", "feedback", "transfer"].every((type) => stepTypes.has(type))) {
+          throw new Error("The adaptive lesson is missing a required learning stage.");
+        }
         result.steps = result.steps.map((step: any) => ({ ...step, targetLanguageText: stripTransliteration(String(step.targetLanguageText || "")) }));
         return res.json({ success: true, action, ...result });
       }
