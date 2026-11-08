@@ -33,6 +33,19 @@ export interface PlacementTestVariant {
   questions: PlacementTestQuestion[];
 }
 
+/** Normalize legacy placement tiers to the six official CEFR levels. */
+const normalizeCefrTier = (tier: string): 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' => {
+  const normalized = tier.toUpperCase();
+  switch (normalized) {
+    case 'A1': case 'A2': case 'B1': case 'B2': case 'C1': case 'C2':
+      return normalized;
+    case 'A3': return 'A2';
+    case 'B3': return 'B2';
+    case 'C3': case 'C3+': return 'C2';
+    default: return 'A1';
+  }
+};
+
 export class PlacementAssessmentEngine {
   // Synchronous cache populated by dynamic engine
   private static synchronousTestCache = new Map<string, PlacementTestVariant>();
@@ -234,7 +247,7 @@ export class PlacementAssessmentEngine {
     };
 
     for (const q of test.questions) {
-      const lvl = (q.level || 'A1').toUpperCase() as CefrLevel;
+      const lvl = normalizeCefrTier(q.level || 'A1');
       if (bank[lvl]) {
         bank[lvl].push(q);
       } else {
@@ -272,7 +285,7 @@ export class PlacementAssessmentEngine {
 
     // If an adaptive tier was directly evaluated
     if (assessedTier) {
-      level = assessedTier;
+      level = normalizeCefrTier(assessedTier);
     } else {
       if (score >= 10) level = 'C2';
       else if (score >= 8) level = 'C1';
