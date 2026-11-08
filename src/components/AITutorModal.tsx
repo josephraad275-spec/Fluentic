@@ -1,3 +1,5 @@
+import { uiText } from "../services/uiLocalization.ts";
+import { getI18n } from "../services/localization.ts";
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   X, 
@@ -196,7 +198,7 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
         const botMsg: Message = {
           id: `b-${Date.now()}`,
           sender: 'tutor',
-          text: turn.reply || 'Here is what you need to know:',
+          text: turn.reply || getI18n(user.nativeLanguageCode || 'en').engineUnavailable,
           targetSnippet: targetClean,
           audioReadyText: audioClean,
           translation: turn.translation,
@@ -214,30 +216,10 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
 
       throw new Error('Omni Engine returned empty turn, falling back');
     } catch {
-      // Direct high-fidelity pedagogical fallback adhering strictly to target script purity
-      const cleanSnippet = stripTransliteration(activeLanguage.sampleGreeting || '');
       const botMsg: Message = {
         id: `b-${Date.now()}`,
         sender: 'tutor',
-        text: `Great focus on ${activeLanguage.name} at CEFR ${activeCefr}! Real fluency is acquired through active recall, contextual nuance, and spaced repetition.`,
-        targetSnippet: cleanSnippet,
-        audioReadyText: cleanSnippet,
-        translation: `Core expression in ${activeLanguage.name}`,
-        grammarAnatomy: 'Structural formulation with high communicative frequency in authentic native contexts.',
-        mnemonic: 'Anchor the speech pattern with rhythm and natural intonation.',
-        registerNotes: {
-          detectedRegister: 'neutral',
-          appropriateForContext: true,
-          recommendation: 'Appropriate for standard situational dialogues and everyday communication.',
-        },
-        tips: [
-          `Focus on rhythm and musical cadence in ${activeLanguage.name}.`,
-          'Practice shadow-reading the authentic native script aloud.'
-        ],
-        followUps: [
-          `How would a native speaker rephrase this formally in ${activeLanguage.name}?`,
-          `Give me an authentic idiomatic expression for this situation`
-        ],
+        text: getI18n(user.nativeLanguageCode || 'en').engineUnavailable,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, botMsg]);
@@ -258,17 +240,13 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
             <FluenticLogo variant="icon" size="sm" />
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">
-                  Fluentic AI Polyglot Tutor
-                </h3>
-                <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 text-[10px] font-black uppercase">
-                  Gemini 3.8
-                </span>
+                <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">{uiText("ui_47fc9c5c4c16")}</h3>
+                <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 text-[10px] font-black uppercase">{uiText("ui_5f3cb1219c0f")}</span>
               </div>
               <p className="text-xs text-slate-500 flex items-center gap-1.5">
                 <span>{activeLanguage.flag} {activeLanguage.name}</span>
                 <span>•</span>
-                <span className="font-semibold text-blue-600">Level {activeCefr}</span>
+                <span className="font-semibold text-blue-600">{uiText("ui_1709305c9fa9") + " "}{activeCefr}</span>
               </p>
             </div>
           </div>
@@ -276,7 +254,7 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
           <button
             onClick={onClose}
             className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-            title="Close AI Tutor"
+            title={uiText("ui_8cb9a9a044ac")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -331,7 +309,7 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
                       type="button"
                       onClick={() => audioSynth.speakPhraseNative(m.audioReadyText || m.targetSnippet!, activeLanguage.code)}
                       className="p-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors shrink-0 cursor-pointer"
-                      title="Listen with Native Audio"
+                      title={uiText("ui_193b8e190b2f")}
                     >
                       <Volume2 className="w-4 h-4" />
                     </button>
@@ -341,9 +319,7 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
                 {/* Contextual Corrections */}
                 {m.contextualCorrections && m.contextualCorrections.length > 0 && (
                   <div className="p-3 rounded-xl bg-rose-50/90 border border-rose-200 text-xs text-rose-950 mt-2 space-y-2">
-                    <span className="font-extrabold uppercase text-[10px] tracking-wider block text-rose-700">
-                      🎯 Contextual Corrections & Syntax Surgery:
-                    </span>
+                    <span className="font-extrabold uppercase text-[10px] tracking-wider block text-rose-700">{uiText("ui_d7c3309bd51e")}</span>
                     {m.contextualCorrections.map((corr, idx) => (
                       <div key={idx} className="space-y-1 bg-white/80 p-2.5 rounded-lg border border-rose-100">
                         <div className="flex items-center gap-2 font-mono text-[11px]">
@@ -360,9 +336,7 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
                 {/* Idiom Breakdowns */}
                 {m.idiomBreakdowns && m.idiomBreakdowns.length > 0 && (
                   <div className="p-3 rounded-xl bg-amber-50/90 border border-amber-200 text-xs text-amber-950 mt-2 space-y-2">
-                    <span className="font-extrabold uppercase text-[10px] tracking-wider block text-amber-800">
-                      💡 Idiom & Cultural Pragmatics:
-                    </span>
+                    <span className="font-extrabold uppercase text-[10px] tracking-wider block text-amber-800">{uiText("ui_2a1d0b22bbee")}</span>
                     {m.idiomBreakdowns.map((idm, idx) => (
                       <div key={idx} className="bg-white/80 p-2.5 rounded-lg border border-amber-100 space-y-1">
                         <div className="font-bold text-amber-900 text-sm font-sans flex items-center justify-between">
@@ -371,12 +345,12 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
                             type="button"
                             onClick={() => audioSynth.speakPhraseNative(idm.idiom, activeLanguage.code)}
                             className="p-1 rounded text-amber-700 hover:bg-amber-100 cursor-pointer"
-                            title="Listen"
+                            title={uiText("ui_225d29f6201e")}
                           >
                             <Volume2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                        <div className="text-[11px] text-slate-500 italic">Literal: "{idm.literalMeaning}"</div>
+                        <div className="text-[11px] text-slate-500 italic">{uiText("ui_3823a1881df4")}{idm.literalMeaning}"</div>
                         <p className="text-[11px] text-slate-700 font-medium">{idm.pragmaticUsage}</p>
                       </div>
                     ))}
@@ -386,9 +360,7 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
                 {/* Grammar Anatomy Breakdown */}
                 {m.grammarAnatomy && (
                   <div className="p-3 rounded-xl bg-indigo-50/80 border border-indigo-100 text-xs text-indigo-950 mt-2 space-y-1">
-                    <span className="font-extrabold uppercase text-[10px] tracking-wider block text-indigo-700">
-                      🔬 Linguistic & Grammar Anatomy:
-                    </span>
+                    <span className="font-extrabold uppercase text-[10px] tracking-wider block text-indigo-700">{uiText("ui_162d5eea511b")}</span>
                     <p className="leading-relaxed">{m.grammarAnatomy}</p>
                   </div>
                 )}
@@ -398,9 +370,7 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
                   <div className="p-3 rounded-xl bg-amber-50/90 border border-amber-200/80 text-xs text-amber-950 mt-2 flex items-start gap-2.5">
                     <Lightbulb className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                     <div className="space-y-0.5">
-                      <span className="font-extrabold text-[10px] uppercase tracking-wider block text-amber-800">
-                        Memory Anchor & Mnemonic:
-                      </span>
+                      <span className="font-extrabold text-[10px] uppercase tracking-wider block text-amber-800">{uiText("ui_dfe78f1dd224")}</span>
                       <p className="leading-relaxed font-medium">{m.mnemonic}</p>
                     </div>
                   </div>
@@ -409,9 +379,7 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
                 {/* Real-World Native Dialogue Examples with Native Audio Speaker */}
                 {m.realWorldExamples && m.realWorldExamples.length > 0 && (
                   <div className="p-3 rounded-xl bg-white border border-slate-200/80 text-xs space-y-2 mt-2">
-                    <span className="font-extrabold uppercase text-[10px] tracking-wider block text-slate-500">
-                      💬 Authentic Native Context:
-                    </span>
+                    <span className="font-extrabold uppercase text-[10px] tracking-wider block text-slate-500">{uiText("ui_5a24944a5b90")}</span>
                     {m.realWorldExamples.map((ex, idx) => (
                       <div key={idx} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50/80 hover:bg-blue-50/50 transition-colors">
                         <div className="space-y-0.5">
@@ -422,7 +390,7 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
                           type="button"
                           onClick={() => audioSynth.speakPhraseNative(ex.target, activeLanguage.code)}
                           className="p-2 rounded-md bg-white hover:bg-blue-100 text-blue-600 border border-slate-200 shadow-2xs transition-colors shrink-0"
-                          title="Listen to native pronunciation"
+                          title={uiText("ui_de8dd6e7723b")}
                         >
                           <Volume2 className="w-3.5 h-3.5" />
                         </button>
@@ -434,9 +402,7 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
                 {/* Common Learner Trap */}
                 {m.commonMistakes && (
                   <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-900 mt-2 space-y-0.5">
-                    <span className="font-extrabold uppercase text-[10px] tracking-wider block text-rose-600">
-                      ⚠️ Common Learner Trap & Native Nuance:
-                    </span>
+                    <span className="font-extrabold uppercase text-[10px] tracking-wider block text-rose-600">{uiText("ui_1f92851751ef")}</span>
                     <p className="leading-relaxed">{m.commonMistakes}</p>
                   </div>
                 )}
@@ -483,7 +449,7 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
               </div>
               <div className="px-4 py-2.5 rounded-2xl bg-slate-100 text-slate-600 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
-                <span>Fluentic AI is synthesizing master pedagogical insights...</span>
+                <span>{uiText("ui_82c7941ac573")}</span>
               </div>
             </div>
           )}
@@ -491,9 +457,7 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
 
         {/* Quick prompt chips */}
         <div className="px-4 py-2 bg-slate-50/80 border-t border-slate-100 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0">
-            Prompt Ideas:
-          </span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0">{uiText("ui_76e456582949")}</span>
           {QUICK_PROMPTS.map((p, idx) => (
             <button
               key={idx}
@@ -540,7 +504,7 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
               type="submit"
               disabled={!inputText.trim() || isLoading}
               className="p-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 transition-all shadow-md shadow-blue-500/20 shrink-0"
-              title="Send to AI Tutor"
+              title={uiText("ui_e6b917a64028")}
             >
               <Send className="w-4 h-4" />
             </button>

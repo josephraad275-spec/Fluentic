@@ -1,3 +1,4 @@
+import { uiText } from "../services/uiLocalization.ts";
 import React, { useState } from 'react';
 import { Sparkles, ArrowRight, RefreshCw, BookOpen, Volume2 } from 'lucide-react';
 import { translateCustom, TranslationResult } from '../services/translationService';
@@ -36,14 +37,14 @@ export const CustomTranslatorView: React.FC = () => {
               <Sparkles className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-900">Custom AI Translator</h2>
-              <p className="text-xs text-slate-500">Auto-detects source text & generates smart teaching translations</p>
+              <h2 className="text-xl font-black text-slate-900">{uiText("ui_9ac56650f31f")}</h2>
+              <p className="text-xs text-slate-500">{uiText("ui_17fdce19f0ea")}</p>
             </div>
           </div>
 
           {/* Target Language Dropdown */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">Translate To:</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">{uiText("ui_f3310e4f3426")}</span>
             <select
               value={targetLang}
               onChange={(e) => {
@@ -66,14 +67,14 @@ export const CustomTranslatorView: React.FC = () => {
           {/* Input Box */}
           <div className="space-y-2">
             <label className="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center justify-between">
-              <span>Source Text</span>
-              <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">Auto Detection</span>
+              <span>{uiText("ui_c5c2446e9f48")}</span>
+              <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">{uiText("ui_b0ed431985ce")}</span>
             </label>
             <textarea
               rows={6}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Type or paste any text here in any language..."
+              placeholder={uiText("ui_faaec2202188")}
               className="w-full p-4 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none"
             />
           </div>
@@ -87,7 +88,7 @@ export const CustomTranslatorView: React.FC = () => {
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-full gap-2 text-slate-400">
                   <RefreshCw className="w-5 h-5 animate-spin text-blue-600" />
-                  <span className="text-xs font-semibold">Translating with Gemini...</span>
+                  <span className="text-xs font-semibold">{uiText("ui_bec11d328c56")}</span>
                 </div>
               ) : result ? (
                 <div className="space-y-2">
@@ -105,9 +106,7 @@ export const CustomTranslatorView: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full text-xs text-slate-400 italic">
-                  Translation details will appear here
-                </div>
+                <div className="flex items-center justify-center h-full text-xs text-slate-400 italic">{uiText("ui_8de4a57d1df4")}</div>
               )}
             </div>
           </div>
@@ -119,7 +118,7 @@ export const CustomTranslatorView: React.FC = () => {
           disabled={isLoading || !inputText.trim()}
           className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-sm shadow-md shadow-blue-500/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
         >
-          <span>Translate & Analyze</span>
+          <span>{uiText("ui_db5e8347b767")}</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>

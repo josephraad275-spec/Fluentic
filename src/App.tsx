@@ -1,3 +1,10 @@
+import { ensureLocale } from "./ai/master/localizationClient.ts";
+import { configureLearner } from "./ai/master/learnerState.ts";
+import { normalizeLearningIntent } from "./ai/pedagogy.ts";
+import { createAdaptiveNode } from "./ai/master/lessonAdapter.ts";
+import { getI18n } from "./services/localization.ts";
+import { useSyncExternalStore } from "react";
+import { subscribeTranslations, getTranslationRevision } from "./services/localization.ts";
 import React, { useState, useEffect } from 'react';
 import { 
   NavigationTab, 
@@ -77,6 +84,7 @@ const DEFAULT_USER: UserProfile = {
 };
 
 export function App() {
+  useSyncExternalStore(subscribeTranslations, getTranslationRevision);
   const [user, setUser] = useState<UserProfile>(() => {
     try {
       const saved = localStorage.getItem('fluentic_user_session');
@@ -112,6 +120,11 @@ export function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>('home');
   const [soundscapeMode, setSoundscapeMode] = useState<'alpha' | 'cosmic' | 'rain' | 'mute'>('mute');
   const [isRetakingPlacement, setIsRetakingPlacement] = useState(false);
+
+  useEffect(() => {
+    configureLearner({ nativeLanguageCode: user.nativeLanguageCode || 'en', targetLanguageCode: activeLanguage.code, intent: normalizeLearningIntent(user.learningIntent) });
+    ensureLocale(user.nativeLanguageCode || 'en').catch(() => { /* Existing dictionary remains usable while the service is unavailable. */ });
+  }, [user.nativeLanguageCode, activeLanguage.code, user.learningIntent]);
 
   // Modals
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
@@ -158,6 +171,20 @@ export function App() {
     );
     setActiveTab('home');
     setIsRetakingPlacement(false);
+  };
+
+  const lessonRequest = React.useRef<AbortController | null>(null);
+  React.useEffect(() => () => lessonRequest.current?.abort(), []);
+  const handleOpenLesson = async (node: LearningNode) => {
+    lessonRequest.current?.abort();
+    const controller = new AbortController();
+    lessonRequest.current = controller;
+    try {
+      const generated = await createAdaptiveNode(node, user.nativeLanguageCode || 'en', activeLanguage.code, user.learningIntent || 'conversational', controller.signal);
+      if (!controller.signal.aborted) setActiveLessonNode(generated);
+    } catch {
+      if (!controller.signal.aborted) window.alert(getI18n(user.nativeLanguageCode || 'en').engineUnavailable);
+    }
   };
 
   // Complete a lesson node
@@ -392,7 +419,7 @@ export function App() {
           <DuolingoPathView
             user={{ ...user, activeCefr }}
             activeLanguage={activeLanguage}
-            onSelectNode={(node) => setActiveLessonNode(node)}
+            onSelectNode={handleOpenLesson}
             onClaimMilestone={() => undefined}
             onUpdateUser={handleUpdateUser}
           />

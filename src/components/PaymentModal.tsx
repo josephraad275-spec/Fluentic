@@ -1,3 +1,4 @@
+import { uiText } from "../services/uiLocalization.ts";
 import { apiFetch } from "../services/apiTransport.ts";
 import React, { useState } from 'react';
 import { 
@@ -126,8 +127,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <Lock className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-black text-slate-900">Secure Checkout</h3>
-              <p className="text-xs text-slate-500">256-Bit Encrypted Payment Channel</p>
+              <h3 className="text-base font-black text-slate-900">{uiText("ui_2f53b21e7434")}</h3>
+              <p className="text-xs text-slate-500">{uiText("ui_39af2da8c4a4")}</p>
             </div>
           </div>
           <button
@@ -145,12 +146,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center">
               <CheckCircle2 className="w-10 h-10" />
             </div>
-            <h4 className="text-2xl font-black text-slate-900">Transaction Approved!</h4>
-            <p className="text-xs text-slate-600 max-w-sm mx-auto">
-              Your order for <strong>{plan.name}</strong> was processed successfully. Your account balance and privileges are updated.
-            </p>
-            <div className="inline-block px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 font-mono text-xs">
-              Tx: {transactionId || 'TXN-00000000'}
+            <h4 className="text-2xl font-black text-slate-900">{uiText("ui_4377314de6a1")}</h4>
+            <p className="text-xs text-slate-600 max-w-sm mx-auto">{uiText("ui_45949f8e042b")}<strong>{plan.name}</strong>{uiText("ui_0221e0030aae")}</p>
+            <div className="inline-block px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 font-mono text-xs">{uiText("ui_4033c155b338")}{transactionId || 'TXN-00000000'}
             </div>
           </div>
         ) : (
@@ -159,19 +157,19 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             {/* Order Summary Item */}
             <div className="p-4 rounded-2xl bg-blue-50/80 border border-blue-200/80 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-extrabold text-blue-700 uppercase tracking-wide">Selected Plan</span>
+                <span className="text-[10px] font-extrabold text-blue-700 uppercase tracking-wide">{uiText("ui_1b2c766b4ab5")}</span>
                 <div className="text-base font-black text-slate-900">{plan.name}</div>
                 <div className="text-xs text-slate-600">{plan.duration || `${plan.amount} Gems`}</div>
               </div>
               <div className="text-right">
                 <div className="text-2xl font-black text-blue-900 font-mono">${plan.priceUsd.toFixed(2)}</div>
-                <span className="text-[10px] text-slate-500">USD one-time</span>
+                <span className="text-[10px] text-slate-500">{uiText("ui_d826040a84d9")}</span>
               </div>
             </div>
 
             {/* Payment Method Selector Tabs */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Select Payment Method</label>
+              <label className="text-xs font-bold text-slate-700">{uiText("ui_09e146c5ed9b")}</label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
                   { id: 'credit-card', label: 'Card' },
@@ -199,18 +197,18 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             {paymentMethod === 'credit-card' ? (
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">Cardholder Name</label>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">{uiText("ui_d6bc26851d00")}</label>
                   <input
                     type="text"
                     required
                     value={cardholderName}
                     onChange={(e) => setCardholderName(e.target.value)}
-                    placeholder="Enter your name"
+                    placeholder={uiText("ui_0421de120444")}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">Card Number</label>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">{uiText("ui_4566e068a215")}</label>
                   <div className="relative">
                     <input
                       type="text"
@@ -226,7 +224,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 mb-1">Expiry (MM/YY)</label>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">{uiText("ui_fdd747fbcc66")}</label>
                     <input
                       type="text"
                       required
@@ -238,7 +236,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 mb-1">CVC / CVV</label>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">{uiText("ui_135ccfc49bc0")}</label>
                     <input
                       type="password"
                       required
@@ -253,25 +251,22 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
             ) : paymentMethod === 'paypal' ? (
               <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-2">
-                <label className="block text-xs font-bold text-amber-900">PayPal Account Email</label>
+                <label className="block text-xs font-bold text-amber-900">{uiText("ui_0ad1c6ce9a07")}</label>
                 <input
                   type="email"
                   required
                   value={paypalEmail}
                   onChange={(e) => setPaypalEmail(e.target.value)}
-                  placeholder="your.email@example.com"
+                  placeholder={uiText("ui_52bf11c1afe0")}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 text-xs text-slate-900 bg-white outline-none focus:border-amber-500"
                 />
-                <p className="text-[11px] text-amber-700">You will be redirected securely to authenticate with PayPal.</p>
+                <p className="text-[11px] text-amber-700">{uiText("ui_46d41a7af162")}</p>
               </div>
             ) : (
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-2">
                 <div className="font-bold text-slate-800 text-xs">
-                  {paymentMethod === 'apple-pay' ? 'Apple Pay' : 'Google Pay'} Express Checkout
-                </div>
-                <p className="text-xs text-slate-500">
-                  Touch ID, Face ID, or biometric wallet confirmation will be invoked automatically upon proceeding.
-                </p>
+                  {paymentMethod === 'apple-pay' ? 'Apple Pay' : 'Google Pay'}{uiText("ui_7f301ea170cf")}</div>
+                <p className="text-xs text-slate-500">{uiText("ui_793f75ba6467")}</p>
               </div>
             )}
 
@@ -285,7 +280,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             {/* Security Guarantee Banner */}
             <div className="flex items-center gap-2 text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
               <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>TLS 1.3 Certified • End-to-End Encrypted Gateway • Instant Activation</span>
+              <span>{uiText("ui_01cce2fc60a6")}</span>
             </div>
 
             {/* Submit Button */}
@@ -297,11 +292,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               {isProcessing ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Authorizing Payment...</span>
+                  <span>{uiText("ui_aba1490158ba")}</span>
                 </>
               ) : (
                 <>
-                  <span>Authorize & Pay ${plan.priceUsd.toFixed(2)}</span>
+                  <span>{uiText("ui_defc7d23c609")}{plan.priceUsd.toFixed(2)}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}

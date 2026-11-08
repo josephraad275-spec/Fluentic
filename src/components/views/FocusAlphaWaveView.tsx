@@ -1,3 +1,4 @@
+import { uiText } from "../../services/uiLocalization.ts";
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Play, 
@@ -620,7 +621,7 @@ export const FocusAlphaWaveView: React.FC<FocusAlphaWaveViewProps> = ({
                 <Sliders className="w-4 h-4 text-[#D4AF37]" />
                 <span>{isArabic ? 'التردد الصوتي (هرتز)' : isDutch ? 'Frequentie (Hz)' : 'Frequency (Hz)'}</span>
               </span>
-              <span className="font-mono text-[#D4AF37]">{baseFreq} Hz</span>
+              <span className="font-mono text-[#D4AF37]">{baseFreq}{" " + uiText("ui_987d2c1d9216")}</span>
             </div>
             <input
               type="range"

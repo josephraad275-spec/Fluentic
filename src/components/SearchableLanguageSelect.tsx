@@ -1,3 +1,4 @@
+import { uiText } from "../services/uiLocalization.ts";
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Search, ChevronDown, Check, Globe2, X } from 'lucide-react';
 import { Language } from '../types';
@@ -118,8 +119,7 @@ export const SearchableLanguageSelect: React.FC<SearchableLanguageSelectProps> =
               </span>
             </div>
             {selectedLanguage.script && selectedLanguage.script !== 'Latin' && (
-              <div className="text-[11px] text-slate-500 font-medium mt-0.5 truncate">
-                Script: {selectedLanguage.script}
+              <div className="text-[11px] text-slate-500 font-medium mt-0.5 truncate">{uiText("ui_fc201fd0c22b")}{selectedLanguage.script}
               </div>
             )}
           </div>
@@ -159,8 +159,8 @@ export const SearchableLanguageSelect: React.FC<SearchableLanguageSelectProps> =
 
           {/* Quick Info Count */}
           <div className="px-3 py-1.5 bg-slate-100/60 border-b border-slate-100 text-[10px] font-bold text-slate-500 flex justify-between items-center uppercase tracking-wider">
-            <span>{filteredLanguages.length} Languages Available</span>
-            <span>Type name or native script</span>
+            <span>{filteredLanguages.length}{" " + uiText("ui_585f9a6b11d8")}</span>
+            <span>{uiText("ui_50c5e0836572")}</span>
           </div>
 
           {/* Filtered Languages List */}
@@ -168,8 +168,8 @@ export const SearchableLanguageSelect: React.FC<SearchableLanguageSelectProps> =
             {filteredLanguages.length === 0 ? (
               <div className="p-6 text-center text-slate-500 text-xs">
                 <Globe2 className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="font-semibold text-slate-700">No language found</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Try searching in English, code, or native script</p>
+                <p className="font-semibold text-slate-700">{uiText("ui_0f22378c41f2")}</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">{uiText("ui_f5c9f28ee69a")}</p>
               </div>
             ) : (
               filteredLanguages.map((lang) => {

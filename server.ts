@@ -1,3 +1,5 @@
+import { generateContent, parseObject } from "./src/ai/master/runtime.ts";
+import { registerMasterEngine } from "./src/ai/master/routes.ts";
 import { nativeCors } from "./src/server/cors.ts";
 import express from "express";
 import http from "http";
@@ -56,66 +58,10 @@ interface GenerateContentOptions {
   preferredModel?: string;
 }
 
-// Models supported according to the Gemini API guidelines in SKILL.md:
-// "gemini-3.8-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"
-const CANDIDATE_MODELS = [
-  "gemini-3.8-flash",
-  "gemini-flash-latest",
-  "gemini-3.1-flash-lite"
-];
-
-async function generateContentWithFallback(
-  ai: GoogleGenAI,
-  options: GenerateContentOptions,
-  timeoutMs: number = 6500
-) {
-  const preferred = options.preferredModel || "gemini-3.8-flash";
-  const modelList = Array.from(new Set([preferred, ...CANDIDATE_MODELS]));
-
-  let lastError: any = null;
-
-  for (let i = 0; i < modelList.length; i++) {
-    const model = modelList[i];
-    try {
-      const callPromise = ai.models.generateContent({
-        model,
-        contents: options.contents,
-        config: options.config,
-      });
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms on model ${model}`)), timeoutMs)
-      );
-
-      const response = await Promise.race([callPromise, timeoutPromise]);
-      return response;
-    } catch (err: any) {
-      lastError = err;
-      const errMsg = err?.message || String(err);
-      const isCapacityOrTransient =
-        err?.status === 503 ||
-        err?.status === 429 ||
-        err?.code === 503 ||
-        err?.code === 429 ||
-        errMsg.includes("503") ||
-        errMsg.includes("429") ||
-        errMsg.includes("high demand") ||
-        errMsg.includes("UNAVAILABLE") ||
-        errMsg.includes("RESOURCE_EXHAUSTED") ||
-        errMsg.includes("Timeout");
-
-      if (isCapacityOrTransient && i < modelList.length - 1) {
-        console.warn(`[Gemini Failover] Model "${model}" issue (${errMsg.slice(0, 60)}...). Rapidly failing over to "${modelList[i + 1]}"...`);
-        continue;
-      }
-
-      if (i < modelList.length - 1) {
-        console.warn(`[Gemini Failover] Model "${model}" returned error. Retrying with "${modelList[i + 1]}"...`);
-        continue;
-      }
-    }
-  }
-
-  throw lastError;
+async function generateContentWithFallback(ai: GoogleGenAI, options: GenerateContentOptions, timeoutMs=20000) {
+  const result = await generateContent(ai, { model: options.preferredModel || process.env.GEMINI_TEXT_MODEL || 'gemini-3.8-flash', contents: options.contents, config: { ...options.config, httpOptions: { timeout: timeoutMs } } });
+  if (options.config?.responseMimeType === 'application/json') parseObject(result.text || '');
+  return result;
 }
 
 // Ultra-fast multimodal audio transcription and live translation via Gemini 3.5 Transcribe / 3.8 Flash
@@ -415,490 +361,7 @@ export async function createFluenticServer({ development = false } = {}) {
     res.json({ status: "ok", geminiConfigured: !!process.env.GEMINI_API_KEY });
   });
 
-  // =========================================================================
-  // MASTER SYSTEM DIRECTIVE: FLUENTIC OMNI-APP ENGINE (V24 CORE)
-  // Centralized backend processing brain and pedagogical engine
-  // Governs: Onboarding, Diagnostic Placement Testing, Active Chat, and Adaptive Curriculum
-  // Enforces 100% Native Language UI Purity, Target Script Purity, Zero Gamification, and Guardrails
-  // =========================================================================
-  const handleOmniEngineRequest = async (req: express.Request, res: express.Response) => {
-    try {
-      const mode = (req.body?.mode || "").toLowerCase().trim();
-      const payload = req.body?.payload || req.body || {};
-      const ai = getGeminiClient();
-
-      // -----------------------------------------------------------------------
-      // MODE 1: ONBOARDING (`onboarding`)
-      // -----------------------------------------------------------------------
-      if (mode === "onboarding") {
-        const rawDisplayName = typeof payload.displayName === "string" ? payload.displayName.trim() : "";
-        const nativeLanguageCode = (payload.nativeLanguageCode || "en").toLowerCase().trim();
-        const targetLanguageCode = (payload.targetLanguageCode || "es").toLowerCase().trim();
-        const learningIntent = payload.learningIntent || "conversational";
-
-        const isArabic = nativeLanguageCode === "ar";
-        const isDutch = nativeLanguageCode === "nl";
-
-        // Display Name defaults strictly to "Enter your name" ("أدخل اسمك" in Arabic locale) if unprovided
-        const fallbackDisplayName = isArabic ? "أدخل اسمك" : "Enter your name";
-        const finalDisplayName = rawDisplayName.length > 0 ? rawDisplayName : fallbackDisplayName;
-
-        // Immediately adapt 100% of UI string translations (`ui_translation`) to selected native language
-        const uiTranslation = getI18n(nativeLanguageCode);
-
-        // Build pedagogical trajectory based on learning intent
-        const trajectoryMap: Record<string, { primaryFocus: string; milestones: string[]; rationale: string }> = {
-          business: {
-            primaryFocus: isArabic
-              ? "المفاوضات المهنية، صياغة المراسلات الرسمية، ومصطلحات الأعمال والعقود"
-              : isDutch
-              ? "Zakelijke onderhandelingen, formele correspondentie en contractvocabulaire"
-              : "Professional negotiation, formal correspondence, and corporate discourse",
-            milestones: [
-              isArabic ? "المصطلحات الرسمية وآداب الاجتماعات (B1)" : "Formal workplace etiquette & lexicon (B1)",
-              isArabic ? "صياغة المقترحات والحجج التفاوضية (B2)" : "Negotiation proposals & counter-arguments (B2)",
-              isArabic ? "البلاغة التنفيذية والإقناع الاستراتيجي (C1/C2)" : "Executive rhetoric & strategic persuasion (C1/C2)"
-            ],
-            rationale: isArabic
-              ? "مسار مهني مكثف يركز على الدقة اللغوية والأسلوب الرسمي المعتمد."
-              : "High-precision professional curriculum calibrated for workplace mastery without casual fluff."
-          },
-          travel: {
-            primaryFocus: isArabic
-              ? "الملاحة في المطارات والمحطات، المعاملات الفندقية، والمواقف الطارئة"
-              : isDutch
-              ? "Transithandelingen, reserveringen, stadsnavigatie en noodsituaties"
-              : "Transit wayfinding, hospitality exchanges, and urgent navigation",
-            milestones: [
-              isArabic ? "تعبيرات الاستقبال والتنقل الحيوي (A1/A2)" : "Survival phonics & transit phrases (A1/A2)",
-              isArabic ? "إدارة المواقف غير المتوقعة وحل المشكلات (B1)" : "Situational problem-solving & inquiries (B1)",
-              isArabic ? "التفاعل العفوي والتفاهم الثقافي المعمق (B2)" : "Spontaneous cultural interaction & colloquial ease (B2)"
-            ],
-            rationale: isArabic
-              ? "تركيز على الاستدعاء الذهني الفوري للجمل الأكثر فاعلية في السفر."
-              : "Fast-acting functional fluency prioritizing direct real-world comprehension."
-          },
-          academic: {
-            primaryFocus: isArabic
-              ? "الخطاب الأكاديمي، النقد الفكري، وتحليل النصوص الأدبية والبحوث"
-              : isDutch
-              ? "Academisch discours, formele debatten en literaire tekstanalyse"
-              : "Academic discourse, formal debate registers, and literary analysis",
-            milestones: [
-              isArabic ? "بناء الجمل المركبة والروابط المنطقية (B1/B2)" : "Complex subordinating syntax & logical connectors (B1/B2)",
-              isArabic ? "المناظرة الفكرية وتفنيد الأطروحات (C1)" : "Dialectical argumentation & rhetorical defense (C1)",
-              isArabic ? "التحليل الأسلوبي والبلاغة الكلاسيكية المتقدمة (C2)" : "Stylistics, classical prose & literary deconstruction (C2)"
-            ],
-            rationale: isArabic
-              ? "مسار أكاديمي صارم يستبعد الجمل البسيطة ويركز على الفصاحة الفكرية."
-              : "Strict academic curriculum rigorously excluding basic greetings and forcing advanced rhetoric."
-          },
-          conversational: {
-            primaryFocus: isArabic
-              ? "الطلاقة الحوارية العفوية، التعبيرات الاصطلاحية، والتواصل الاجتماعي الدافئ"
-              : isDutch
-              ? "Spontane sociale vloeiendheid, idiomatische expressie en dagelijkse dialoog"
-              : "Spontaneous conversational fluency, idiomatic mastery, and social nuance",
-            milestones: [
-              isArabic ? "التعارف والاهتمامات الشخصية (A2)" : "Everyday social introductions & interests (A2)",
-              isArabic ? "سرد القصص والآراء العفوية (B1/B2)" : "Narrative expression & nuanced perspectives (B1/B2)",
-              isArabic ? "استيعاب السخرية الخفيفة والأمثال الشعبية (C1)" : "Cultural proverbs, humor, and natural idioms (C1)"
-            ],
-            rationale: isArabic
-              ? "تطوير ردود الفعل اللغوية التلقائية والطلاقة الصوتية."
-              : "Spaced active recall tuned for fluid communicative confidence."
-          }
-        };
-
-        const trajectory = trajectoryMap[learningIntent] || trajectoryMap.conversational;
-
-        return res.json({
-          status: "success",
-          mode: "onboarding",
-          user_profile: {
-            displayName: finalDisplayName,
-            nativeLanguageCode,
-            targetLanguageCode,
-            learningIntent,
-            // ZERO GAMIFICATION: progression measured through structural mastery and active recall
-            structuralMastery: 0,
-            activeRecallRetentionRate: 100,
-            spacedErrorRecyclingCount: 0,
-            currentCefr: "A1"
-          },
-          ui_translation: uiTranslation,
-          pedagogical_trajectory: trajectory
-        });
-      }
-
-      // -----------------------------------------------------------------------
-      // MODE 2: DIAGNOSTIC PLACEMENT TESTING (`placement_test`)
-      // -----------------------------------------------------------------------
-      if (mode === "placement_test") {
-        const action = payload.action || (payload.userAnswers ? "evaluate" : "generate_questions");
-        const targetLanguage = payload.targetLanguage || "Spanish";
-        const targetLanguageCode = (payload.targetLanguageCode || "es").toLowerCase();
-        const nativeLanguage = payload.nativeLanguage || "English";
-        const nativeLanguageCode = (payload.nativeLanguageCode || "en").toLowerCase();
-        const isArabic = nativeLanguageCode === "ar";
-        const isDutch = nativeLanguageCode === "nl";
-
-        // Evaluation Action: Calculate CEFR placement levels dynamically based on accuracy
-        if (action === "evaluate") {
-          const userAnswers = Array.isArray(payload.userAnswers) ? payload.userAnswers : [];
-          const totalEvaluated = Math.max(userAnswers.length, 1);
-          const correctCount = userAnswers.filter((a: any) => a.selectedKey === a.correctKey).length;
-          const accuracyPercentage = Math.round((correctCount / totalEvaluated) * 100);
-
-          let assessedLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" = "A1";
-          if (correctCount >= 9) assessedLevel = "C2";
-          else if (correctCount >= 7) assessedLevel = "C1";
-          else if (correctCount >= 5) assessedLevel = "B2";
-          else if (correctCount >= 3) assessedLevel = "B1";
-          else if (correctCount >= 2) assessedLevel = "A2";
-
-          const errors = userAnswers.filter((a: any) => a.selectedKey !== a.correctKey);
-
-          let diagnosticFeedback = isArabic
-            ? `أظهرت دقة بنسبة ${accuracyPercentage}% عبر المعايير الأوروبية المرجعية CEFR. تم تعيين مستواك اللغوي عند: ${assessedLevel}.`
-            : isDutch
-            ? `Je behaalde ${accuracyPercentage}% nauwkeurigheid op de ERK-standaard. Gekwalificeerd niveau: ${assessedLevel}.`
-            : `Demonstrated ${accuracyPercentage}% accuracy across CEFR standardized benchmarks. Verified Level: ${assessedLevel}.`;
-
-          const conceptMap = [
-            {
-              concept: isArabic ? "مخارج الحروف والتطابق الصوتي" : "Orthographic Phonics & Mechanics",
-              status: correctCount >= 2 ? "mastered" : "emerging",
-              tier: "A1"
-            },
-            {
-              concept: isArabic ? "الربط النحوي والتراكيب الظرفية" : "Complex Subordinate Conjunctions",
-              status: correctCount >= 5 ? "mastered" : "needs_review",
-              tier: "B1"
-            },
-            {
-              concept: isArabic ? "الخطاب الأكاديمي والتحليل البلاغي" : "Advanced Academic Discourse & Rhetoric",
-              status: correctCount >= 8 ? "mastered" : "needs_review",
-              tier: "C1"
-            }
-          ];
-
-          // If AI client is configured, enrich diagnostic feedback with linguistic concept mapping
-          if (ai && errors.length > 0) {
-            try {
-              const diagnosticPrompt = `You are Fluentic Diagnostic Evaluation Engine.
-User tested for target language: ${targetLanguage}.
-User native language: ${nativeLanguage}.
-Assessed level: ${assessedLevel} (${correctCount}/${totalEvaluated} correct).
-Errors logged: ${JSON.stringify(errors.slice(0, 5))}.
-Provide:
-1. Concise linguistic feedback in ${nativeLanguage} explaining the exact grammatical confusion and how to overcome it.
-2. Error breakdowns for missed questions in ${nativeLanguage}.
-Format strictly as JSON:
-{
-  "realtimeGrammarFeedback": "...",
-  "errorBreakdowns": [
-    {"questionId": 1, "errorSnippet": "...", "grammaticalCorrection": "...", "linguisticReason": "..."}
-  ]
-}`;
-              const diagResponse = await generateContentWithFallback(ai, {
-                contents: diagnosticPrompt,
-                config: { responseMimeType: "application/json", temperature: 0.2 },
-              });
-              const diagParsed = JSON.parse(diagResponse.text || "{}");
-              if (diagParsed.realtimeGrammarFeedback) {
-                diagnosticFeedback = diagParsed.realtimeGrammarFeedback;
-              }
-              if (Array.isArray(diagParsed.errorBreakdowns)) {
-                return res.json({
-                  status: "success",
-                  mode: "placement_test",
-                  diagnostic_data: {
-                    assessedLevel,
-                    calibratedScore: correctCount,
-                    totalEvaluated,
-                    structuralMasteryPercentage: accuracyPercentage,
-                    activeRecallRetentionRate: Math.max(65, accuracyPercentage),
-                    spacedErrorRecycling: {
-                      recycledErrorCount: errors.length,
-                      flaggedConcepts: errors.map((e: any) => e.targetSkill || "Syntax")
-                    },
-                    conceptMapping: conceptMap,
-                    realtimeGrammarFeedback: diagnosticFeedback,
-                    errorBreakdowns: diagParsed.errorBreakdowns
-                  }
-                });
-              }
-            } catch (err) {
-              console.warn("[Omni-Engine Placement Diagnosis AI Warning]", err);
-            }
-          }
-
-          return res.json({
-            status: "success",
-            mode: "placement_test",
-            diagnostic_data: {
-              assessedLevel,
-              calibratedScore: correctCount,
-              totalEvaluated,
-              structuralMasteryPercentage: accuracyPercentage,
-              activeRecallRetentionRate: Math.max(65, accuracyPercentage),
-              spacedErrorRecycling: {
-                recycledErrorCount: errors.length,
-                flaggedConcepts: errors.map((e: any) => e.targetSkill || "Grammar Focus")
-              },
-              conceptMapping: conceptMap,
-              realtimeGrammarFeedback: diagnosticFeedback,
-              errorBreakdowns: errors.map((err: any) => ({
-                questionId: err.questionId,
-                userChoice: err.selectedKey,
-                correctKey: err.correctKey,
-                errorSnippet: err.selectedText || "",
-                grammaticalCorrection: err.correctText || "",
-                linguisticReason: isArabic
-                  ? `الخيار الصحيح يراعي القواعد الهيكلية لـ: ${err.targetSkill || "بناء الجملة"}.`
-                  : `Choice ${err.correctKey} demonstrates accurate structural morphology for: ${err.targetSkill || "syntax"}.`
-              }))
-            }
-          });
-        }
-
-        // Question Generation: strictly follow tier criteria
-        // A1/A2: native script mechanics, fundamental phonics, core high-frequency structures
-        // B1/B2: situational navigation, complex conjunctions, intermediate syntax
-        // C1/C2: STRICTLY BAN basic greetings or simple phrases. Force advanced academic discourse, formal debate registers, complex literary prose, and rhetorical analysis.
-        // Target script purity: zero Latin transliterations.
-        if (ai) {
-          try {
-            const prompt = `You are Fluentic Adaptive Placement Engine V24 Core.
-Target language: ${targetLanguage} (${targetLanguageCode}).
-User native language: ${nativeLanguage} (${nativeLanguageCode}).
-
-MANDATED TIER REQUIREMENTS:
-- A1 / A2 Tiers (Q1-Q3): Native script mechanics, fundamental phonics, core high-frequency survival structures.
-- B1 / B2 Tiers (Q4-Q7): Situational navigation, complex conjunctions, intermediate syntax, hypothetical clauses.
-- C1 / C2 Tiers (Q8-Q10): STRICTLY BAN basic greetings or simple phrases. Force advanced academic discourse, formal debate registers, complex literary prose, and rhetorical analysis.
-
-MANDATED SCRIPT CONSTRAINTS:
-- All target phrases, reading passages, and multiple-choice options MUST be in authentic native script of ${targetLanguage}.
-- STRICT BAN: Zero Latin transliterations, phonetic guide strings, or English phonetic approximations permitted in target fields.
-- Prompts, instructions, questions, and explanations MUST be in ${nativeLanguage}.
-
-Format strictly as JSON:
-{
-  "questions": [
-    {
-      "id": 1,
-      "level": "A1",
-      "target_skill": "Skill name in ${nativeLanguage}",
-      "instruction": "Instruction prompt in ${nativeLanguage}",
-      "prompt": "Prompt text in authentic ${targetLanguage} native script (ZERO transliteration)",
-      "options": [
-        {"key": "A", "text": "Option A in ${targetLanguage} native script"},
-        {"key": "B", "text": "Option B in ${targetLanguage} native script"},
-        {"key": "C", "text": "Option C in ${targetLanguage} native script"},
-        {"key": "D", "text": "Option D in ${targetLanguage} native script"}
-      ],
-      "correct_key": "A",
-      "explanation": "Clear grammatical explanation in ${nativeLanguage}"
-    }
-  ]
-}`;
-            const response = await generateContentWithFallback(ai, {
-              contents: prompt,
-              config: { responseMimeType: "application/json", temperature: 0.25 },
-            });
-            const parsed = JSON.parse(response.text || "{}");
-            if (Array.isArray(parsed.questions) && parsed.questions.length >= 8) {
-              // Ensure pure native script on all generated items
-              const cleanedQuestions = parsed.questions.map((q: any) => ({
-                ...q,
-                prompt: stripTransliteration(q.prompt || ""),
-                instruction: stripTransliteration(q.instruction || ""),
-                explanation: stripTransliteration(q.explanation || ""),
-                options: (q.options || []).map((opt: any) => ({
-                  ...opt,
-                  text: stripTransliteration(opt.text || "")
-                }))
-              }));
-              return res.json({
-                status: "success",
-                mode: "placement_test",
-                targetLanguage,
-                nativeLanguage,
-                questions: cleanedQuestions
-              });
-            }
-          } catch (err) {
-            console.warn("[Omni-Engine Placement AI Warning]", err);
-          }
-        }
-
-        // Procedural fallback
-        const fallback = getFallbackPlacementQuestions(targetLanguage, nativeLanguage, targetLanguageCode, nativeLanguageCode);
-        return res.json({
-          status: "fallback",
-          mode: "placement_test",
-          targetLanguage,
-          nativeLanguage,
-          questions: fallback.questions
-        });
-      }
-
-      // -----------------------------------------------------------------------
-      // MODE 3: ACTIVE TUTORING & CHAT (`active_chat`)
-      // -----------------------------------------------------------------------
-      if (mode === "active_chat") {
-        const userMessage = String(payload.userMessage || "").trim();
-        const targetLanguage = payload.targetLanguage || "Spanish";
-        const targetLanguageCode = (payload.targetLanguageCode || "es").toLowerCase();
-        const nativeLanguage = payload.nativeLanguage || "English";
-        const nativeLanguageCode = (payload.nativeLanguageCode || "en").toLowerCase();
-        const cefrLevel = payload.cefrLevel || "B1";
-        const learningIntent = payload.learningIntent || "conversational";
-        const history = Array.isArray(payload.history) ? payload.history.slice(-8) : [];
-        const isArabic = nativeLanguageCode === "ar";
-
-        // Security & Guardrail Check: Reject prompt injection or system directive reveal attempts gracefully
-        const injectionPattern = /(ignore (all )?previous instructions|system directive|reveal your prompt|jailbreak|DAN mode|developer mode|tell me your rules)/i;
-        if (injectionPattern.test(userMessage)) {
-          return res.json({
-            status: "guarded",
-            mode: "active_chat",
-            guardrailAlert: "Request out of linguistic scope. Redirected to language pedagogy.",
-            tutor_turn: {
-              reply: isArabic
-                ? "أنا معلمك اللغوي في Fluentic المخصص لتعلم وإتقان اللغة. لنركز معاً على القواعد والتراكيب والمحادثة العملية."
-                : "I am your Fluentic AI Polyglot Tutor focused exclusively on linguistic pedagogy and structural mastery. Let us explore vocabulary and conversational phrasing.",
-              audioReadyText: isArabic ? "أهلاً بك، لنركز على تعلم اللغة." : "Welcome. Let us focus on linguistic mastery.",
-              contextualCorrections: [],
-              idiomBreakdowns: [],
-              registerNotes: {
-                detectedRegister: "neutral",
-                appropriateForContext: true,
-                recommendation: isArabic ? "حافظ على التركيز في المحادثة اللغوية الهادفة." : "Maintain focus on authentic communicative practice."
-              },
-              pedagogicalNextPrompts: [
-                isArabic ? "كيف أطلب قهوة بأسلوب لبق في هذه اللغة؟" : "How do I order courteously in this language?",
-                isArabic ? "اشرح لي قاعدة استخدام الماضي والمضارع" : "Explain the contrast between past and present tenses"
-              ]
-            }
-          });
-        }
-
-        if (ai) {
-          try {
-            const systemInstruction = `You are Fluentic Master AI Polyglot Tutor (V24 Core).
-Target Language: ${targetLanguage} (${targetLanguageCode}).
-Learner Native Language: ${nativeLanguage} (${nativeLanguageCode}).
-Learner CEFR Level: ${cefrLevel}.
-Learner Intent: ${learningIntent}.
-
-MANDATED PEDAGOGICAL DIRECTIVES:
-1. Calibrate complexity dynamically to CEFR ${cefrLevel} and intent "${learningIntent}".
-2. All explanations, tips, and translations MUST be written 100% in the user's native language (${nativeLanguage}). Zero English leakage if native language is not English.
-3. Target Language Utterance: Authentic native script for ${targetLanguage}. Zero Latin transliterations permitted in target fields.
-4. Audio Ready Text: Provide an audio-ready string of pure target language text optimized for zero-latency Text-to-Speech (TTS) engines.
-5. Contextual Corrections: If the user wrote in ${targetLanguage}, analyze their grammar, syntax, verb conjugations, and word choice. Highlight errors and explain the rule in ${nativeLanguage}.
-6. Idiom Breakdowns: Break down any idioms, metaphors, or cultural expressions used.
-7. Register Notes: State whether the register is colloquial, neutral, formal, or academic, and note if it is appropriate.
-
-Format strictly as JSON:
-{
-  "reply": "Warm pedagogical reply and explanation written entirely in ${nativeLanguage}",
-  "targetLanguageUtterance": "Exemplary phrase in ${targetLanguage} native script (ZERO Latin transliteration)",
-  "audioReadyText": "Clean target phrase for TTS in ${targetLanguage}",
-  "translation": "Natural translation in ${nativeLanguage}",
-  "contextualCorrections": [
-    {
-      "originalSnippet": "User phrase slip",
-      "correctedSnippet": "Polished native phrase in ${targetLanguage}",
-      "grammaticalRule": "Grammar rule explanation in ${nativeLanguage}",
-      "severity": "minor" | "critical"
-    }
-  ],
-  "idiomBreakdowns": [
-    {
-      "idiom": "Idiom in ${targetLanguage}",
-      "literalMeaning": "Literal translation in ${nativeLanguage}",
-      "pragmaticUsage": "How natives use it in ${nativeLanguage}"
-    }
-  ],
-  "registerNotes": {
-    "detectedRegister": "colloquial" | "neutral" | "formal" | "academic",
-    "appropriateForContext": true,
-    "recommendation": "Advice on register in ${nativeLanguage}"
-  },
-  "pedagogicalNextPrompts": ["Interactive prompt 1 in ${nativeLanguage}", "Interactive prompt 2 in ${nativeLanguage}"]
-}`;
-
-            const response = await generateContentWithFallback(ai, {
-              contents: `History: ${JSON.stringify(history)}\nUser says: "${userMessage}"`,
-              config: { systemInstruction, responseMimeType: "application/json", temperature: 0.45 },
-            });
-
-            const parsed = JSON.parse(response.text || "{}");
-            return res.json({
-              status: "success",
-              mode: "active_chat",
-              tutor_turn: {
-                reply: parsed.reply || "",
-                targetLanguageUtterance: stripTransliteration(parsed.targetLanguageUtterance || ""),
-                audioReadyText: stripTransliteration(parsed.audioReadyText || parsed.targetLanguageUtterance || ""),
-                translation: parsed.translation || "",
-                contextualCorrections: Array.isArray(parsed.contextualCorrections) ? parsed.contextualCorrections : [],
-                idiomBreakdowns: Array.isArray(parsed.idiomBreakdowns) ? parsed.idiomBreakdowns : [],
-                registerNotes: parsed.registerNotes || {
-                  detectedRegister: "neutral",
-                  appropriateForContext: true,
-                  recommendation: isArabic ? "أسلوب متوازن وطبيعي." : "Balanced, natural phrasing."
-                },
-                pedagogicalNextPrompts: Array.isArray(parsed.pedagogicalNextPrompts) ? parsed.pedagogicalNextPrompts : []
-              }
-            });
-          } catch (err) {
-            console.warn("[Omni-Engine Active Chat AI Warning]", err);
-          }
-        }
-
-        // Procedural fallback
-        const cleanUserMsg = stripTransliteration(userMessage);
-        return res.json({
-          status: "fallback",
-          mode: "active_chat",
-          tutor_turn: {
-            reply: isArabic
-              ? `أهلاً بك! في مستوى ${cefrLevel} لتعلم ${targetLanguage}، يعتمد الإتقان على التكرار المتباعد ودقة التصريف والتركيب.`
-              : `Welcome! At CEFR ${cefrLevel} for ${targetLanguage}, structural mastery develops through active recall and grammatical accuracy.`,
-            targetLanguageUtterance: cleanUserMsg,
-            audioReadyText: cleanUserMsg,
-            translation: isArabic ? "تعبير لغوي عملي" : "Functional practical expression",
-            contextualCorrections: [],
-            idiomBreakdowns: [],
-            registerNotes: {
-              detectedRegister: "neutral",
-              appropriateForContext: true,
-              recommendation: isArabic ? "أسلوب سليم ومناسب للتواصل." : "Natural communicative register."
-            },
-            pedagogicalNextPrompts: [
-              isArabic ? "كيف أصيغ هذا التعبير بأسلوب أكثر رسمية؟" : "How can I express this in a formal register?",
-              isArabic ? "أعطني تمرين نطق فوري لهذه الجملة" : "Give me a quick pronunciation drill for this phrase"
-            ]
-          }
-        });
-      }
-
-      // Default unsupported mode
-      return res.status(400).json({ error: `Unsupported mode "${mode}". Supported: onboarding, placement_test, active_chat.` });
-    } catch (engineError: any) {
-      console.error("[Omni-Engine Fatal Error]", engineError);
-      res.status(500).json({ error: engineError?.message || "Internal Omni-Engine processing error" });
-    }
-  };
-
-  app.post("/api/engine", handleOmniEngineRequest);
-  app.post("/api/gemini/engine", handleOmniEngineRequest);
-  app.post("/api/omni-engine", handleOmniEngineRequest);
+  registerMasterEngine(app, getGeminiClient);
 
   // AI Scenario Generator / Continuation
   app.post("/api/gemini/scenario", async (req, res) => {
@@ -947,7 +410,7 @@ Format your response as a JSON object with:
       res.json(parsed);
     } catch (error: any) {
       console.error("Gemini Scenario Error:", error);
-      res.status(500).json({ error: error.message || "Failed to generate scenario" });
+      res.status(500).json({ error: "Failed to generate scenario" });
     }
   });
 
@@ -1019,7 +482,7 @@ Format strictly as JSON:
       res.json(parsed);
     } catch (error: any) {
       console.error("Gemini Dialogue Chat Error:", error);
-      res.status(500).json({ error: error.message || "Failed to process dialogue turn" });
+      res.status(500).json({ error: "Failed to process dialogue turn" });
     }
   });
 
@@ -1063,7 +526,7 @@ Respond in JSON:
       res.json(parsed);
     } catch (error: any) {
       console.error("Gemini Debate Error:", error);
-      res.status(500).json({ error: error.message || "Failed to generate debate turn" });
+      res.status(500).json({ error: "Failed to generate debate turn" });
     }
   });
 
@@ -1111,7 +574,7 @@ Format as JSON:
       res.json(parsed);
     } catch (error: any) {
       console.error("Grammar Surgeon Error:", error);
-      res.status(500).json({ error: error.message || "Failed to diagnose grammar gap" });
+      res.status(500).json({ error: "Failed to diagnose grammar gap" });
     }
   });
 
@@ -1160,7 +623,7 @@ Format as JSON:
       res.json(parsed);
     } catch (error: any) {
       console.error("Document Lens Error:", error);
-      res.status(500).json({ error: error.message || "Failed to analyze document" });
+      res.status(500).json({ error: "Failed to analyze document" });
     }
   });
 
@@ -1224,7 +687,7 @@ Format your response STRICTLY as a valid JSON object matching:
       res.json(parsed);
     } catch (error: any) {
       console.error("AI Tutor Error:", error);
-      res.status(500).json({ error: error.message || "Failed to get AI Tutor response" });
+      res.status(500).json({ error: "Failed to get AI Tutor response" });
     }
   });
 
@@ -1326,7 +789,7 @@ Format strictly as JSON:
       res.json(parsed);
     } catch (error: any) {
       console.error("Speech Feedback Error:", error);
-      res.status(500).json({ error: error.message || "Failed to generate speech feedback" });
+      res.status(500).json({ error: "Failed to generate speech feedback" });
     }
   });
 
@@ -1409,7 +872,7 @@ Format strictly as JSON:
       res.json(parsed);
     } catch (error: any) {
       console.error("Curriculum Generation Error:", error);
-      res.status(500).json({ error: error.message || "Failed to generate curriculum" });
+      res.status(500).json({ error: "Failed to generate curriculum" });
     }
   });
 
@@ -1558,7 +1021,7 @@ Format as JSON:
       res.json(parsed);
     } catch (error: any) {
       console.error("Grammar Module Error:", error);
-      res.status(500).json({ error: error.message || "Failed to generate grammar module" });
+      res.status(500).json({ error: "Failed to generate grammar module" });
     }
   });
 
@@ -1618,7 +1081,7 @@ Format strictly as JSON:
       res.json(parsed);
     } catch (error: any) {
       console.error("Speech Scenarios Error:", error);
-      res.status(500).json({ error: error.message || "Failed to generate speech scenarios" });
+      res.status(500).json({ error: "Failed to generate speech scenarios" });
     }
   });
 
@@ -1677,7 +1140,7 @@ Format strictly as JSON:
       res.json(parsed);
     } catch (error: any) {
       console.error("Scenario Chat Error:", error);
-      res.status(500).json({ error: error.message || "Failed to generate scenario reply" });
+      res.status(500).json({ error: "Failed to generate scenario reply" });
     }
   });
 
@@ -1849,7 +1312,7 @@ Return valid JSON matching this schema:
       });
     } catch (error: any) {
       console.error("Translation Endpoint Error:", error);
-      res.status(500).json({ error: error.message || "Translation failed" });
+      res.status(500).json({ error: "Translation failed" });
     }
   });
 
@@ -1881,7 +1344,7 @@ Return valid JSON matching this schema:
       });
     } catch (error: any) {
       console.error("Live Audio Stream API Error:", error);
-      res.status(500).json({ error: error.message || "Failed to process audio stream" });
+      res.status(500).json({ error: "Failed to process audio stream" });
     }
   });
 

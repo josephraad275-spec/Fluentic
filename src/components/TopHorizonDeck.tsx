@@ -1,3 +1,4 @@
+import { uiText } from "../services/uiLocalization.ts";
 import React, { useState } from 'react';
 import { 
   Search, 
@@ -122,7 +123,7 @@ export const TopHorizonDeck: React.FC<TopHorizonDeckProps> = ({
               id="fluentic-brand-logo-btn"
               onClick={onOpenSpotlight}
               className="flex items-center group cursor-pointer focus:outline-none"
-              title="Fluentic"
+              title={uiText("ui_a45afdf6e188")}
             >
               <FluenticLogo variant="horizontal" size="sm" showBadge={false} />
             </button>
@@ -148,8 +149,8 @@ export const TopHorizonDeck: React.FC<TopHorizonDeckProps> = ({
             className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-xs text-slate-500 hover:text-slate-800 transition-all cursor-pointer font-medium"
           >
             <Search className="w-3.5 h-3.5 text-slate-400" />
-            <span>Search curriculum, scenarios, grammar...</span>
-            <kbd className="px-1.5 py-0.5 rounded bg-white text-[10px] font-mono text-slate-500 border border-slate-300">⌘K</kbd>
+            <span>{uiText("ui_0c5af50268e4")}</span>
+            <kbd className="px-1.5 py-0.5 rounded bg-white text-[10px] font-mono text-slate-500 border border-slate-300">{uiText("ui_dfe870d90b82")}</kbd>
           </button>
 
           {/* Right Section: Streak, Gems, AI Tutor & Profile */}
@@ -157,7 +158,7 @@ export const TopHorizonDeck: React.FC<TopHorizonDeckProps> = ({
             {/* Streak Counter */}
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
               <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-pulse" />
-              <span>{user?.streakDays || 0}d</span>
+              <span>{user?.streakDays || 0}{uiText("ui_18ac3e7343f0")}</span>
             </div>
 
             {/* Gems Wallet */}
@@ -179,10 +180,10 @@ export const TopHorizonDeck: React.FC<TopHorizonDeckProps> = ({
                     ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
                     : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 shadow-2xs'
                 }`}
-                title="Open Fluentic AI Tutor"
+                title={uiText("ui_f7db5bfca692")}
               >
                 <Sparkles className={`w-3.5 h-3.5 ${isAITutorActive ? 'text-white' : 'text-blue-600'} animate-pulse`} />
-                <span className="hidden sm:inline">AI Tutor</span>
+                <span className="hidden sm:inline">{uiText("ui_64da958601b1")}</span>
               </button>
             )}
 
@@ -195,7 +196,7 @@ export const TopHorizonDeck: React.FC<TopHorizonDeckProps> = ({
                   onOpenSignInPage();
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer"
-                title="Go to Sign In & Setup Page"
+                title={uiText("ui_dff1e37e5170")}
               >
                 <User className="w-3.5 h-3.5" />
                 <span>{user?.name && user.name !== 'Explorer' && user.name !== 'Enter your name' ? 'Switch / Sign In' : 'Sign In'}</span>
@@ -210,7 +211,7 @@ export const TopHorizonDeck: React.FC<TopHorizonDeckProps> = ({
                 onOpenAuthModal();
               }}
               className="flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 transition-all cursor-pointer"
-              title="Account & Settings"
+              title={uiText("ui_456684cec6ae")}
             >
               <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center">
                 {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}

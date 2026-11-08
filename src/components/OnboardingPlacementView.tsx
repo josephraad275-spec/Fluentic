@@ -1,3 +1,6 @@
+import { ensureLocale } from "../ai/master/localizationClient.ts";
+import { subscribeTranslations, getTranslationRevision } from "../services/localization.ts";
+import { uiText } from "../services/uiLocalization.ts";
 import React, { useState } from 'react';
 import { 
   CefrLevel, 
@@ -46,7 +49,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
   // Step 1: Profile & Language Setup, Step 2: 10-Question Placement Test, Step 3: Assessment Results
   // If the user already provided their name from SignInView, start right at the placement test!
   const [step, setStep] = useState<1 | 2 | 3>(
-    initialProfile?.name && initialProfile.name.trim().length > 0 ? 2 : 1
+    1
   );
 
   // User details - default to English
@@ -62,6 +65,9 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
       if (initialProfile.activeLanguageCode) setTargetLanguageCode(initialProfile.activeLanguageCode);
     }
   }, [initialProfile]);
+
+  React.useSyncExternalStore(subscribeTranslations, getTranslationRevision);
+  React.useEffect(() => { ensureLocale(nativeLanguageCode).catch(() => {}); }, [nativeLanguageCode]);
 
   // Placement Test State & Dynamic Adaptive Routing (Strict 10-Question Standardized CEFR Assessment)
   const [selectedVariant, setSelectedVariant] = useState<'A' | 'B' | 'C' | 'D'>('A');
@@ -147,6 +153,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
     ).questions;
     try {
       const nativeName = WORLD_LANGUAGES.find((language) => language.code === nativeLanguageCode)?.name || 'English';
+      await OmniAppEngineClient.executeOnboarding({ displayName: name, nativeLanguageCode, targetLanguageCode: targetLanguage.code, learningIntent: initialProfile?.learningIntent || 'conversational' });
       const generated = await fluenticAssessment.createPlacementTest(targetLanguage.name, nativeName, 10, initialProfile?.learningIntent || 'conversational');
       const generatedQuestions = generated.questions as any[];
       const tiers = new Set(generatedQuestions.map((question) => String(question.level || '').toUpperCase()));
@@ -357,7 +364,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
       placementScore: score,
       placementDiagnosis: diagnosisText,
       structuralMastery: accuracy,
-      activeRecallRate: diagnosticData?.activeRecallRetentionRate ?? Math.max(70, accuracy),
+      activeRecallRate: diagnosticData?.activeRecallRetentionRate ?? accuracy,
       spacedErrorRecyclingCount: diagnosticData?.spacedErrorRecycling?.recycledErrorCount ?? (10 - score),
       diagnosticData: diagnosticData || undefined,
       gems: 0, // STRICT BAN: Zero superficial reward tokens
@@ -402,8 +409,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
         <div className="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-blue-50/80 via-white to-indigo-50/80 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <span className="text-xl">✨</span>
-            <span className="text-base font-black tracking-tight text-blue-900 font-sans">
-              Fluentic <span className="text-blue-600 font-normal">| {i18n.tagline}</span>
+            <span className="text-base font-black tracking-tight text-blue-900 font-sans">{uiText("ui_a45afdf6e188")}<span className="text-blue-600 font-normal">| {i18n.tagline}</span>
             </span>
           </div>
 
@@ -578,8 +584,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
                     <h2 className="text-base font-black text-slate-900">
                       {getLanguageLabel(targetLanguage)}
                     </h2>
-                    <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 font-extrabold text-[10px] border border-blue-200">
-                      Tier: {activeTier}
+                    <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 font-extrabold text-[10px] border border-blue-200">{uiText("ui_50c519cd51cc")}{activeTier}
                     </span>
                   </div>
                   <p className="text-xs text-slate-500">
@@ -661,7 +666,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
                 <div className="flex items-center gap-2">
                   <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-900 font-extrabold border border-blue-200 flex items-center gap-1.5">
                     <Target className="w-3.5 h-3.5" />
-                    <span>Niveau {currentQuestion.level || activeTier}</span>
+                    <span>{uiText("ui_2b5104f5fc26") + " "}{currentQuestion.level || activeTier}</span>
                   </span>
                   <span className="font-bold text-slate-700">
                     {currentQuestion.target_skill}
@@ -683,9 +688,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
                   <div className="text-[11px] uppercase tracking-wider text-[#D4AF37] font-extrabold flex items-center gap-2">
                     <span>{getLanguageLabel(targetLanguage)}</span>
                     {isRtlLanguage(targetLanguage.code) && (
-                      <span className="px-1.5 py-0.5 rounded bg-[#C5A059]/20 text-[10px] text-[#FDE68A] font-bold border border-[#C5A059]/40">
-                        RTL
-                      </span>
+                      <span className="px-1.5 py-0.5 rounded bg-[#C5A059]/20 text-[10px] text-[#FDE68A] font-bold border border-[#C5A059]/40">{uiText("ui_74ca1d86590d")}</span>
                     )}
                   </div>
                   <p
@@ -954,7 +957,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
               <div className="max-w-xl mx-auto rounded-2xl border border-slate-200 overflow-hidden text-left text-xs">
                 <div className="bg-slate-100/80 px-4 py-2.5 font-bold text-slate-700 uppercase tracking-wider text-[11px] flex items-center justify-between">
                   <span>{nativeLanguageCode === 'ar' ? 'خريطة المفاهيم اللغوية (Concept Mapping)' : 'Diagnostic Concept Mapping'}</span>
-                  <span className="text-[10px] text-slate-500">CEFR Framework</span>
+                  <span className="text-[10px] text-slate-500">{uiText("ui_4746a02c0be9")}</span>
                 </div>
                 <div className="divide-y divide-slate-100 bg-white">
                   {diagnosticData.conceptMapping.map((item, idx) => (

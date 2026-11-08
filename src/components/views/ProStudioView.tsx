@@ -1,3 +1,4 @@
+import { uiText } from "../../services/uiLocalization.ts";
 import { apiFetch } from "../../services/apiTransport.ts";
 import React, { useState, useRef } from 'react';
 import { 
@@ -441,7 +442,7 @@ export const ProStudioView: React.FC<ProStudioViewProps> = ({
           <div className="space-y-4 pt-4">
             <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
               <Gem className="w-5 h-5 text-blue-500 fill-blue-500" />
-              <span>Gem Vault & Energy Packs</span>
+              <span>{uiText("ui_e978d77410a3")}</span>
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {GEM_PACKS.map((pack) => (
@@ -454,14 +455,13 @@ export const ProStudioView: React.FC<ProStudioViewProps> = ({
                       💎
                     </div>
                     <div className="text-base font-black text-slate-900">{pack.name}</div>
-                    <div className="text-2xl font-black text-blue-600 font-mono">+{pack.amount} Gems</div>
+                    <div className="text-2xl font-black text-blue-600 font-mono">+{pack.amount}{" " + uiText("ui_6024329694ab")}</div>
                   </div>
                   <button
                     type="button"
                     onClick={() => setSelectedPlanForPayment(pack as any)}
                     className="mt-4 w-full py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 font-black text-xs transition-colors cursor-pointer"
-                  >
-                    Get for ${pack.priceUsd.toFixed(2)}
+                  >{uiText("ui_71cd7003aed6")}{pack.priceUsd.toFixed(2)}
                   </button>
                 </div>
               ))}
@@ -480,16 +480,10 @@ export const ProStudioView: React.FC<ProStudioViewProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-xl sm:text-2xl font-black text-slate-900">
-                    Custom Voice Persona / Accent Trainer
-                  </h3>
-                  <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-extrabold text-[11px] border border-amber-300">
-                    AI Neural Lab
-                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900">{uiText("ui_b9200685e52d")}</h3>
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-extrabold text-[11px] border border-amber-300">{uiText("ui_4b8055e561ea")}</span>
                 </div>
-                <p className="text-xs text-slate-500">
-                  Analyze your voice samples for custom pitch, accent inflection, and cadence fed directly into lesson readouts.
-                </p>
+                <p className="text-xs text-slate-500">{uiText("ui_b41a812b4eef")}</p>
               </div>
 
               {/* Activation Switch */}
@@ -514,11 +508,9 @@ export const ProStudioView: React.FC<ProStudioViewProps> = ({
                 <div className="space-y-1">
                   <div className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                     <Mic className="w-4 h-4 text-blue-600" />
-                    <span>Option 1: Record 5-10s Voice Sample</span>
+                    <span>{uiText("ui_c6aa26f06363")}</span>
                   </div>
-                  <p className="text-xs text-slate-600">
-                    Speak a phrase naturally in {activeLanguage.name} or your native language.
-                  </p>
+                  <p className="text-xs text-slate-600">{uiText("ui_b519d4daac76")}{activeLanguage.name}{uiText("ui_de5ed227ef15")}</p>
                 </div>
 
                 <div className="flex items-center justify-center py-2">
@@ -545,11 +537,9 @@ export const ProStudioView: React.FC<ProStudioViewProps> = ({
                 <div className="space-y-1">
                   <div className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                     <Upload className="w-4 h-4 text-[#C5A059]" />
-                    <span>Option 2: Upload Audio Sample</span>
+                    <span>{uiText("ui_2fec598840cc")}</span>
                   </div>
-                  <p className="text-xs text-slate-600">
-                    Select a .wav, .mp3, or .m4a recording of speech to train neural weights.
-                  </p>
+                  <p className="text-xs text-slate-600">{uiText("ui_469be49b4bbd")}</p>
                 </div>
 
                 <input
@@ -567,7 +557,7 @@ export const ProStudioView: React.FC<ProStudioViewProps> = ({
                     className="px-6 py-3 rounded-2xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs shadow-xs flex items-center gap-2 cursor-pointer"
                   >
                     <Upload className="w-4 h-4 text-slate-500" />
-                    <span>Choose Audio File</span>
+                    <span>{uiText("ui_ac83b49a325f")}</span>
                   </button>
                 </div>
 
@@ -581,30 +571,27 @@ export const ProStudioView: React.FC<ProStudioViewProps> = ({
             <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 to-[#0F2137] text-white border border-[#C5A059]/30 space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black uppercase tracking-wider text-[#D4AF37] flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4" /> AI Neural Extraction Metrics
-                </span>
+                  <Sparkles className="w-4 h-4" />{uiText("ui_952953683f3e")}</span>
                 {isAnalyzingVoice && (
-                  <span className="text-xs font-bold text-amber-300 animate-pulse">
-                    Analyzing cadence & pitch...
-                  </span>
+                  <span className="text-xs font-bold text-amber-300 animate-pulse">{uiText("ui_cbb92a0f8eba")}</span>
                 )}
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3 bg-white/10 rounded-xl border border-white/10">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase">Accent Clarity</div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">{uiText("ui_a1706aa28e9a")}</div>
                   <div className="text-lg font-black text-emerald-400">{voiceMetrics.accentClarity}</div>
                 </div>
                 <div className="p-3 bg-white/10 rounded-xl border border-white/10">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase">Pitch (F0)</div>
-                  <div className="text-lg font-black text-[#D4AF37]">{voiceMetrics.pitchHz} Hz</div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">{uiText("ui_65e9f18dc244")}</div>
+                  <div className="text-lg font-black text-[#D4AF37]">{voiceMetrics.pitchHz}{" " + uiText("ui_987d2c1d9216")}</div>
                 </div>
                 <div className="p-3 bg-white/10 rounded-xl border border-white/10">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase">Cadence Rhythm</div>
-                  <div className="text-lg font-black text-blue-300">{voiceMetrics.cadenceWpm} wpm</div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">{uiText("ui_5a6b8157c885")}</div>
+                  <div className="text-lg font-black text-blue-300">{voiceMetrics.cadenceWpm}{" " + uiText("ui_2ded97d88d1e")}</div>
                 </div>
                 <div className="p-3 bg-white/10 rounded-xl border border-white/10">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase">Tonal Stability</div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">{uiText("ui_108f55814b72")}</div>
                   <div className="text-lg font-black text-white">{voiceMetrics.tonalStability}</div>
                 </div>
               </div>
@@ -614,14 +601,14 @@ export const ProStudioView: React.FC<ProStudioViewProps> = ({
             <div className="space-y-4 pt-2">
               <div className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-[#1B365D]" />
-                <span>Adjust Neural Pitch & Cadence Modulation</span>
+                <span>{uiText("ui_d6b4122fca3a")}</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Pitch Slider */}
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                   <div className="flex justify-between text-xs font-bold text-slate-700">
-                    <span>Voice Pitch: {pitchFactor.toFixed(2)}x</span>
+                    <span>{uiText("ui_999eead44528") + " "}{pitchFactor.toFixed(2)}{uiText("ui_2d711642b726")}</span>
                     <span className="text-slate-400">{pitchFactor < 1 ? 'Deep' : 'High'}</span>
                   </div>
                   <input
@@ -638,7 +625,7 @@ export const ProStudioView: React.FC<ProStudioViewProps> = ({
                 {/* Cadence Slider */}
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                   <div className="flex justify-between text-xs font-bold text-slate-700">
-                    <span>Cadence Speed: {rateFactor.toFixed(2)}x</span>
+                    <span>{uiText("ui_dae03cf827e9") + " "}{rateFactor.toFixed(2)}{uiText("ui_2d711642b726")}</span>
                     <span className="text-slate-400">{rateFactor < 1 ? 'Slow & Clear' : 'Native Pace'}</span>
                   </div>
                   <input
@@ -689,7 +676,7 @@ export const ProStudioView: React.FC<ProStudioViewProps> = ({
       {activeTab === 'lens' && (
         <div className="space-y-6">
           <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
-            <h3 className="text-base font-black text-slate-900">AI Document Linguistic Lens</h3>
+            <h3 className="text-base font-black text-slate-900">{uiText("ui_eff32f4cc4d4")}</h3>
             <textarea
               value={docText}
               onChange={(e) => setDocText(e.target.value)}
@@ -710,19 +697,19 @@ export const ProStudioView: React.FC<ProStudioViewProps> = ({
             <div className="p-6 rounded-3xl bg-blue-50/50 border border-blue-200 space-y-4">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3 bg-white rounded-xl border border-blue-100">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase">Assessed CEFR</div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">{uiText("ui_39f5a05b4a77")}</div>
                   <div className="text-lg font-black text-blue-600">{docAnalysis.cefrLevel || 'B2'}</div>
                 </div>
                 <div className="p-3 bg-white rounded-xl border border-blue-100">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase">Total Words</div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">{uiText("ui_c834bb1dece1")}</div>
                   <div className="text-lg font-black text-slate-800">{docAnalysis.totalWords || 22}</div>
                 </div>
                 <div className="p-3 bg-white rounded-xl border border-blue-100">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase">Unique Tokens</div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">{uiText("ui_6f854a538365")}</div>
                   <div className="text-lg font-black text-slate-800">{docAnalysis.uniqueTokens || 19}</div>
                 </div>
                 <div className="p-3 bg-white rounded-xl border border-blue-100">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase">Lexical Variety</div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">{uiText("ui_73a472476a8d")}</div>
                   <div className="text-lg font-black text-emerald-600">{docAnalysis.lexicalDensity || '86.4%'}</div>
                 </div>
               </div>

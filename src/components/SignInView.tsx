@@ -1,3 +1,4 @@
+import { uiText } from "../services/uiLocalization.ts";
 import React, { useState } from 'react';
 import { 
   Sparkles, 
@@ -139,9 +140,7 @@ export const SignInView: React.FC<SignInViewProps> = ({
                 className={`px-2 py-0.5 rounded-lg transition-all ${
                   nativeCode === 'ar' ? 'bg-blue-600 text-white font-bold' : 'hover:text-slate-900'
                 }`}
-              >
-                AR 🇸🇦
-              </button>
+              >{uiText("ui_edd29441800f")}</button>
               <span className="text-slate-300">|</span>
               <button
                 type="button"
@@ -152,9 +151,7 @@ export const SignInView: React.FC<SignInViewProps> = ({
                 className={`px-2 py-0.5 rounded-lg transition-all ${
                   nativeCode === 'nl' ? 'bg-blue-600 text-white font-bold' : 'hover:text-slate-900'
                 }`}
-              >
-                NL 🇳🇱
-              </button>
+              >{uiText("ui_8b152ae31daa")}</button>
               <span className="text-slate-300">|</span>
               <button
                 type="button"
@@ -165,9 +162,7 @@ export const SignInView: React.FC<SignInViewProps> = ({
                 className={`px-2 py-0.5 rounded-lg transition-all ${
                   nativeCode === 'en' ? 'bg-blue-600 text-white font-bold' : 'hover:text-slate-900'
                 }`}
-              >
-                EN 🇬🇧
-              </button>
+              >{uiText("ui_13f03014f84d")}</button>
             </div>
           </div>
         </div>

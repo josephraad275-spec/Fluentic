@@ -1,3 +1,4 @@
+import { uiText } from "../../services/uiLocalization.ts";
 import React from 'react';
 import { 
   Sparkles, 
@@ -57,17 +58,12 @@ export const ConstellationGalaxyView: React.FC<ConstellationGalaxyViewProps> = (
       <div className="max-w-3xl w-full text-center mb-6 space-y-1.5 z-10">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-slate-200 text-xs font-bold text-slate-700 shadow-xs backdrop-blur-sm">
           <span className="text-base leading-none">{activeLanguage.flag}</span>
-          <span>{activeLanguage.name} Skill Map</span>
+          <span>{activeLanguage.name}{" " + uiText("ui_1a957955aab6")}</span>
           <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 font-extrabold text-[10px]">
-            {activeCefr} Level
-          </span>
+            {activeCefr}{uiText("ui_1709305c9fa9")}</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-          Your Learning Map
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto">
-          Pick any topic below to practice. No heart limits, learn at your own pace, and earn crowns & gems as you level up!
-        </p>
+        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{uiText("ui_4762df026f03")}</h2>
+        <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto">{uiText("ui_1ea8595c56f2")}</p>
       </div>
 
       {/* Celestial SVG Vector Links & Nodes Canvas */}
@@ -102,7 +98,7 @@ export const ConstellationGalaxyView: React.FC<ConstellationGalaxyViewProps> = (
                 {/* Crown Mastery Level Badge */}
                 <div className="absolute -top-3 flex items-center gap-0.5 px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-extrabold shadow-sm">
                   <Crown className="w-3 h-3 fill-white" />
-                  <span>Crown {crowns}/5</span>
+                  <span>{uiText("ui_29968c38d1fa") + " "}{crowns}/5</span>
                 </div>
 
                 {/* Node Orbital Icon Button */}
@@ -137,7 +133,7 @@ export const ConstellationGalaxyView: React.FC<ConstellationGalaxyViewProps> = (
                 {/* Reward & Start Action */}
                 <div className="mt-4 pt-3 border-t border-slate-100 w-full flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-                    <span className="text-amber-600">+{node.xpReward} XP</span>
+                    <span className="text-amber-600">+{node.xpReward}{" " + uiText("ui_168aad3e9812")}</span>
                     <span>•</span>
                     <span className="text-cyan-600">+{node.gemReward} 💎</span>
                   </div>

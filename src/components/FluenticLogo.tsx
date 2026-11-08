@@ -1,3 +1,4 @@
+import { uiText } from "../services/uiLocalization.ts";
 import React from 'react';
 
 interface FluenticLogoProps {
@@ -35,7 +36,7 @@ export const FluenticLogo: React.FC<FluenticLogoProps> = ({
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={`${iconDimensions} shrink-0 transition-transform duration-300 ${customClass}`}
-      aria-label="Fluentic logo emblem"
+      aria-label={uiText("ui_f0c372eaf8fd")}
     >
       <defs>
         <linearGradient id="fl-gold-swoosh" x1="0%" y1="100%" x2="100%" y2="0%">
@@ -124,14 +125,10 @@ export const FluenticLogo: React.FC<FluenticLogoProps> = ({
       <div className={`inline-flex flex-col items-center justify-center p-4 rounded-3xl bg-white shadow-lg border border-slate-200/90 ${className}`}>
         <Emblem customClass="w-16 h-16 sm:w-20 sm:h-20" />
         <div className="mt-2 text-center">
-          <span className="text-xl sm:text-2xl font-black tracking-tight text-[#0B1B3D] flex items-center justify-center">
-            Fluent<span className="relative">i<span className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#C59239]" /></span>c
-          </span>
+          <span className="text-xl sm:text-2xl font-black tracking-tight text-[#0B1B3D] flex items-center justify-center">{uiText("ui_04ad78f7d243")}<span className="relative">{uiText("ui_de7d1b721a1e")}<span className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#C59239]" /></span>{uiText("ui_2e7d2c03a950")}</span>
           {showTagline && (
             <p className="text-[11px] sm:text-xs font-semibold text-slate-600 mt-0.5 tracking-wide">
-              <span className="text-[#C59239] font-bold">— </span>
-              Fluent in <span className="text-[#C59239] font-bold italic">every </span>word.
-              <span className="text-[#C59239] font-bold"> —</span>
+              <span className="text-[#C59239] font-bold">— </span>{uiText("ui_9c1796bb540d")}<span className="text-[#C59239] font-bold italic">{uiText("ui_66a424a9a958") + " "}</span>{uiText("ui_3f7d2f9dbb02")}<span className="text-[#C59239] font-bold"> —</span>
             </p>
           )}
         </div>
@@ -146,15 +143,11 @@ export const FluenticLogo: React.FC<FluenticLogoProps> = ({
           <Emblem customClass="w-24 h-24 sm:w-32 sm:h-32 transition-transform group-hover:scale-105 duration-300" />
         </div>
         <div className="mt-2 flex items-center justify-center">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#0B1B3D]">
-            Fluent<span className="relative inline-block">i<span className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-gradient-to-tr from-[#9E6F22] to-[#E2B85E] shadow-sm" /></span>c
-          </h1>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#0B1B3D]">{uiText("ui_04ad78f7d243")}<span className="relative inline-block">{uiText("ui_de7d1b721a1e")}<span className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-gradient-to-tr from-[#9E6F22] to-[#E2B85E] shadow-sm" /></span>{uiText("ui_2e7d2c03a950")}</h1>
         </div>
         {showTagline && (
           <p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1 tracking-wide">
-            <span className="text-[#C59239] font-bold">— </span>
-            Fluent in <span className="text-[#C59239] font-bold italic">every </span>word.
-            <span className="text-[#C59239] font-bold"> —</span>
+            <span className="text-[#C59239] font-bold">— </span>{uiText("ui_9c1796bb540d")}<span className="text-[#C59239] font-bold italic">{uiText("ui_66a424a9a958") + " "}</span>{uiText("ui_3f7d2f9dbb02")}<span className="text-[#C59239] font-bold"> —</span>
           </p>
         )}
       </div>
@@ -166,14 +159,10 @@ export const FluenticLogo: React.FC<FluenticLogoProps> = ({
     <div className={`inline-flex items-center gap-2.5 sm:gap-3 group ${className}`}>
       <Emblem customClass="group-hover:scale-105 transition-transform" />
       <div className="flex flex-col justify-center leading-none text-left">
-        <span className={`${textSizes} font-extrabold tracking-tight text-[#0B1B3D] flex items-center`}>
-          Fluent<span className="relative">i<span className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-gradient-to-tr from-[#9E6F22] to-[#E2B85E]" /></span>c
-        </span>
+        <span className={`${textSizes} font-extrabold tracking-tight text-[#0B1B3D] flex items-center`}>{uiText("ui_04ad78f7d243")}<span className="relative">{uiText("ui_de7d1b721a1e")}<span className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-gradient-to-tr from-[#9E6F22] to-[#E2B85E]" /></span>{uiText("ui_2e7d2c03a950")}</span>
         {showTagline && size !== 'sm' && (
           <span className="text-[10px] font-semibold text-slate-500 mt-0.5 tracking-tight hidden sm:inline-block">
-            <span className="text-[#C59239] font-bold">— </span>
-            Fluent in <span className="text-[#C59239] font-bold italic">every </span>word.
-            <span className="text-[#C59239] font-bold"> —</span>
+            <span className="text-[#C59239] font-bold">— </span>{uiText("ui_9c1796bb540d")}<span className="text-[#C59239] font-bold italic">{uiText("ui_66a424a9a958") + " "}</span>{uiText("ui_3f7d2f9dbb02")}<span className="text-[#C59239] font-bold"> —</span>
           </span>
         )}
       </div>

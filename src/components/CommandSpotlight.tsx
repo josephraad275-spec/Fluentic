@@ -1,3 +1,4 @@
+import { uiText } from "../services/uiLocalization.ts";
 import React, { useState, useEffect } from 'react';
 import { 
   Search, 
@@ -102,15 +103,13 @@ export const CommandSpotlight: React.FC<CommandSpotlightProps> = ({
           <input
             id="spotlight-search-input"
             type="text"
-            placeholder="Type a command, jump to language, or switch soundscape (e.g. 'French', 'Speech', 'Alpha')..."
+            placeholder={uiText("ui_bfd81e50429e")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             autoFocus
             className="w-full bg-transparent text-slate-800 placeholder-slate-400 text-base outline-none font-medium"
           />
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-xs font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded">
-            ESC
-          </kbd>
+          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-xs font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded">{uiText("ui_c5b7d0ec4f69")}</kbd>
           <button
             id="spotlight-close-btn"
             onClick={onClose}
@@ -125,9 +124,7 @@ export const CommandSpotlight: React.FC<CommandSpotlightProps> = ({
           {/* Quick Nav Section */}
           {filteredActions.length > 0 && (
             <div>
-              <p className="px-2 text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                Spatial Navigation
-              </p>
+              <p className="px-2 text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">{uiText("ui_8f7ccfa06dee")}</p>
               <div className="space-y-1">
                 {filteredActions.map((action) => {
                   const Icon = action.icon;
@@ -161,9 +158,7 @@ export const CommandSpotlight: React.FC<CommandSpotlightProps> = ({
           {/* Languages Section */}
           {matchingLanguages.length > 0 && (
             <div>
-              <p className="px-2 text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                World Languages (55+ Available)
-              </p>
+              <p className="px-2 text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">{uiText("ui_ac5abf45782c")}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {matchingLanguages.map((lang) => (
                   <button
@@ -198,9 +193,7 @@ export const CommandSpotlight: React.FC<CommandSpotlightProps> = ({
 
           {/* Soundscapes quick action */}
           <div>
-            <p className="px-2 text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-              Focus Binaural Soundscapes (Web Audio)
-            </p>
+            <p className="px-2 text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">{uiText("ui_a00c4dfe2a36")}</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
               {soundActions.map((snd) => (
                 <button
@@ -224,12 +217,12 @@ export const CommandSpotlight: React.FC<CommandSpotlightProps> = ({
         {/* Footer */}
         <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
           <div className="flex items-center gap-2">
-            <span>Navigation:</span>
+            <span>{uiText("ui_1bcf55b5d648")}</span>
             <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-600 font-mono">1-8</kbd>
-            <span>Spotlight:</span>
-            <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-600 font-mono">Cmd+K</kbd>
+            <span>{uiText("ui_982d79228e95")}</span>
+            <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-600 font-mono">{uiText("ui_f929c604c8af")}</kbd>
           </div>
-          <span className="font-medium text-amber-700">Fluentic Omni-Studio 2.0</span>
+          <span className="font-medium text-amber-700">{uiText("ui_52831be479a5")}</span>
         </div>
       </div>
     </div>

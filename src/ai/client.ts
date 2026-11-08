@@ -1,3 +1,4 @@
+import { masterRequest } from "./master/client.ts";
 import { apiFetch } from "../services/apiTransport.ts";
 export type FluenticAIAction =
   | "translate"
@@ -19,6 +20,11 @@ export async function fluenticAI<T = Record<string, unknown>>(
   payload: Record<string, unknown>,
   options: { signal?: AbortSignal } = {},
 ): Promise<T & FluenticAIResponse> {
+  if (action === 'placement' || action === 'personal-lesson') {
+    const mode = action === 'placement' ? 'placement_test' : 'personal_lesson';
+    const data = await masterRequest<Record<string, unknown>>(mode, { ...payload, action: 'generate_questions' }, options.signal);
+    return { ...data, success: true, action } as T & FluenticAIResponse;
+  }
   const maxAttempts = 3;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     let response: Response;

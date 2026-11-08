@@ -1,3 +1,4 @@
+import { uiText } from "../../services/uiLocalization.ts";
 import React, { useState, useEffect } from 'react';
 import { 
   Swords, 
@@ -116,14 +117,10 @@ export const GrandArenaView: React.FC<GrandArenaViewProps> = ({
       <div className="text-center space-y-1.5">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold">
           <Swords className="w-3.5 h-3.5" />
-          <span>Grand Arena • 60s Speed Sprint</span>
+          <span>{uiText("ui_96311ccf160e")}</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-          High-Velocity Polyglot Arena
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
-          Test your spontaneous retrieval agility in {activeLanguage.name} against the clock.
-        </p>
+        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{uiText("ui_edcf98603520")}</h2>
+        <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">{uiText("ui_c108c0c93980")}{activeLanguage.name}{uiText("ui_e52a7c85b74f")}</p>
       </div>
 
       {gameState === 'idle' && (
@@ -133,12 +130,8 @@ export const GrandArenaView: React.FC<GrandArenaViewProps> = ({
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-xl font-extrabold text-slate-900">
-              60-Second Rapid Vocabulary Duel
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
-              Answer as many rapid linguistic translations as possible in one minute. Build high combos for bonus multipliers!
-            </p>
+            <h3 className="text-xl font-extrabold text-slate-900">{uiText("ui_a03fcd728e5e")}</h3>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">{uiText("ui_e4c3bde38241")}</p>
           </div>
 
           <button
@@ -147,7 +140,7 @@ export const GrandArenaView: React.FC<GrandArenaViewProps> = ({
             className="px-8 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-sm shadow-lg shadow-rose-600/30 hover:scale-105 transition-all inline-flex items-center gap-2"
           >
             <Play className="w-4 h-4 fill-white" />
-            <span>Launch Sprint</span>
+            <span>{uiText("ui_ac5af5364f16")}</span>
           </button>
         </div>
       )}
@@ -158,16 +151,15 @@ export const GrandArenaView: React.FC<GrandArenaViewProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 font-bold text-rose-600 text-lg">
               <Timer className="w-5 h-5 animate-spin" />
-              <span>{timeLeft}s</span>
+              <span>{timeLeft}{uiText("ui_043a718774c5")}</span>
             </div>
 
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1 text-orange-600 font-extrabold text-sm">
                 <Flame className="w-4 h-4 fill-orange-500" />
-                <span>{streak}x Combo</span>
+                <span>{streak}{uiText("ui_b01107bf9bbd")}</span>
               </div>
-              <div className="text-sm font-extrabold text-slate-900">
-                Score: {score}
+              <div className="text-sm font-extrabold text-slate-900">{uiText("ui_9689a814f358")}{score}
               </div>
             </div>
           </div>
@@ -182,8 +174,7 @@ export const GrandArenaView: React.FC<GrandArenaViewProps> = ({
 
           {/* Target Word Display */}
           <div className="py-6 text-center space-y-2 bg-slate-50 rounded-2xl border border-slate-200">
-            <span className="text-xs font-bold text-slate-400 uppercase">
-              Translate Word • {activeLanguage.name}
+            <span className="text-xs font-bold text-slate-400 uppercase">{uiText("ui_f85e62c82769")}{activeLanguage.name}
             </span>
             <div className="text-2xl sm:text-3xl font-black text-slate-900">
               {currentQ.word}
@@ -219,19 +210,17 @@ export const GrandArenaView: React.FC<GrandArenaViewProps> = ({
           </div>
 
           <div className="space-y-1">
-            <h3 className="text-2xl font-black text-slate-900">Sprint Concluded!</h3>
-            <p className="text-xs sm:text-sm text-slate-500">
-              You answered {score} words correctly with a peak combo of {maxStreak}x.
-            </p>
+            <h3 className="text-2xl font-black text-slate-900">{uiText("ui_ce6972fe3525")}</h3>
+            <p className="text-xs sm:text-sm text-slate-500">{uiText("ui_5a1633c272ff")}{score}{" " + uiText("ui_19408a9d5097") + " "}{maxStreak}{uiText("ui_c92f00b196e2")}</p>
           </div>
 
           <div className="flex items-center justify-center gap-4 py-2">
             <div className="px-5 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-center">
-              <div className="text-xs font-bold text-amber-800 uppercase">XP Awarded</div>
-              <div className="text-xl font-black text-amber-900">+{score * 15} XP</div>
+              <div className="text-xs font-bold text-amber-800 uppercase">{uiText("ui_4f924e763321")}</div>
+              <div className="text-xl font-black text-amber-900">+{score * 15}{" " + uiText("ui_168aad3e9812")}</div>
             </div>
             <div className="px-5 py-3 rounded-2xl bg-cyan-50 border border-cyan-200 text-center">
-              <div className="text-xs font-bold text-cyan-800 uppercase">Gems Earned</div>
+              <div className="text-xs font-bold text-cyan-800 uppercase">{uiText("ui_cf181bd8f6c4")}</div>
               <div className="text-xl font-black text-cyan-900">+{Math.floor(score / 3) + 2} 💎</div>
             </div>
           </div>
@@ -241,7 +230,7 @@ export const GrandArenaView: React.FC<GrandArenaViewProps> = ({
             className="px-6 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-all inline-flex items-center gap-2"
           >
             <RotateCcw className="w-4 h-4" />
-            <span>Play Again</span>
+            <span>{uiText("ui_82959974e9e2")}</span>
           </button>
         </div>
       )}

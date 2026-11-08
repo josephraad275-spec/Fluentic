@@ -1,3 +1,5 @@
+import { uiText } from "../services/uiLocalization.ts";
+import { recordRetrieval } from "../ai/master/learnerState.ts";
 import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
@@ -41,7 +43,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
   // 2: 'practice'   - Interactive exercises (word bank, matching, speech, fill-blank)
   // 3: 'assessment' - Mandatory Module Assessment Mini-Quiz (+20 Gems bonus)
   // 4: 'complete'   - Reinforcement & Progress Tracking (Mastery Badges & Streak points)
-  const [stage, setStage] = useState<'concept' | 'practice' | 'assessment' | 'complete'>('concept');
+  const [stage, setStage] = useState<'concept' | 'practice' | 'assessment' | 'complete'>(node.exercises[0]?.learningStage ? 'practice' : 'concept');
   const [currentExIndex, setCurrentExIndex] = useState<number>(0);
   const [reviewedConcepts, setReviewedConcepts] = useState<Record<number, boolean>>({});
 
@@ -301,7 +303,9 @@ export const LessonModal: React.FC<LessonModalProps> = ({
       if (currentExIndex < node.exercises.length - 1) {
         const nextIdx = currentExIndex + 1;
         setCurrentExIndex(nextIdx);
-        if (!reviewedConcepts[nextIdx]) {
+        if (node.exercises[nextIdx]?.learningStage) {
+          setStage(node.exercises[nextIdx].learningStage === 'feedback' ? 'concept' : 'practice');
+        } else if (!reviewedConcepts[nextIdx]) {
           setStage('concept');
         } else {
           setStage('practice');
@@ -333,9 +337,10 @@ export const LessonModal: React.FC<LessonModalProps> = ({
         .toLowerCase();
       correct = assembledStr === targetStr;
     } else if (currentExercise.type === 'speech-pronounce') {
-      correct = (speechAccuracy ?? 0) >= 70 || recognizedSpeech.length > 2;
+      correct = speechAccuracy !== null && speechAccuracy >= 70;
     }
 
+    recordRetrieval(currentExercise.grammarTip || currentExercise.prompt, correct);
     setIsCorrect(correct);
     setIsAnswerChecked(true);
 
@@ -355,7 +360,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
 
     if (isAnsCorrect) {
       audioSynth.playTriumphChime();
-      setQuizGemsEarned(20);
+      setQuizGemsEarned(0);
     } else {
       audioSynth.playGentleFeedback();
     }
@@ -368,7 +373,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
 
   // Finalize Lesson & Award Mastery Badges + Regular Gems + Assessment Bonus Gems
   const handleFinish = () => {
-    onComplete(node.xpReward, node.gemReward + quizGemsEarned);
+    onComplete(0, 0);
     onClose();
   };
 
@@ -401,8 +406,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                {mins}m
-              </button>
+                {mins}{uiText("ui_62c66a7a5dd7")}</button>
             ))}
             <button
               type="button"
@@ -436,8 +440,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
             <div className="space-y-6">
               <div className="text-center space-y-2">
                 <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#1B365D] bg-blue-50 px-3.5 py-1 rounded-full border border-[#C5A059]/30">
-                  <BookOpen className="w-3.5 h-3.5 text-[#C5A059]" /> Concept Card • Pure Native Script
-                </span>
+                  <BookOpen className="w-3.5 h-3.5 text-[#C5A059]" />{uiText("ui_ba8093b614a3")}</span>
                 <h2
                   dir={isRtl ? 'rtl' : 'ltr'}
                   className={`text-2xl sm:text-4xl font-black text-[#0F2137] tracking-tight leading-relaxed ${
@@ -456,7 +459,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                   className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#1B365D] to-[#0F2137] hover:from-[#0F2137] text-[#D4AF37] font-black text-xs flex items-center gap-2 shadow-md shadow-blue-900/15 cursor-pointer border border-[#C5A059]/40"
                 >
                   <Volume2 className="w-4 h-4 text-[#D4AF37]" />
-                  <span>Listen Normal</span>
+                  <span>{uiText("ui_a222ba0cd97b")}</span>
                 </button>
                 <button
                   type="button"
@@ -464,21 +467,21 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                   className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-2 cursor-pointer"
                 >
                   <Volume2 className="w-4 h-4 text-slate-500" />
-                  <span>Slow (0.7x)</span>
+                  <span>{uiText("ui_c67b2f07c63e")}</span>
                 </button>
               </div>
 
               {/* Meaning & Context Card */}
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Meaning</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{uiText("ui_1f5d64b92820")}</span>
                   <p className="text-base sm:text-lg font-bold text-slate-800">
                     {currentExercise.translation}
                   </p>
                 </div>
                 {currentExercise.exampleSentence && (
                   <div className="pt-2 border-t border-slate-200">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Real-Life Context</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{uiText("ui_cf4c97863ea3")}</span>
                     <p
                       dir={isRtl ? 'rtl' : 'ltr'}
                       className={`text-sm font-semibold text-slate-700 italic ${isRtl ? 'text-right' : 'text-left'}`}
@@ -511,7 +514,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                   onClick={handleStartPractice}
                   className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#1B365D] via-[#0F2137] to-[#1B365D] hover:from-[#0F2137] text-white font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 cursor-pointer border border-[#C5A059]/40"
                 >
-                  <span className="text-[#D4AF37]">Practice This Phrase</span>
+                  <span className="text-[#D4AF37]">{uiText("ui_627232cc2dfc")}</span>
                   <ArrowRight className="w-4 h-4 text-[#D4AF37]" />
                 </button>
               </div>
@@ -524,16 +527,14 @@ export const LessonModal: React.FC<LessonModalProps> = ({
           {stage === 'practice' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between text-xs font-bold text-slate-400 pb-2 border-b border-slate-100">
-                <span className="text-[#1B365D] font-extrabold uppercase tracking-wider">
-                  Exercise {currentExIndex + 1} of {node.exercises.length}
+                <span className="text-[#1B365D] font-extrabold uppercase tracking-wider">{uiText("ui_9bc3516b784a")}{currentExIndex + 1}{" " + uiText("ui_28391d3bc64e") + " "}{node.exercises.length}
                 </span>
                 <button
                   type="button"
                   onClick={() => setStage('concept')}
                   className="text-slate-400 hover:text-slate-700 flex items-center gap-1 text-[11px]"
                 >
-                  <HelpCircle className="w-3.5 h-3.5" /> Review Concept
-                </button>
+                  <HelpCircle className="w-3.5 h-3.5" />{uiText("ui_06c63f7c8ac3")}</button>
               </div>
 
               <div className="space-y-1">
@@ -546,8 +547,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                     onClick={() => playAudio(currentExercise.targetPhrase || '', 0.9)}
                     className="mt-2 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 font-bold text-xs flex items-center gap-1.5"
                   >
-                    <Volume2 className="w-4 h-4" /> Listen again
-                  </button>
+                    <Volume2 className="w-4 h-4" />{uiText("ui_d30d89be2e5a")}</button>
                 )}
               </div>
 
@@ -604,7 +604,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                     className="min-h-[64px] p-4 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex flex-wrap gap-2 items-center"
                   >
                     {assembledTokens.length === 0 ? (
-                      <span className="text-xs text-slate-400 italic">Tap words below to construct the phrase...</span>
+                      <span className="text-xs text-slate-400 italic">{uiText("ui_6091ce2f78ef")}</span>
                     ) : (
                       assembledTokens.map((word, idx) => (
                         <button
@@ -638,9 +638,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
               {/* Practice Form C: Speech Pronunciation */}
               {currentExercise.type === 'speech-pronounce' && (
                 <div className="p-6 rounded-3xl bg-amber-50/50 border border-amber-200/80 text-center space-y-4">
-                  <p className="text-xs font-black uppercase tracking-wider text-amber-900">
-                    Tap microphone and speak:
-                  </p>
+                  <p className="text-xs font-black uppercase tracking-wider text-amber-900">{uiText("ui_30fade7d594a")}</p>
                   <h4
                     dir={isRtl ? 'rtl' : 'ltr'}
                     className={`text-xl sm:text-2xl font-black text-slate-900 ${isRtl ? 'text-right' : 'text-center'}`}
@@ -664,7 +662,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                       type="button"
                       onClick={() => playAudio(currentExercise.targetPhrase || '', 0.85)}
                       className="p-3.5 rounded-2xl bg-white border border-slate-200 text-slate-700 shadow-xs cursor-pointer"
-                      title="Hear audio"
+                      title={uiText("ui_9515c0dffaad")}
                     >
                       <Volume2 className="w-5 h-5 text-[#C5A059]" />
                     </button>
@@ -672,10 +670,9 @@ export const LessonModal: React.FC<LessonModalProps> = ({
 
                   {(interimSpeech || recognizedSpeech) && (
                     <div className="p-3 rounded-2xl bg-white border border-slate-200 text-xs font-bold text-slate-800 space-y-1">
-                      <div>Heard: "{interimSpeech || recognizedSpeech}"</div>
+                      <div>{uiText("ui_5c951bf21734")}{interimSpeech || recognizedSpeech}"</div>
                       {speechAccuracy !== null && (
-                        <div className="text-emerald-700 font-extrabold">
-                          Pronunciation Accuracy: {speechAccuracy}% 🎯
+                        <div className="text-emerald-700 font-extrabold">{uiText("ui_538bafa99352")}{speechAccuracy}% 🎯
                         </div>
                       )}
                     </div>
@@ -722,7 +719,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                   <div className="flex items-center justify-between border-b border-blue-100 pb-1.5">
                     <div className="flex items-center gap-1.5 font-extrabold text-blue-900">
                       <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Fluentic AI Neural Analysis</span>
+                      <span>{uiText("ui_6f364f12d9d8")}</span>
                     </div>
                     {aiRegister && (
                       <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[9px] font-black uppercase font-mono">
@@ -738,7 +735,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                       className="px-3 py-1 rounded-lg bg-white border border-blue-200 hover:bg-blue-50 text-blue-700 font-bold text-[11px] flex items-center gap-1.5 cursor-pointer shadow-2xs"
                     >
                       <Volume2 className="w-3.5 h-3.5" />
-                      <span>Listen to Native Articulation</span>
+                      <span>{uiText("ui_525b7312e855")}</span>
                     </button>
                   )}
                 </div>
@@ -770,9 +767,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                         : !selectedOption
                     }
                     className="px-6 py-3 rounded-2xl bg-[#1B365D] hover:bg-[#0F2137] disabled:opacity-50 text-[#D4AF37] font-black text-xs sm:text-sm shadow-md border border-[#C5A059]/40 cursor-pointer"
-                  >
-                    Check
-                  </button>
+                  >{uiText("ui_9d60841e0a78")}</button>
                 ) : (
                   <button
                     type="button"
@@ -800,24 +795,17 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                     <Award className="w-5 h-5 text-slate-950" />
                   </div>
                   <div>
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900">
-                      Mandatory End-of-Module Mini-Quiz
-                    </h3>
-                    <p className="text-[11px] text-slate-600">
-                      Demonstrate CEFR mastery of <strong>{node.title}</strong>
+                    <h3 className="text-xs sm:text-sm font-black text-slate-900">{uiText("ui_5ef2b7a07cb6")}</h3>
+                    <p className="text-[11px] text-slate-600">{uiText("ui_3c49a86da96d")}<strong>{node.title}</strong>
                     </p>
                   </div>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-slate-950 font-black text-xs shadow-xs border border-amber-300 whitespace-nowrap">
-                  +20 Gems 💎
-                </span>
+                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#FFD700] text-slate-950 font-black text-xs shadow-xs border border-amber-300 whitespace-nowrap">{uiText("ui_3ffc039ca427")}</span>
               </div>
 
               {/* Assessment Question Prompt */}
               <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
-                <span className="text-[10px] font-black uppercase tracking-wider text-[#1B365D]">
-                  Final Verification Question
-                </span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#1B365D]">{uiText("ui_62f6181d8213")}</span>
                 <p className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug">
                   {assessmentQuestion.prompt}
                 </p>
@@ -903,16 +891,14 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                     onClick={handleCheckAssessment}
                     disabled={!assessmentSelectedKey}
                     className="px-6 py-3 rounded-2xl bg-[#1B365D] hover:bg-[#0F2137] disabled:opacity-50 text-[#D4AF37] font-black text-xs sm:text-sm shadow-md border border-[#D4AF37]/50 cursor-pointer"
-                  >
-                    Verify Assessment
-                  </button>
+                  >{uiText("ui_c2ba709bdf84")}</button>
                 ) : (
                   <button
                     type="button"
                     onClick={handleFinishAssessment}
                     className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white font-black text-xs sm:text-sm flex items-center gap-2 shadow-md cursor-pointer"
                   >
-                    <span>Claim Mastery & Rewards</span>
+                    <span>{uiText("ui_d37d1d145505")}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 )}
@@ -930,24 +916,18 @@ export const LessonModal: React.FC<LessonModalProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <h3 className="text-2xl sm:text-3xl font-black text-slate-900">
-                  Lesson Completed! 🎉
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto">
-                  You successfully mastered the concepts in <strong>{node.title}</strong>!
+                <h3 className="text-2xl sm:text-3xl font-black text-slate-900">{uiText("ui_205b5c7e8347")}</h3>
+                <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto">{uiText("ui_ab8ccb1748b0")}<strong>{node.title}</strong>!
                 </p>
               </div>
 
               {/* Skill Mastery Badge */}
               <div className="max-w-md mx-auto p-4 rounded-2xl bg-gradient-to-r from-[#0F2137] via-[#1B365D] to-[#0F2137] text-white shadow-lg space-y-1 border border-[#C5A059]/40">
-                <div className="text-[10px] font-black uppercase tracking-wider text-[#D4AF37]">
-                  Skill Mastery Badge Unlocked
-                </div>
+                <div className="text-[10px] font-black uppercase tracking-wider text-[#D4AF37]">{uiText("ui_b4f33da9de9b")}</div>
                 <div className="text-sm sm:text-base font-extrabold flex items-center justify-center gap-2 text-white">
-                  <span>🏅 CEFR {node.cefr || 'A1'} {node.category || 'Core'} Specialist</span>
+                  <span>{uiText("ui_872436360103") + " "}{node.cefr || 'A1'} {node.category || 'Core'}{" " + uiText("ui_8302f971b58f")}</span>
                 </div>
-                <div className="text-[11px] text-slate-300 font-medium">
-                  Verified proficiency milestone in {activeLanguage.name}
+                <div className="text-[11px] text-slate-300 font-medium">{uiText("ui_2c289b711ba8")}{activeLanguage.name}
                 </div>
               </div>
 
@@ -955,15 +935,15 @@ export const LessonModal: React.FC<LessonModalProps> = ({
               <div className="flex items-center justify-center gap-3 flex-wrap">
                 <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold text-xs">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>CEFR {node.cefr || 'A1'} Competency Verified</span>
+                  <span>{uiText("ui_911dcef1da20") + " "}{node.cefr || 'A1'}{" " + uiText("ui_05f31cd5dfbd")}</span>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 font-bold text-xs">
                   <Sparkles className="w-4 h-4 text-blue-600" />
-                  <span>Structural Syntax Mastered</span>
+                  <span>{uiText("ui_78349432261f")}</span>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-900 font-bold text-xs">
                   <BookOpen className="w-4 h-4 text-indigo-600" />
-                  <span>FSRS Spaced Review Scheduled</span>
+                  <span>{uiText("ui_f082f49ab1df")}</span>
                 </div>
               </div>
 
@@ -974,7 +954,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                   onClick={handleFinish}
                   className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white font-black text-sm shadow-xl shadow-emerald-500/25 flex items-center gap-2 mx-auto cursor-pointer"
                 >
-                  <span>Continue Learning Journey</span>
+                  <span>{uiText("ui_1e342d36a1a6")}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -988,10 +968,8 @@ export const LessonModal: React.FC<LessonModalProps> = ({
       {isCustomDurationModalOpen && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
           <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
-            <h4 className="text-base font-black text-slate-900">Custom Session Duration</h4>
-            <p className="text-xs text-slate-500">
-              Set how many minutes you want to dedicate to this study session:
-            </p>
+            <h4 className="text-base font-black text-slate-900">{uiText("ui_945406c9b7c9")}</h4>
+            <p className="text-xs text-slate-500">{uiText("ui_9ece55d3bf42")}</p>
             <div className="flex items-center gap-2">
               <input
                 type="number"
@@ -1001,23 +979,19 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                 onChange={(e) => setCustomInputMinutes(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-slate-900 font-bold text-center text-lg focus:outline-none focus:ring-2 focus:ring-[#1B365D]"
               />
-              <span className="text-sm font-bold text-slate-600">min</span>
+              <span className="text-sm font-bold text-slate-600">{uiText("ui_1f6fa6f69d18")}</span>
             </div>
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setIsCustomDurationModalOpen(false)}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100"
-              >
-                Cancel
-              </button>
+              >{uiText("ui_19766ed6ccb2")}</button>
               <button
                 type="button"
                 onClick={handleApplyCustomDuration}
                 className="px-5 py-2 rounded-xl bg-[#1B365D] text-[#D4AF37] font-black text-xs shadow-sm hover:bg-[#0F2137]"
-              >
-                Apply
-              </button>
+              >{uiText("ui_31e392d1c037")}</button>
             </div>
           </div>
         </div>

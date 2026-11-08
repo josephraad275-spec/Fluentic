@@ -1,3 +1,4 @@
+import { uiText } from "../../services/uiLocalization.ts";
 import React from 'react';
 import { 
   Check, 
@@ -37,14 +38,10 @@ export const OdysseyChronoView: React.FC<OdysseyChronoViewProps> = ({
       <div className="text-center space-y-1.5">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
           <Flag className="w-3.5 h-3.5" />
-          <span>Step-by-Step Path • {activeLanguage.name}</span>
+          <span>{uiText("ui_da7d7db11ded") + " "}{activeLanguage.name}</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-          Your Learning Journey
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto">
-          Take it one step at a time! Start from the basics (A1) and work your way up to speaking like a native (C2).
-        </p>
+        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{uiText("ui_4101b9bed89d")}</h2>
+        <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto">{uiText("ui_34c7c782303a")}</p>
       </div>
 
       {/* Chrono Stream Timeline */}
@@ -75,11 +72,9 @@ export const OdysseyChronoView: React.FC<OdysseyChronoViewProps> = ({
               {/* Level Title Header */}
               <div className="pt-1">
                 <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
-                  <span>CEFR Level {lvl}</span>
+                  <span>{uiText("ui_c75e6d9a8691") + " "}{lvl}</span>
                   {isCurrentLevel && (
-                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase">
-                      Current Track
-                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase">{uiText("ui_df32bccad1f8")}</span>
                   )}
                 </h3>
               </div>
@@ -112,7 +107,7 @@ export const OdysseyChronoView: React.FC<OdysseyChronoViewProps> = ({
                       </div>
 
                       <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-400">+{node.xpReward} XP</span>
+                        <span className="text-xs font-bold text-slate-400">+{node.xpReward}{" " + uiText("ui_168aad3e9812")}</span>
                         <button
                           onClick={() => {
                             audioSynth.playGentleFeedback();

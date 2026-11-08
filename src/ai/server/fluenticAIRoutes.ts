@@ -1,3 +1,4 @@
+import { GeminiJsonGenerator, audioText, parseObject, generateContent } from "../master/runtime.ts";
 import { isCorrectAnswer, validatePlacementQuestions, validatePersonalLesson } from "../validation.ts";
 import type { Express, Request, Response } from "express";
 import type { GoogleGenAI } from "@google/genai";
@@ -16,34 +17,9 @@ function cleanString(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value.trim() : fallback;
 }
 
-function parseJson(text: string): any {
-  const cleaned = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    const first = cleaned.indexOf("{");
-    const last = cleaned.lastIndexOf("}");
-    if (first >= 0 && last > first) return JSON.parse(cleaned.slice(first, last + 1));
-    throw new Error("The AI returned an invalid structured response.");
-  }
-}
-
+function parseJson(source: string): any { return parseObject(source); }
 async function generateJson(ai: GoogleGenAI, systemInstruction: string, input: unknown, maxOutputTokens = 1800) {
-  const result = await ai.models.generateContent({
-    model: CORE_MODEL,
-    contents: typeof input === "string" ? input : JSON.stringify(input),
-    config: {
-      systemInstruction,
-      responseMimeType: "application/json",
-      temperature: 0.25,
-      maxOutputTokens,
-    },
-  });
-  const parsed = parseJson(result.text || "");
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    throw new Error("The AI returned an invalid structured response object.");
-  }
-  return parsed;
+  return new GeminiJsonGenerator(() => ai).generate(systemInstruction, input, maxOutputTokens) as Promise<any>;
 }
 
 class InputError extends Error {}
@@ -173,7 +149,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
         const mimeType = cleanString(payload.mimeType, "audio/webm");
         const targetLanguage = cleanString(payload.targetLanguage, "auto");
         const nativeLanguage = cleanString(payload.nativeLanguage, "English");
-        const result = await ai.models.generateContent({
+        const result = await generateContent(ai, {
           model: TRANSCRIPTION_MODEL,
           contents: {
             parts: [
@@ -190,11 +166,11 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           heard: stripTransliteration(String(correction.heard || "")),
           suggested: stripTransliteration(String(correction.suggested || "")),
         })) : [];
-        return res.json({ success: true, action, ...analysis });
+        return res.json({ ...analysis, success: true, action });
       }
 
       if (action === "voice-synthesis") {
-        const text = requireText(payload.text, "text", 5000);
+        const text = audioText(requireText(payload.text, "text", 5000));
         const language = cleanString(payload.language, "English");
         const languageCode = cleanString(payload.languageCode, "en-US");
         const voiceName = cleanString(payload.voiceName, "Kore");
@@ -253,7 +229,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
     if (!ai) return res.status(503).json({ success: false, error: "Fluentic AI is not configured." });
     try {
       const payload = req.body?.payload && typeof req.body.payload === "object" ? req.body.payload : req.body;
-      const text = requireText(payload.text, "text", 5000);
+      const text = audioText(requireText(payload.text, "text", 5000));
       const voiceName = cleanString(payload.voiceName, "Kore");
       const style = cleanString(payload.style, "Warm, clear, encouraging Fluentic language tutor. Speak the exact transcript with native pronunciation and natural conversational cadence.");
       res.status(200);
