@@ -1,3 +1,4 @@
+import { apiFetch, voiceSocketUrl } from "./apiTransport.ts";
 /**
  * Real-Time AI Voice Engine (16kHz 16-bit PCM Audio + WebSocket / Multimodal Streaming)
  * Directly replaces standard browser SpeechRecognition with 16kHz PCM audio stream capture
@@ -172,7 +173,7 @@ export class RealtimeAudioEngine {
 
       const pcmBase64 = this.int16ToBase64(combined);
 
-      const res = await fetch('/api/gemini/live-audio-stream', {
+      const res = await apiFetch('/api/gemini/live-audio-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -206,8 +207,7 @@ export class RealtimeAudioEngine {
 
   private connectWebSocket(options: LiveVoiceSessionOptions) {
     try {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/api/ws/voice-stream`;
+      const wsUrl = voiceSocketUrl();
       const socket = new WebSocket(wsUrl);
 
       socket.onopen = () => {

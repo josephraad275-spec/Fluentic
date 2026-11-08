@@ -1,3 +1,4 @@
+import { apiFetch } from "./apiTransport.ts";
 import { LearningNode, Exercise, CefrLevel, Language } from '../types';
 import { PlacementTestQuestion } from './placementTestService';
 import { GrammarTopic } from '../data/grammarTopicsData';
@@ -510,7 +511,7 @@ export class AICurriculumEngine {
     // Try calling Gemini API backend
     try {
       const nativeLangObj = WORLD_LANGUAGES.find((l) => l.code === nativeLangCode);
-      const res = await fetch('/api/gemini/curriculum', {
+      const res = await apiFetch('/api/gemini/curriculum', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -688,7 +689,7 @@ export class AICurriculumEngine {
 
     try {
       const nativeLangObj = WORLD_LANGUAGES.find((l) => l.code === nativeLangCode);
-      const res = await fetch('/api/gemini/placement-test', {
+      const res = await apiFetch('/api/gemini/placement-test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -927,7 +928,7 @@ export class AICurriculumEngine {
 
     try {
       const nativeLangObj = WORLD_LANGUAGES.find((l) => l.code === nativeLangCode);
-      const res = await fetch('/api/gemini/grammar-module', {
+      const res = await apiFetch('/api/gemini/grammar-module', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1029,7 +1030,7 @@ export class AICurriculumEngine {
 
     try {
       const nativeLangObj = WORLD_LANGUAGES.find((l) => l.code === nativeLangCode);
-      const res = await fetch('/api/gemini/speech-scenarios', {
+      const res = await apiFetch('/api/gemini/speech-scenarios', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

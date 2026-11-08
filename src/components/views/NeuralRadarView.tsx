@@ -1,3 +1,4 @@
+import { apiFetch } from "../../services/apiTransport.ts";
 import React, { useState } from 'react';
 import { 
   Activity, 
@@ -64,7 +65,7 @@ export const NeuralRadarView: React.FC<NeuralRadarViewProps> = ({
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/gemini/grammar-surgeon', {
+      const res = await apiFetch('/api/gemini/grammar-surgeon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

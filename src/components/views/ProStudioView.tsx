@@ -1,3 +1,4 @@
+import { apiFetch } from "../../services/apiTransport.ts";
 import React, { useState, useRef } from 'react';
 import { 
   Crown, 
@@ -194,7 +195,7 @@ export const ProStudioView: React.FC<ProStudioViewProps> = ({
     setIsAnalyzingDoc(true);
 
     try {
-      const res = await fetch('/api/gemini/document-lens', {
+      const res = await apiFetch('/api/gemini/document-lens', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

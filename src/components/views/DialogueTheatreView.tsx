@@ -1,3 +1,4 @@
+import { apiFetch } from "../../services/apiTransport.ts";
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Send, 
@@ -452,7 +453,7 @@ export const DialogueTheatreView: React.FC<DialogueTheatreViewProps> = ({
 
     try {
       // Call backend Gemini interactive chat with writing diagnostic
-      const res = await fetch('/api/gemini/dialogue-chat', {
+      const res = await apiFetch('/api/gemini/dialogue-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

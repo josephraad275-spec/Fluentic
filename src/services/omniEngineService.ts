@@ -1,3 +1,4 @@
+import { apiFetch } from "./apiTransport.ts";
 import { CefrLevel, Language, UserProfile } from '../types';
 import { getI18n, TranslationDictionary } from './localization';
 import { stripTransliteration } from './languageTypography';
@@ -132,7 +133,7 @@ export class OmniAppEngineClient {
     const localI18n = getI18n(params.nativeLanguageCode);
 
     try {
-      const response = await fetch('/api/engine', {
+      const response = await apiFetch('/api/engine', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -201,7 +202,7 @@ export class OmniAppEngineClient {
     const isDutch = params.nativeLanguageCode.toLowerCase() === 'nl';
 
     try {
-      const response = await fetch('/api/engine', {
+      const response = await apiFetch('/api/engine', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -280,7 +281,7 @@ export class OmniAppEngineClient {
     const isArabic = params.nativeLanguageCode.toLowerCase() === 'ar';
 
     try {
-      const response = await fetch('/api/engine', {
+      const response = await apiFetch('/api/engine', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

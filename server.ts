@@ -1,3 +1,4 @@
+import { nativeCors } from "./src/server/cors.ts";
 import express from "express";
 import http from "http";
 import path from "path";
@@ -403,6 +404,7 @@ export async function createFluenticServer({ development = false } = {}) {
   const app = express();
 
   app.disable("x-powered-by");
+  app.use("/api", nativeCors((process.env.NATIVE_ALLOWED_ORIGINS || "").split(",")));
   app.use(express.json({ limit: "10mb" }));
 
   // Fluentic AI API layer. Existing screens and visual components remain untouched.

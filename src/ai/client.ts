@@ -1,3 +1,4 @@
+import { apiFetch } from "../services/apiTransport.ts";
 export type FluenticAIAction =
   | "translate"
   | "placement"
@@ -22,7 +23,7 @@ export async function fluenticAI<T = Record<string, unknown>>(
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     let response: Response;
     try {
-      response = await fetch("/api/fluentic-ai", {
+      response = await apiFetch("/api/fluentic-ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, payload }),
@@ -96,7 +97,7 @@ export interface FluenticVoiceStreamEvent {
 }
 
 async function* streamFluenticVoice(text: string, language: string, voiceName = "Kore", style?: string, signal?: AbortSignal): AsyncGenerator<FluenticVoiceStreamEvent> {
-  const response = await fetch("/api/fluentic-ai/voice-stream", {
+  const response = await apiFetch("/api/fluentic-ai/voice-stream", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Accept": "text/event-stream" },
     body: JSON.stringify({ text, language, voiceName, style }),

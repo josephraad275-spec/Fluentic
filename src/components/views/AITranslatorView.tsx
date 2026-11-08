@@ -1,3 +1,4 @@
+import { apiFetch } from "../../services/apiTransport.ts";
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   ArrowLeftRight, 
@@ -364,7 +365,7 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
       return translationCacheRef.current.get(cacheKey)!;
     }
 
-    const res = await fetch('/api/translate', {
+    const res = await apiFetch('/api/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

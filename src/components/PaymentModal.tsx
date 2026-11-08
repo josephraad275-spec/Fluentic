@@ -1,3 +1,4 @@
+import { apiFetch } from "../services/apiTransport.ts";
 import React, { useState } from 'react';
 import { 
   X, 
@@ -67,7 +68,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     setErrorMessage(null);
 
     try {
-      const response = await fetch('/api/payment/checkout', {
+      const response = await apiFetch('/api/payment/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
