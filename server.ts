@@ -404,6 +404,7 @@ async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
+  app.disable("x-powered-by");
   app.use(express.json({ limit: "10mb" }));
 
   // Fluentic AI API layer. Existing screens and visual components remain untouched.
@@ -1894,6 +1895,9 @@ Return valid JSON matching this schema:
       error: "Payments are unavailable until a verified payment provider is connected.",
     });
   });
+
+  // Unknown API paths must never fall through to the SPA HTML response.
+  app.use('/api', (_req, res) => res.status(404).json({ success: false, error: 'API route not found.' }));
 
   // Vite middleware setup
   if (process.env.NODE_ENV !== "production") {
