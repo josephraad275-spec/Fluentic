@@ -1,8 +1,8 @@
 import { isCorrectAnswer, validatePlacementQuestions, validatePersonalLesson } from "../validation.ts";
 import type { Express, Request, Response } from "express";
 import type { GoogleGenAI } from "@google/genai";
-import { FLUENTIC_CEFR_LEVELS, buildPlacementAuthoringInstruction, buildPersonalLessonInstruction, estimateLevelFromEvidence, normalizeLearningIntent } from "../pedagogy";
-import { stripTransliteration } from "../../services/languageTypography";
+import { FLUENTIC_CEFR_LEVELS, buildPlacementAuthoringInstruction, buildPersonalLessonInstruction, estimateLevelFromEvidence, normalizeLearningIntent } from "../pedagogy.ts";
+import { stripTransliteration } from "../../services/languageTypography.ts";
 
 type AIClientProvider = () => GoogleGenAI | null;
 
@@ -46,10 +46,12 @@ async function generateJson(ai: GoogleGenAI, systemInstruction: string, input: u
   return parsed;
 }
 
+class InputError extends Error {}
+
 function requireText(value: unknown, field: string, max = MAX_TEXT_LENGTH): string {
   const text = cleanString(value);
-  if (!text) throw new Error(`${field} is required.`);
-  if (text.length > max) throw new Error(`${field} exceeds the ${max}-character limit.`);
+  if (!text) throw new InputError(`${field} is required.`);
+  if (text.length > max) throw new InputError(`${field} exceeds the ${max}-character limit.`);
   return text;
 }
 
@@ -65,6 +67,8 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
 
   app.post("/api/fluentic-ai", async (req: Request, res: Response) => {
     try {
+      if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) throw new InputError('Request body must be an object.');
+      if (req.body.payload !== undefined && (!req.body.payload || typeof req.body.payload !== 'object' || Array.isArray(req.body.payload))) throw new InputError('payload must be an object.');
       const ai = getAI();
       if (!ai) {
         return res.status(503).json({
@@ -113,10 +117,10 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
         const targetLanguage = requireText(payload.targetLanguage, "targetLanguage", 100);
         const answers = payload.answers;
         if (!Array.isArray(answers) || answers.length < 3 || answers.length > 60) {
-          throw new Error("Assessment requires between 3 and 60 answers.");
+          throw new InputError("Assessment requires between 3 and 60 answers.");
         }
         if (JSON.stringify(answers).length > 50000) {
-          throw new Error("Assessment answers exceed the maximum payload size.");
+          throw new InputError("Assessment answers exceed the maximum payload size.");
         }
         const result = await generateJson(
           ai,
@@ -235,9 +239,13 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
         supportedActions: ["translate", "placement", "level-analysis", "personal-lesson", "speech-analysis", "voice-synthesis"],
       });
     } catch (error: any) {
-      const message = error?.message || "Fluentic AI request failed.";
-      console.error("[Fluentic AI]", message);
-      return res.status(400).json({ success: false, error: message });
+      const invalidInput = error instanceof InputError;
+      // Provider errors can contain request details or credentials; never echo them.
+      return res.status(invalidInput ? 400 : 502).json({
+        success: false,
+        code: invalidInput ? 'INVALID_REQUEST' : 'AI_RESPONSE_FAILED',
+        error: invalidInput ? error.message : 'The AI service could not complete this request. Please retry.',
+      });
     }
   });
   app.post("/api/fluentic-ai/voice-stream", async (req: Request, res: Response) => {
