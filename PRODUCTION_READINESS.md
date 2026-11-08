@@ -1,6 +1,6 @@
 # Production readiness checkpoint — 2026-11-08
 
-This remains a partial hardening PR, not a production-ready release. Do not merge or deploy without owner approval. `vercel.json` disables automatic deployment of `fix/production-readiness-2026-11`.
+This remains a development PR, not a production-ready release. The owner authorized preview deployment; branch previews are enabled. Main has not been merged. The new master core is documented in `MASTER_ENGINE.md`.
 
 ## Coverage definition
 
@@ -9,24 +9,24 @@ Work-area coverage is the number of the eight requested areas receiving focused 
 | Area | Work and evidence | Remaining release blockers |
 | --- | --- | --- |
 | CEFR A1–C2 | Question IDs/options/prompts checked; two independent items required at C1/C2; missing answer keys no longer count as correct; regression/API tests | Expert-calibrated difficulty, listening/writing/speaking evidence, server-owned scoring, legacy assessment pipeline and overconfident result wording |
-| Adaptive lessons | Ordered retrieval/construction/feedback/transfer/review; learner level/intent and spaced review metadata validated | Durable learner history, real mastery updates, live provider and full UI integration tests |
-| Localization | Eight current dictionaries checked for key parity/nonempty values; regional fallback checked | Only en/nl/es/fr/de/it/ru/ar dictionaries exist; other codes fall back to English; hardcoded UI text and expert translation review remain |
+| Adaptive lessons | Ordered retrieval/construction/feedback/transfer/review; learner level/intent and spaced review metadata validated | Central lesson adapter and in-memory spaced errors implemented; durable history, real mastery updates, live provider and full UI integration tests remain |
+| Localization | Eight dictionaries checked for key parity; 346 static labels extracted without markup changes; atomic locale activation and selection-race regression test | Eight bundled dictionaries plus on-demand complete dictionary/catalog generation; dynamic expression/data labels and expert translation review remain. A failed locale load retains the previous active locale. |
 | Native-script accuracy | Latin-language parentheses preserved; Arabic/Japanese cleanup regression tests | Regex cleanup is heuristic, can remove meaningful mixed-script parentheses, and is not proof of native-language correctness; review all supported scripts |
 | Backend security | Backend artifacts removed from public dist; core request shape validation; safe upstream failure envelope; WS message/session bounds; exact-origin native CORS; payment stays disabled | Real authentication, durable accounts/entitlements, distributed abuse limits, quotas, complete legacy endpoint validation/error sanitization, origin/session validation for WebSockets |
-| Vercel compatibility | Exported HTTP server without port binding; API/SPA routing; public/private build separation; local production HTTP/WS smoke test | Actual Vercel build and authorized deployed smoke tests, runtime duration/cold-start behavior, production secrets, model availability |
+| Vercel compatibility | Exported HTTP server without port binding; API/SPA routing; public/private build separation; local production HTTP/WS smoke test | Earlier branch preview built successfully; preview SSO prevents unauthenticated deployed smoke tests. Current revision cloud build, runtime duration/cold starts, production secrets and live model behavior need verification |
 | Mobile packaging | Android/iOS Capacitor scaffolds, microphone declarations, HTTPS backend transport, packaging preflight and successful asset sync | Android build blocked by Gradle download network failure; no configured Android SDK found; iOS needs macOS/Xcode; signing, runtime permission/device tests, brand icons, store billing/privacy/account deletion and approved backend |
-| Automated testing | 27 regression/API tests plus one production HTTP/WS smoke test; CI runs tests/type-check/build/native sync | Browser E2E and real device/provider tests remain; local Chromium launch blocked by socket permission |
+| Automated testing | 44 regression/API tests plus one production HTTP/WS smoke test; CI runs tests/type-check/build/native sync | Browser E2E and real device/provider tests remain; local Chromium launch blocked by socket permission |
 
 ## Verified locally
 
 - `bun install --frozen-lockfile` (through npx Bun): passed. Existing duplicate Vite declaration warning remains.
-- `npm test`: 27 passed, zero failed.
+- `npm test`: 44 passed, zero failed.
 - `npm run lint`: passed.
-- `npm run build`: passed. JavaScript bundle is approximately 887 kB, with Vite's large-chunk warning.
+- `npm run build`: passed. JavaScript bundle is approximately 904 kB, with Vite's large-chunk warning.
 - `npm run test:smoke`: passed; covers SPA response, API 404, disabled payments, missing provider config, WebSocket handshake/empty result, bad sample rate and oversized message rejection, and non-exposure of backend artifacts.
 - `npx cap sync`: passed for Android and iOS. This is NOT a signed native build.
-- Source comparison against starting commit `2f8a278`: JSX markup and CSS unchanged across all 30 existing TSX/CSS files.
-- Vercel entry imports locally without binding a listener. No cloud deployment tested or requested.
+- Source comparison against starting commit `2f8a278`: JSX tag structure, className/style attributes and CSS unchanged across all 30 existing TSX/CSS files. Text is now catalog-backed. Latest comparison baseline: `aec7cb8`.
+- Vercel entry imports locally without binding a listener. An earlier authorized preview succeeded at `aec7cb8`; SSO blocked public API verification.
 
 ## Failures and unavailable verification
 
