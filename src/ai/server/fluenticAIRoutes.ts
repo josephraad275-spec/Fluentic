@@ -1,3 +1,4 @@
+import { isCorrectAnswer, validatePlacementQuestions, validatePersonalLesson } from "../validation.ts";
 import type { Express, Request, Response } from "express";
 import type { GoogleGenAI } from "@google/genai";
 import { FLUENTIC_CEFR_LEVELS, buildPlacementAuthoringInstruction, buildPersonalLessonInstruction, estimateLevelFromEvidence, normalizeLearningIntent } from "../pedagogy";
@@ -87,7 +88,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
         );
         if (!cleanString(result.translation)) throw new Error("Translation response was empty.");
         result.translation = stripTransliteration(result.translation);
-        return res.json({ success: true, action, ...result });
+        return res.json({ ...result, success: true, action });
       }
 
       if (action === "placement") {
@@ -103,23 +104,9 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           { learnerGoal: cleanString(payload.goal, "general fluency"), knownLevel: cleanString(payload.currentLevel, "unknown") },
           5000
         );
-        if (!Array.isArray(result.questions) || result.questions.length !== count) throw new Error("Placement test generation was incomplete.");
-        result.questions = result.questions.map((question: any) => ({ ...question, prompt: stripTransliteration(String(question.prompt || "")) }));
-        const presentTiers = new Set(result.questions.map((question: any) => String(question.level).toUpperCase()));
-        if (CEFR_LEVELS.some((level) => !presentTiers.has(level))) throw new Error("Placement test must contain evidence for every CEFR tier from A1 to C2.");
-        const invalidQuestion = result.questions.some((question: any) => {
-          if (!question || typeof question !== "object") return true;
-          if (!CEFR_LEVELS.includes(String(question.level).toUpperCase() as typeof CEFR_LEVELS[number])) return true;
-          if (!cleanString(question.prompt)) return true;
-          if (!Array.isArray(question.options) || question.options.length !== 4) return true;
-          const keys = question.options.map((option: any) => option?.key);
-          if (new Set(keys).size !== 4 || !["A", "B", "C", "D"].every(key => keys.includes(key))) return true;
-          if (!keys.includes(question.correctKey)) return true;
-          const answers = question.options.map((option: any) => cleanString(option?.text || option?.text_native));
-          return answers.some((answer: string) => !answer) || new Set(answers.map((answer: string) => answer.toLocaleLowerCase())).size !== 4;
-        });
-        if (invalidQuestion) throw new Error("Placement test contains invalid, duplicate, or incomplete answer options.");
-        return res.json({ success: true, action, ...result });
+        validatePlacementQuestions(result.questions, count);
+        result.questions = result.questions.map((question: any) => ({ ...question, prompt: stripTransliteration(question.prompt) }));
+        return res.json({ ...result, success: true, action });
       }
 
       if (action === "level-analysis") {
@@ -140,7 +127,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
         if (!CEFR_LEVELS.includes(result.estimatedLevel)) throw new Error("The level assessor returned an invalid CEFR level.");
         const evidenceAnswers = answers.map((answer: any) => ({
           level: answer?.level,
-          correct: typeof answer?.correct === "boolean" ? answer.correct : answer?.selectedKey === answer?.correctKey,
+          correct: isCorrectAnswer(answer),
         }));
         const hasTierEvidence = evidenceAnswers.some((answer: any) => CEFR_LEVELS.includes(String(answer.level).toUpperCase() as any));
         if (hasTierEvidence) {
@@ -149,7 +136,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           result.confidence = Math.min(100, Math.max(0, Math.min(Number(result.confidence) || 0, evidence.confidence)));
           result.evidenceByTier = evidence.evidence;
         }
-        return res.json({ success: true, action, ...result });
+        return res.json({ ...result, success: true, action });
       }
 
       if (action === "personal-lesson") {
@@ -172,17 +159,9 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           },
           3500
         );
-        if (!Array.isArray(result.steps) || result.steps.length < 4) throw new Error("The adaptive lesson did not contain a complete retrieval-to-transfer sequence.");
-        const allowedStepTypes = new Set(["retrieve", "construct", "feedback", "transfer", "review"]);
-        const stepTypes = new Set(result.steps.map((step: any) => step?.type));
-        if (result.steps.some((step: any) => !step || !allowedStepTypes.has(step.type) || !cleanString(step.instruction))) {
-          throw new Error("The adaptive lesson contains malformed learning steps.");
-        }
-        if (!["retrieve", "construct", "feedback", "transfer"].every((type) => stepTypes.has(type))) {
-          throw new Error("The adaptive lesson is missing a required learning stage.");
-        }
+        validatePersonalLesson(result, level, intent);
         result.steps = result.steps.map((step: any) => ({ ...step, targetLanguageText: stripTransliteration(String(step.targetLanguageText || "")) }));
-        return res.json({ success: true, action, ...result });
+        return res.json({ ...result, success: true, action });
       }
 
       if (action === "speech-analysis") {
