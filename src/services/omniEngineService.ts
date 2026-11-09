@@ -1,6 +1,6 @@
 import { configureLearner, recordRetrieval } from "../ai/master/learnerState.ts";
 import { normalizeLearningIntent } from "../ai/pedagogy.ts";
-import { masterRequest } from "../ai/master/client.ts";
+import { fluenticBrain } from "./FluenticBrain.ts";
 import { diagnose } from "../ai/master/diagnostic.ts";
 import { installTranslations } from "./localization.ts";
 import { apiFetch } from "./apiTransport.ts";
@@ -124,7 +124,7 @@ export interface ActiveChatResult {
 
 export class OmniAppEngineClient {
   static async executeOnboarding(params: OnboardingParams): Promise<OnboardingResult> {
-    const result = await masterRequest<OnboardingResult>('onboarding', { ...params });
+    const result = await fluenticBrain.processOnboarding({ displayName: params.displayName || 'Learner', nativeLanguageCode: params.nativeLanguageCode, targetLanguageCode: params.targetLanguageCode, learningIntent: params.learningIntent || 'conversational' }) as unknown as OnboardingResult;
     installTranslations(params.nativeLanguageCode, result.ui_translation);
     configureLearner({mode:"placement_test",nativeLanguageCode:params.nativeLanguageCode,targetLanguageCode:params.targetLanguageCode,intent:normalizeLearningIntent(params.learningIntent)});
     return result;
@@ -134,13 +134,13 @@ export class OmniAppEngineClient {
     userAnswers: Array<{ questionId: number; selectedKey: string; correctKey: string; level: CefrLevel; targetSkill: string }>;
   }): Promise<DiagnosticData> {
     try {
-      const result = await masterRequest<{ diagnostic_data: DiagnosticData }>('placement_test', { ...params, action: 'evaluate' });
+      const result = await fluenticBrain.runDiagnosticTest({ nativeLanguageCode: params.nativeLanguageCode, targetLanguageCode: params.targetLanguageCode, cefrLevel: 'A1', learningIntent: 'conversational', action: 'evaluate' }, params.userAnswers) as unknown as { diagnostic_data: DiagnosticData };
       for (const answer of params.userAnswers) recordRetrieval(answer.targetSkill, answer.selectedKey === answer.correctKey);
       configureLearner({mode:"active_chat",level:result.diagnostic_data.assessedLevel as "A1"|"A2"|"B1"|"B2"|"C1"|"C2"});
       return result.diagnostic_data;
     } catch { return diagnose(params.userAnswers); }
   }
   static executeActiveChat(params: ActiveChatParams): Promise<ActiveChatResult> {
-    return masterRequest<ActiveChatResult>('active_chat', { ...params });
+    return fluenticBrain.generateTutorResponse(params.history || [], params.userMessage, { nativeLanguageCode: params.nativeLanguageCode, targetLanguageCode: params.targetLanguageCode, cefrLevel: params.cefrLevel, learningIntent: params.learningIntent || 'conversational' }) as Promise<ActiveChatResult>;
   }
 }
