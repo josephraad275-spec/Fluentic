@@ -1,4 +1,4 @@
-import { ensureLocale } from "./ai/master/localizationClient.ts";
+import { fluenticBrain } from "./services/FluenticBrain.ts";
 import { configureLearner } from "./ai/master/learnerState.ts";
 import { normalizeLearningIntent } from "./ai/pedagogy.ts";
 import { createAdaptiveNode } from "./ai/master/lessonAdapter.ts";
@@ -140,7 +140,7 @@ export function App() {
 
   useEffect(() => {
     configureLearner({ nativeLanguageCode: user.nativeLanguageCode || 'en', targetLanguageCode: activeLanguage.code, intent: normalizeLearningIntent(user.learningIntent) });
-    ensureLocale(user.nativeLanguageCode || 'en').catch(() => { /* Existing dictionary remains usable while the service is unavailable. */ });
+    fluenticBrain.activateLocalization(user.nativeLanguageCode || 'en').catch(() => { /* Existing dictionary remains usable while the service is unavailable. */ });
   }, [user.nativeLanguageCode, activeLanguage.code, user.learningIntent]);
 
   // Modals
