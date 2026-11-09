@@ -1,3 +1,4 @@
+import { apiFetch } from "./apiTransport.ts";
 /**
  * Translation Service for Custom Translator
  */
@@ -16,7 +17,7 @@ export async function translateCustom(
   targetLanguage: string
 ): Promise<TranslationResult> {
   try {
-    const res = await fetch('/api/translate', {
+    const res = await apiFetch('/api/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

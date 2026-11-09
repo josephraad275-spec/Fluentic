@@ -1,3 +1,4 @@
+import { audioText } from "../ai/master/runtime.ts";
 /**
  * Procedural Web Audio API Sound Engine & Web Speech Interface
  * Zero external MP3 dependencies. 100% synthesized in-browser.
@@ -476,7 +477,7 @@ class AudioSynthesizer {
       }
 
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(audioText(text));
       const bcp47 = getBcp47Locale(langCode);
       utterance.lang = bcp47;
 

@@ -1,3 +1,4 @@
+import { uiText } from "../services/uiLocalization.ts";
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, 
@@ -301,7 +302,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
               audioSynth.playGentleFeedback();
             }}
             className="group flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-[0_10px_25px_rgba(37,99,235,0.35)] hover:shadow-[0_15px_35px_rgba(37,99,235,0.45)] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-blue-400/40"
-            title="Open Fluentic Omni AI Brain"
+            title={uiText("ui_a8e00c54726c")}
           >
             <div className="relative flex items-center justify-center">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping absolute" />
@@ -309,11 +310,10 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
             </div>
             <div className="flex items-center gap-1.5 font-sans">
               <Sparkles className="w-4 h-4 fill-white" />
-              <span>Fluentic AI Brain</span>
+              <span>{uiText("ui_f7cf95b34993")}</span>
             </div>
             <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-mono tracking-tight">
-              {lastLatency}ms
-            </span>
+              {lastLatency}{uiText("ui_f785c3ce1d58")}</span>
           </button>
         </div>
       )}
@@ -336,16 +336,11 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-extrabold text-xs sm:text-sm tracking-tight truncate">
-                    Fluentic AI Omni-Brain
-                  </h3>
-                  <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200 text-[9px] font-black uppercase font-mono border border-emerald-400/40">
-                    Live V24
-                  </span>
+                  <h3 className="font-extrabold text-xs sm:text-sm tracking-tight truncate">{uiText("ui_1c08eae2a0b8")}</h3>
+                  <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200 text-[9px] font-black uppercase font-mono border border-emerald-400/40">{uiText("ui_21012094eca2")}</span>
                 </div>
                 <p className="text-[10px] text-blue-100 truncate">
-                  {activeLanguage.flag} {activeLanguage.name} • CEFR {activeCefr} • {lastLatency}ms Ultra-Fast
-                </p>
+                  {activeLanguage.flag} {activeLanguage.name}{" " + uiText("ui_75b8e8a89541") + " "}{activeCefr} • {lastLatency}{uiText("ui_b5b6442a5482")}</p>
               </div>
             </div>
 
@@ -362,7 +357,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                 type="button"
                 onClick={() => setIsOpen(false)}
                 className="p-1.5 rounded-lg hover:bg-white/15 text-white/80 hover:text-white transition-colors cursor-pointer"
-                title="Close AI Brain"
+                title={uiText("ui_4793789c0dfb")}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -381,9 +376,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                       ? 'bg-white text-blue-700 shadow-2xs border border-blue-100'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
-                >
-                  💬 AI Tutor Chat
-                </button>
+                >{uiText("ui_cd338658f07a")}</button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('surgery')}
@@ -392,9 +385,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                       ? 'bg-white text-blue-700 shadow-2xs border border-blue-100'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
-                >
-                  🔬 Grammar Doctor
-                </button>
+                >{uiText("ui_e7b7a9eae398")}</button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('drill')}
@@ -403,9 +394,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                       ? 'bg-white text-blue-700 shadow-2xs border border-blue-100'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
-                >
-                  ⚡ Rapid Drill
-                </button>
+                >{uiText("ui_cc62ba5468f3")}</button>
               </div>
 
               {/* Chat & Output Stream */}
@@ -414,11 +403,9 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                   <div className="p-3 rounded-2xl bg-indigo-50/80 border border-indigo-200 text-indigo-950 space-y-2">
                     <div className="flex items-center gap-1.5 font-extrabold text-[11px] text-indigo-800">
                       <Zap className="w-3.5 h-3.5" />
-                      <span>Instant Grammar & Morpho-Syntax Surgery</span>
+                      <span>{uiText("ui_1bd58aaa0582")}</span>
                     </div>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">
-                      Type or paste any sentence in {activeLanguage.name}. The AI instantly checks case endings, verb conjugations, and register flaws.
-                    </p>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">{uiText("ui_831953fdf6d7")}{activeLanguage.name}{uiText("ui_fdd3d1ad552e")}</p>
                   </div>
                 )}
 
@@ -426,26 +413,20 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                   <div className="p-3 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-emerald-950 space-y-2">
                     <div className="flex items-center gap-1.5 font-extrabold text-[11px] text-emerald-800">
                       <Flame className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Sub-Second Active Recall Drill Generator</span>
+                      <span>{uiText("ui_aa02f5850698")}</span>
                     </div>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">
-                      Click below to generate a real-time challenge calibrated to your CEFR {activeCefr} proficiency.
-                    </p>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">{uiText("ui_ea0a92db3fb2")}{activeCefr}{uiText("ui_3a3f10c57774")}</p>
                     <div className="flex gap-2 flex-wrap pt-1">
                       <button
                         type="button"
                         onClick={() => handleSend(`Give me an active recall translation drill in ${activeLanguage.name} (Level ${activeCefr})`)}
                         className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-[10px] shadow-2xs hover:bg-emerald-700 cursor-pointer"
-                      >
-                        ⚡ Generate Translation Drill
-                      </button>
+                      >{uiText("ui_397ea5880e6a")}</button>
                       <button
                         type="button"
                         onClick={() => handleSend(`Give me a speaking fill-in-the-blank challenge for ${activeLanguage.name}`)}
                         className="px-2.5 py-1 rounded-lg bg-white border border-emerald-300 text-emerald-800 font-bold text-[10px] hover:bg-emerald-100 cursor-pointer"
-                      >
-                        🎯 Fill-in-Blank
-                      </button>
+                      >{uiText("ui_044d4fefc24d")}</button>
                     </div>
                   </div>
                 )}
@@ -487,7 +468,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                             type="button"
                             onClick={() => void playTutorVoice(m.audioReadyText || m.targetSnippet!)}
                             className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors shrink-0 cursor-pointer"
-                            title="Play Native Pronunciation"
+                            title={uiText("ui_653a95ba1caf")}
                           >
                             <Volume2 className="w-3.5 h-3.5" />
                           </button>
@@ -497,9 +478,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                       {/* Contextual corrections */}
                       {m.corrections && m.corrections.length > 0 && (
                         <div className="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-950 space-y-1 mt-1">
-                          <span className="font-extrabold uppercase text-[9px] tracking-wider text-rose-700 block">
-                            🎯 Syntax Correction:
-                          </span>
+                          <span className="font-extrabold uppercase text-[9px] tracking-wider text-rose-700 block">{uiText("ui_376a0febf2df")}</span>
                           {m.corrections.map((c, idx) => (
                             <div key={idx} className="bg-white/90 p-1.5 rounded text-[10px] space-y-0.5">
                               <div className="flex items-center gap-1.5 font-mono">
@@ -516,13 +495,11 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                       {/* Idiom breakdown */}
                       {m.idioms && m.idioms.length > 0 && (
                         <div className="p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-950 space-y-1 mt-1">
-                          <span className="font-extrabold uppercase text-[9px] tracking-wider text-amber-800 block">
-                            💡 Idiom & Cultural Nuance:
-                          </span>
+                          <span className="font-extrabold uppercase text-[9px] tracking-wider text-amber-800 block">{uiText("ui_1202e3b8652f")}</span>
                           {m.idioms.map((idm, idx) => (
                             <div key={idx} className="bg-white/90 p-1.5 rounded text-[10px] space-y-0.5">
                               <span className="font-bold text-amber-900 block">{idm.idiom}</span>
-                              <div className="text-[9px] text-slate-500 italic">Literal: "{idm.literal}"</div>
+                              <div className="text-[9px] text-slate-500 italic">{uiText("ui_3823a1881df4")}{idm.literal}"</div>
                               <p className="text-[10px] text-slate-700">{idm.pragmatic}</p>
                             </div>
                           ))}
@@ -556,7 +533,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                 {isLoading && (
                   <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs animate-pulse">
                     <span className="w-2 h-2 rounded-full bg-blue-600 animate-ping" />
-                    <span>Fluentic AI Neural Brain is thinking...</span>
+                    <span>{uiText("ui_9a219fb2daa1")}</span>
                   </div>
                 )}
               </div>
@@ -601,7 +578,7 @@ export const OmniAIBrainCopilot: React.FC<OmniAIBrainCopilotProps> = ({
                     type="submit"
                     disabled={!inputText.trim() || isLoading}
                     className="p-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 active:scale-95 transition-all shadow-sm cursor-pointer shrink-0"
-                    title="Send to AI Brain"
+                    title={uiText("ui_6649925ff8e0")}
                   >
                     <Send className="w-4 h-4" />
                   </button>

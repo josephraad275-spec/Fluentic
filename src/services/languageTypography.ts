@@ -67,10 +67,12 @@ export function getDirectionProps(text?: string, langCode?: string) {
  */
 export function stripTransliteration(text: string): string {
   if (!text) return '';
+  // Latin-script content can contain meaningful parentheses, not pronunciation aids.
+  if (!/[\p{Script=Arabic}\p{Script=Hebrew}\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Devanagari}\p{Script=Thai}]/u.test(text)) return text.trim();
   return text
     // Remove any parenthesis containing Latin letters / diacritics / romanization tokens, along with optional trailing punctuation
     .replace(/\s*\([^)]*[A-Za-zāīūḍṣṭẓʿʾēōáéíóúàèìòùâêîôûäëïöüñçß][^)]*\)[.\s]*/g, ' ')
     // Normalize spaces and trim
-    .replace(/\s{2,}/g, ' ')
+    .replace(/[^\S\r\n]{2,}/g, ' ')
     .trim();
 }

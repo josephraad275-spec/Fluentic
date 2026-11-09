@@ -1,3 +1,4 @@
+import { currentUiLocale } from "./uiLocalization.ts";
 /**
  * Comprehensive Fluentic Localization Engine
  * When user's native language is Dutch (nl) and target language is Lithuanian (lt),
@@ -6,6 +7,7 @@
  */
 
 export interface TranslationDictionary {
+  engineUnavailable: string;
   // Brand & General
   appName: string;
   tagline: string;
@@ -205,6 +207,7 @@ export interface TranslationDictionary {
 }
 
 export const DUTCH_TRANSLATIONS: TranslationDictionary = {
+  engineUnavailable: "De leerservice is tijdelijk niet beschikbaar. Probeer het opnieuw.",
   // Brand & General
   appName: 'Fluentic',
   tagline: 'Vloeiend in elk woord',
@@ -402,6 +405,7 @@ export const DUTCH_TRANSLATIONS: TranslationDictionary = {
 };
 
 export const ENGLISH_FALLBACK_TRANSLATIONS: TranslationDictionary = {
+  engineUnavailable: "The learning service is temporarily unavailable. Please try again.",
   appName: 'Fluentic',
   tagline: 'Fluent in every word',
   close: 'Close',
@@ -593,6 +597,7 @@ export const ENGLISH_FALLBACK_TRANSLATIONS: TranslationDictionary = {
  */
 
 export const SPANISH_TRANSLATIONS: TranslationDictionary = {
+  engineUnavailable: "El servicio de aprendizaje no está disponible temporalmente. Inténtalo de nuevo.",
   appName: "Fluentic",
   tagline: "Fluido en cada palabra",
   close: "Cerrar",
@@ -776,6 +781,7 @@ export const SPANISH_TRANSLATIONS: TranslationDictionary = {
 };
 
 export const FRENCH_TRANSLATIONS: TranslationDictionary = {
+  engineUnavailable: "Le service d’apprentissage est temporairement indisponible. Réessayez.",
   appName: "Fluentic",
   tagline: "La fluidité dans chaque mot",
   close: "Fermer",
@@ -959,6 +965,7 @@ export const FRENCH_TRANSLATIONS: TranslationDictionary = {
 };
 
 export const GERMAN_TRANSLATIONS: TranslationDictionary = {
+  engineUnavailable: "Der Lerndienst ist vorübergehend nicht verfügbar. Bitte versuche es erneut.",
   appName: "Fluentic",
   tagline: "Fließend in jedem Wort",
   close: "Schließen",
@@ -1142,6 +1149,7 @@ export const GERMAN_TRANSLATIONS: TranslationDictionary = {
 };
 
 export const ITALIAN_TRANSLATIONS: TranslationDictionary = {
+  engineUnavailable: "Il servizio di apprendimento non è momentaneamente disponibile. Riprova.",
   appName: "Fluentic",
   tagline: "Piattaforma di Padronanza Linguistica Autentica",
   close: "Chiudi",
@@ -1325,6 +1333,7 @@ export const ITALIAN_TRANSLATIONS: TranslationDictionary = {
 };
 
 export const RUSSIAN_TRANSLATIONS: TranslationDictionary = {
+  engineUnavailable: "Учебный сервис временно недоступен. Попробуйте ещё раз.",
   appName: "Fluentic",
   tagline: "Платформа истинного языкового мастерства",
   close: "Закрыть",
@@ -1508,6 +1517,7 @@ export const RUSSIAN_TRANSLATIONS: TranslationDictionary = {
 };
 
 export const ARABIC_TRANSLATIONS: TranslationDictionary = {
+  engineUnavailable: "خدمة التعلّم غير متاحة مؤقتاً. يُرجى المحاولة مجدداً.",
   appName: "Fluentic",
   tagline: "منصة إتقان اللغات الحقيقية",
   close: "إغلاق",
@@ -1694,7 +1704,7 @@ export const ARABIC_TRANSLATIONS: TranslationDictionary = {
   billedAnnuallyNotice: "فاتورة سنوية بقيمة 39.99$ (ما يعادل 3.33$ شهرياً)"
 };
 
-export function getI18n(nativeCode: string = 'en'): TranslationDictionary {
+export function getBundledI18n(nativeCode: string = 'en'): TranslationDictionary {
   const code = (nativeCode || 'en').toLowerCase().trim().split(/[-_]/)[0];
   if (code === 'nl') {
     return DUTCH_TRANSLATIONS;
@@ -1718,4 +1728,26 @@ export function getI18n(nativeCode: string = 'en'): TranslationDictionary {
     return ARABIC_TRANSLATIONS;
   }
   return ENGLISH_FALLBACK_TRANSLATIONS;
+}
+
+
+const dynamicTranslations = new Map<string, TranslationDictionary>();
+const translationListeners = new Set<() => void>();
+let translationRevision = 0;
+export function subscribeTranslations(listener: () => void): () => void {
+  translationListeners.add(listener);
+  return () => { translationListeners.delete(listener); };
+}
+export function getTranslationRevision(): number { return translationRevision; }
+export function installTranslations(code: string, dictionary: TranslationDictionary): void {
+  const keys = Object.keys(ENGLISH_FALLBACK_TRANSLATIONS);
+  if (!dictionary || keys.some(key => typeof dictionary[key] !== 'string' || !dictionary[key].trim()) || Object.keys(dictionary).length !== keys.length) throw new Error('Incomplete localization dictionary.');
+  dynamicTranslations.set(code.toLowerCase().split(/[-_]/)[0], dictionary);
+  translationRevision += 1;
+  translationListeners.forEach(listener => listener());
+}
+export function getI18n(nativeCode = 'en'): TranslationDictionary {
+  const code = (nativeCode || 'en').trim().toLowerCase().split(/[-_]/)[0];
+  const effective = typeof window === 'undefined' ? code : currentUiLocale();
+  return dynamicTranslations.get(effective) || getBundledI18n(effective);
 }

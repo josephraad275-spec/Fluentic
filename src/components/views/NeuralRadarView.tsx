@@ -1,3 +1,5 @@
+import { uiText } from "../../services/uiLocalization.ts";
+import { apiFetch } from "../../services/apiTransport.ts";
 import React, { useState } from 'react';
 import { 
   Activity, 
@@ -64,7 +66,7 @@ export const NeuralRadarView: React.FC<NeuralRadarViewProps> = ({
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/gemini/grammar-surgeon', {
+      const res = await apiFetch('/api/gemini/grammar-surgeon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -103,22 +105,16 @@ export const NeuralRadarView: React.FC<NeuralRadarViewProps> = ({
       <div>
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-800 text-xs font-bold mb-1">
           <Activity className="w-3.5 h-3.5" />
-          <span>Smart Grammar Fixer & Quick Tips</span>
+          <span>{uiText("ui_e1d6a21774bf")}</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-          Fix Tricky Grammar Mistakes
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-500">
-          Spot common tricky rules and check your sentences in seconds.
-        </p>
+        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{uiText("ui_ceffb9659b4c")}</h2>
+        <p className="text-xs sm:text-sm text-slate-500">{uiText("ui_17a8f346835a")}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Identified Gaps Heatmap (Col 1) */}
         <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
-          <h3 className="font-extrabold text-slate-900 text-base">
-            Common Tricky Spots
-          </h3>
+          <h3 className="font-extrabold text-slate-900 text-base">{uiText("ui_05f212f06386")}</h3>
 
           <div className="space-y-3">
             {DIAGNOSTIC_GAPS.map((gap) => (
@@ -140,8 +136,7 @@ export const NeuralRadarView: React.FC<NeuralRadarViewProps> = ({
                     {gap.category}
                   </span>
                   <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
-                    {gap.errorRate}% Tricky
-                  </span>
+                    {gap.errorRate}{uiText("ui_4f6bdc6905fc")}</span>
                 </div>
 
                 <div className="font-bold text-slate-900 text-xs sm:text-sm">
@@ -157,27 +152,22 @@ export const NeuralRadarView: React.FC<NeuralRadarViewProps> = ({
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
               <Stethoscope className="w-5 h-5 text-cyan-600" />
-              <h3 className="font-extrabold text-slate-900 text-base">
-                Instant Sentence Checker
-              </h3>
+              <h3 className="font-extrabold text-slate-900 text-base">{uiText("ui_5e0a6fa9a630")}</h3>
             </div>
-            <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full">
-              Language: {activeLanguage.name}
+            <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full">{uiText("ui_8c16819a2bd4")}{activeLanguage.name}
             </span>
           </div>
 
           {/* Input text to perform surgery on */}
           <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-700">
-              Type or paste any sentence you want to check:
-            </label>
+            <label className="block text-xs font-bold text-slate-700">{uiText("ui_19ee0671c8d3")}</label>
             <textarea
               id="surgeon-input-sentence"
               rows={3}
               value={sentenceToSurgeon}
               onChange={(e) => setSentenceToSurgeon(e.target.value)}
               className="w-full p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm outline-none focus:border-cyan-500 focus:bg-white transition-all resize-none"
-              placeholder="Type any sentence here to check grammar..."
+              placeholder={uiText("ui_6188f65c2a6f")}
             />
           </div>
 
@@ -190,12 +180,12 @@ export const NeuralRadarView: React.FC<NeuralRadarViewProps> = ({
             {isLoading ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin text-cyan-400" />
-                <span>Checking your sentence...</span>
+                <span>{uiText("ui_d5a89bd44ec6")}</span>
               </>
             ) : (
               <>
                 <Sparkles className="w-4 h-4 text-cyan-400" />
-                <span>Check & Fix Sentence</span>
+                <span>{uiText("ui_453a2141f561")}</span>
               </>
             )}
           </button>
@@ -205,14 +195,12 @@ export const NeuralRadarView: React.FC<NeuralRadarViewProps> = ({
             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-4 animate-in fade-in">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-extrabold uppercase tracking-wider text-cyan-700 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  Checked & Corrected
-                </span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />{uiText("ui_a249fe3a1933")}</span>
               </div>
 
               {surgeonAnalysis.correctedText && (
                 <div>
-                  <div className="text-[11px] font-bold text-slate-400 uppercase">Corrected Sentence</div>
+                  <div className="text-[11px] font-bold text-slate-400 uppercase">{uiText("ui_eff6ec7e5582")}</div>
                   <div className="text-base font-black text-emerald-900 mt-0.5 bg-emerald-50/70 p-3 rounded-xl border border-emerald-200">
                     {surgeonAnalysis.correctedText}
                   </div>
@@ -221,7 +209,7 @@ export const NeuralRadarView: React.FC<NeuralRadarViewProps> = ({
 
               {surgeonAnalysis.deepPedagogicalRule && (
                 <div>
-                  <div className="text-[11px] font-bold text-slate-400 uppercase">How It Works</div>
+                  <div className="text-[11px] font-bold text-slate-400 uppercase">{uiText("ui_c1879525c75c")}</div>
                   <p className="text-xs text-slate-700 mt-0.5 leading-relaxed">
                     {surgeonAnalysis.deepPedagogicalRule}
                   </p>
@@ -230,7 +218,7 @@ export const NeuralRadarView: React.FC<NeuralRadarViewProps> = ({
 
               {surgeonAnalysis.drillExercises && surgeonAnalysis.drillExercises.length > 0 && (
                 <div className="pt-2 border-t border-slate-200">
-                  <div className="text-[11px] font-bold text-slate-400 uppercase mb-1.5">Quick Mini-Practice</div>
+                  <div className="text-[11px] font-bold text-slate-400 uppercase mb-1.5">{uiText("ui_281caed812c8")}</div>
                   <div className="space-y-1.5">
                     {surgeonAnalysis.drillExercises.map((drill, idx) => (
                       <div key={idx} className="p-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800">

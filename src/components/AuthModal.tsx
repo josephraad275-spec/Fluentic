@@ -1,3 +1,4 @@
+import { uiText } from "../services/uiLocalization.ts";
 import React, { useState } from 'react';
 import { 
   X, 
@@ -130,9 +131,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <h3 className="font-extrabold text-slate-900 text-lg">
                 {currentUser.isGuest ? 'Join Fluentic' : 'Account & Security'}
               </h3>
-              <p className="text-xs text-slate-500">
-                AES-GCM 256-bit encrypted client-side storage
-              </p>
+              <p className="text-xs text-slate-500">{uiText("ui_cfccce3f139d")}</p>
             </div>
           </div>
           <button
@@ -158,8 +157,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               </div>
               <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" /> Encrypted
-              </span>
+                <ShieldCheck className="w-3 h-3" />{uiText("ui_f45aef6e0f7e")}</span>
             </div>
           )}
 
@@ -189,27 +187,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
               />
             </svg>
-            <span>Continue with Google Single Sign-On</span>
+            <span>{uiText("ui_e2debbb2e5a2")}</span>
           </button>
 
           <div className="relative flex items-center justify-center">
             <div className="border-t border-slate-200 w-full" />
-            <span className="bg-white px-2 text-xs text-slate-400 uppercase tracking-wider font-semibold absolute">
-              or email
-            </span>
+            <span className="bg-white px-2 text-xs text-slate-400 uppercase tracking-wider font-semibold absolute">{uiText("ui_207c51302b34")}</span>
           </div>
 
           {/* Form */}
           <form onSubmit={handleEmailAuth} className="space-y-3">
             {authMode === 'signup' && (
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">{uiText("ui_8e00cdf71fa7")}</label>
                 <div className="relative">
                   <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     required
-                    placeholder="Enter your name"
+                    placeholder={uiText("ui_0421de120444")}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs outline-none focus:border-amber-500 focus:bg-white transition-all"
@@ -219,13 +215,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             )}
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">{uiText("ui_09bf25ef3083")}</label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="email"
                   required
-                  placeholder="polyglot@example.com"
+                  placeholder={uiText("ui_29449435a535")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs outline-none focus:border-amber-500 focus:bg-white transition-all"
@@ -235,15 +231,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-bold text-slate-700">Password</label>
+                <label className="text-xs font-bold text-slate-700">{uiText("ui_e7cf3ef4f17c")}</label>
                 {authMode === 'signin' && (
                   <button
                     type="button"
                     onClick={() => alert('Password reset link dispatched to your local encrypted session.')}
                     className="text-[11px] text-amber-700 hover:underline font-semibold"
-                  >
-                    Forgot?
-                  </button>
+                  >{uiText("ui_761c9156320c")}</button>
                 )}
               </div>
               <div className="relative">
@@ -290,7 +284,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="rounded border-slate-300 text-amber-600 focus:ring-amber-500 w-3.5 h-3.5"
                 />
-                <span className="text-xs text-slate-600">Keep session active</span>
+                <span className="text-xs text-slate-600">{uiText("ui_4127e26662e0")}</span>
               </label>
             </div>
 
@@ -307,12 +301,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </>
               ) : authMode === 'signin' ? (
                 <>
-                  <span>Sign In & Sync Vault</span>
+                  <span>{uiText("ui_2e1561e4197c")}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </>
               ) : (
                 <>
-                  <span>Create Encrypted Account</span>
+                  <span>{uiText("ui_4fc21dfb8e8b")}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </>
               )}
@@ -322,26 +316,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* Toggle between Sign In / Sign Up */}
           <div className="text-center pt-1">
             {authMode === 'signin' ? (
-              <p className="text-xs text-slate-500">
-                Don't have an account?{' '}
+              <p className="text-xs text-slate-500">{uiText("ui_1b545b23fae3")}{' '}
                 <button
                   type="button"
                   onClick={() => setAuthMode('signup')}
                   className="text-amber-700 font-bold hover:underline"
-                >
-                  Create one now
-                </button>
+                >{uiText("ui_910217011197")}</button>
               </p>
             ) : (
-              <p className="text-xs text-slate-500">
-                Already registered?{' '}
+              <p className="text-xs text-slate-500">{uiText("ui_bd5714e2bec9")}{' '}
                 <button
                   type="button"
                   onClick={() => setAuthMode('signin')}
                   className="text-amber-700 font-bold hover:underline"
-                >
-                  Sign in here
-                </button>
+                >{uiText("ui_59262b8e9fb2")}</button>
               </p>
             )}
           </div>
@@ -353,9 +341,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               type="button"
               onClick={handleGuestSandbox}
               className="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-semibold text-xs transition-colors text-center"
-            >
-              Launch Guest / Sandbox Mode (No Registration)
-            </button>
+            >{uiText("ui_5e98729fb499")}</button>
           </div>
         </div>
       </div>

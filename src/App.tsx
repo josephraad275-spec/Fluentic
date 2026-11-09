@@ -1,3 +1,10 @@
+import { fluenticBrain } from "./services/FluenticBrain.ts";
+import { configureLearner } from "./ai/master/learnerState.ts";
+import { normalizeLearningIntent } from "./ai/pedagogy.ts";
+import { createAdaptiveNode } from "./ai/master/lessonAdapter.ts";
+import { getI18n } from "./services/localization.ts";
+import { useSyncExternalStore } from "react";
+import { subscribeTranslations, getTranslationRevision } from "./services/localization.ts";
 import React, { useState, useEffect } from 'react';
 import { 
   NavigationTab, 
@@ -43,40 +50,58 @@ const DEFAULT_USER: UserProfile = {
   email: 'explorer@fluentic.ai',
   avatar: 'EX',
   isGuest: false,
-  isPro: true,
-  hasCompletedOnboarding: true,
+  isPro: false,
+  hasCompletedOnboarding: false,
   nativeLanguageCode: 'en',
   nativeLanguage: 'English',
   targetPace: 'dedicated',
-  placementScore: 8,
-  structuralMastery: 85,
-  activeRecallRate: 90,
-  spacedErrorRecyclingCount: 2,
+  placementScore: 0,
+  structuralMastery: 0,
+  activeRecallRate: 0,
+  spacedErrorRecyclingCount: 0,
   xp: 0,
   level: 1,
-  gems: 100,
-  streakDays: 3,
-  speakingPunctuation: 92,
-  speakingScore: 88,
-  totalPracticeMinutes: 45,
-  streakShields: 1,
+  gems: 0,
+  streakDays: 0,
+  speakingPunctuation: 0,
+  speakingScore: 0,
+  totalPracticeMinutes: 0,
+  streakShields: 0,
   streakProtected: false,
   activeLanguageCode: 'es',
   activeLanguage: 'Spanish',
-  activeCefr: 'B1',
-  unlockedCefrLevels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
-  completedNodeIds: ['node-1'],
-  nodeCrowns: { 'node-1': 1 },
+  activeCefr: 'A1',
+  unlockedCefrLevels: ['A1'],
+  completedNodeIds: [],
+  nodeCrowns: {},
   dailyGoalMinutes: 15,
   dailyGoalCompleted: false,
-  weeklyActivity: [15, 20, 25, 0, 0, 0, 0],
-  unlockedAchievements: ['first-step'],
-  claimedAchievements: ['first-step'],
-  isSignedIn: true,
+  weeklyActivity: [0, 0, 0, 0, 0, 0, 0],
+  unlockedAchievements: [],
+  claimedAchievements: [],
+  isSignedIn: false,
   dailyQuests: [],
 };
 
+// One-time clean-slate migration for this single-user development app.
+// Runs only on the device after the updated app is opened; does not delete remote data.
+const FRESH_START_MIGRATION_KEY = 'fluentic_fresh_start_2026_11';
+function applyFreshStartOnce(): void {
+  try {
+    if (localStorage.getItem(FRESH_START_MIGRATION_KEY) === 'done') return;
+    const keys = Object.keys(localStorage).filter(key => key.startsWith('fluentic_'));
+    for (const key of keys) localStorage.removeItem(key);
+    sessionStorage.clear();
+    localStorage.setItem(FRESH_START_MIGRATION_KEY, 'done');
+  } catch {
+    // Storage may be blocked; the clean default profile still applies.
+  }
+}
+
+applyFreshStartOnce();
+
 export function App() {
+  useSyncExternalStore(subscribeTranslations, getTranslationRevision);
   const [user, setUser] = useState<UserProfile>(() => {
     try {
       const saved = localStorage.getItem('fluentic_user_session');
@@ -112,6 +137,11 @@ export function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>('home');
   const [soundscapeMode, setSoundscapeMode] = useState<'alpha' | 'cosmic' | 'rain' | 'mute'>('mute');
   const [isRetakingPlacement, setIsRetakingPlacement] = useState(false);
+
+  useEffect(() => {
+    configureLearner({ nativeLanguageCode: user.nativeLanguageCode || 'en', targetLanguageCode: activeLanguage.code, intent: normalizeLearningIntent(user.learningIntent) });
+    fluenticBrain.activateLocalization(user.nativeLanguageCode || 'en').catch(() => { /* Existing dictionary remains usable while the service is unavailable. */ });
+  }, [user.nativeLanguageCode, activeLanguage.code, user.learningIntent]);
 
   // Modals
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
@@ -158,6 +188,20 @@ export function App() {
     );
     setActiveTab('home');
     setIsRetakingPlacement(false);
+  };
+
+  const lessonRequest = React.useRef<AbortController | null>(null);
+  React.useEffect(() => () => lessonRequest.current?.abort(), []);
+  const handleOpenLesson = async (node: LearningNode) => {
+    lessonRequest.current?.abort();
+    const controller = new AbortController();
+    lessonRequest.current = controller;
+    try {
+      const generated = await createAdaptiveNode(node, user.nativeLanguageCode || 'en', activeLanguage.code, user.learningIntent || 'conversational', controller.signal);
+      if (!controller.signal.aborted) setActiveLessonNode(generated);
+    } catch {
+      if (!controller.signal.aborted) window.alert(getI18n(user.nativeLanguageCode || 'en').engineUnavailable);
+    }
   };
 
   // Complete a lesson node
@@ -392,7 +436,7 @@ export function App() {
           <DuolingoPathView
             user={{ ...user, activeCefr }}
             activeLanguage={activeLanguage}
-            onSelectNode={(node) => setActiveLessonNode(node)}
+            onSelectNode={handleOpenLesson}
             onClaimMilestone={() => undefined}
             onUpdateUser={handleUpdateUser}
           />

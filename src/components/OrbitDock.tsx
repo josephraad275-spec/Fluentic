@@ -1,3 +1,4 @@
+import { uiText } from "../services/uiLocalization.ts";
 import React, { useEffect } from 'react';
 import { 
   Home, 
@@ -98,7 +99,7 @@ export const OrbitDock: React.FC<OrbitDockProps> = ({
   return (
     <nav
       id="fluentic-spatial-orbit-dock"
-      aria-label="Main navigation dock"
+      aria-label={uiText("ui_67876f5b0e35")}
       className="fixed bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 z-40 px-2 sm:px-3 py-1.5 rounded-2xl bg-[#0A1128]/95 backdrop-blur-xl border border-slate-800 shadow-2xl shadow-slate-950/60 flex items-center gap-1 sm:gap-1.5 max-w-[98vw] overflow-x-auto no-scrollbar text-slate-200"
     >
       {/* 1. Home */}

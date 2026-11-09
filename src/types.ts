@@ -14,6 +14,7 @@ export interface Language {
 }
 
 export interface Exercise {
+  learningStage?: "retrieve" | "construct" | "feedback" | "transfer" | "review";
   id: string;
   type: 'multiple-choice' | 'speech-pronounce' | 'sentence-scramble' | 'listening-comprehension' | 'translation' | 'fill-blank';
   prompt: string;

@@ -1,3 +1,5 @@
+import { uiText } from "../../services/uiLocalization.ts";
+import { apiFetch } from "../../services/apiTransport.ts";
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   ArrowLeftRight, 
@@ -364,7 +366,7 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
       return translationCacheRef.current.get(cacheKey)!;
     }
 
-    const res = await fetch('/api/translate', {
+    const res = await apiFetch('/api/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -779,7 +781,7 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
                     type="text"
                     value={srcSearch}
                     onChange={(e) => setSrcSearch(e.target.value)}
-                    placeholder="Search or type any language..."
+                    placeholder={uiText("ui_5f5bd336282e")}
                     className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-bold outline-none focus:border-blue-500"
                     autoFocus
                   />
@@ -798,7 +800,7 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
                       className="w-full text-left px-3 py-2 rounded-lg text-xs font-black bg-blue-50 text-blue-700 hover:bg-blue-100 flex items-center gap-2"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      <span>Use custom language: "{srcSearch.trim()}"</span>
+                      <span>{uiText("ui_29e810c3df63")}{srcSearch.trim()}"</span>
                     </button>
                   )}
 
@@ -842,7 +844,7 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
             id="translator-swap-btn"
             onClick={handleSwap}
             className="p-3 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 border border-slate-200 shadow-2xs transition-all active:scale-95 cursor-pointer"
-            title="Swap languages and texts immediately"
+            title={uiText("ui_313067f8d74c")}
           >
             <ArrowLeftRight className="w-4 h-4" />
           </button>
@@ -851,9 +853,7 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
         {/* Target Language Combobox */}
         <div className="flex-1 relative">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
-              To (Target):
-            </span>
+            <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider">{uiText("ui_d03a20ad4dbc")}</span>
           </div>
 
           <div className="relative">
@@ -885,7 +885,7 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
                     type="text"
                     value={tgtSearch}
                     onChange={(e) => setTgtSearch(e.target.value)}
-                    placeholder="Search or type any target language..."
+                    placeholder={uiText("ui_ff869cc72ab8")}
                     className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-bold outline-none focus:border-blue-500"
                     autoFocus
                   />
@@ -904,7 +904,7 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
                       className="w-full text-left px-3 py-2 rounded-lg text-xs font-black bg-blue-50 text-blue-700 hover:bg-blue-100 flex items-center gap-2"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      <span>Use custom language: "{tgtSearch.trim()}"</span>
+                      <span>{uiText("ui_29e810c3df63")}{tgtSearch.trim()}"</span>
                     </button>
                   )}
 
@@ -1024,7 +1024,7 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
                     {targetLangName}
                   </span>
                   {isRtlLanguage(currentTgtOption?.code) && (
-                    <span className="px-1.5 py-0.2 rounded bg-amber-100 text-[10px] text-amber-800 font-bold">RTL</span>
+                    <span className="px-1.5 py-0.2 rounded bg-amber-100 text-[10px] text-amber-800 font-bold">{uiText("ui_74ca1d86590d")}</span>
                   )}
                 </div>
 
@@ -1226,9 +1226,7 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
               </span>
-              <span className="font-extrabold text-slate-800">
-                Two-Way Conversation Studio
-              </span>
+              <span className="font-extrabold text-slate-800">{uiText("ui_fc05c5f7e13b")}</span>
               <span className="text-slate-400">•</span>
               <span className="font-medium text-slate-600">
                 {sourceLangName} ⇄ {targetLangName}
@@ -1244,10 +1242,10 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
                     ? 'bg-blue-50 text-blue-700 border-blue-200'
                     : 'bg-slate-50 text-slate-500 border-slate-200'
                 }`}
-                title="Toggle automatic speech synthesis for translations"
+                title={uiText("ui_cd35291fa75a")}
               >
                 {autoPlayDialogueAudio ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-                <span>Auto-Speak</span>
+                <span>{uiText("ui_3f802cfd0503")}</span>
               </button>
 
               <button
@@ -1258,10 +1256,10 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
                 }}
                 disabled={dialogueTurns.length === 0}
                 className="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-500 hover:text-rose-600 hover:border-rose-200 disabled:opacity-30 transition-all font-bold flex items-center gap-1"
-                title="Clear conversation history"
+                title={uiText("ui_8703aa179543")}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset</span>
+                <span>{uiText("ui_daee7606b339")}</span>
               </button>
             </div>
           </div>
@@ -1274,12 +1272,8 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
                   <Users className="w-7 h-7" />
                 </div>
                 <div className="space-y-1 max-w-md">
-                  <h3 className="text-base font-black text-slate-900">
-                    Live Two-Way Conversation
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Speak or type using either speaker panel below. The app automatically detects or translates the speech in real time with native voice audio!
-                  </p>
+                  <h3 className="text-base font-black text-slate-900">{uiText("ui_c123b6496db8")}</h3>
+                  <p className="text-xs text-slate-500">{uiText("ui_ca249478a143")}</p>
                 </div>
               </div>
             ) : (
@@ -1308,16 +1302,14 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
                     >
                       {/* Original Transcript */}
                       <div className="text-xs text-slate-600 font-medium pb-1 border-b border-slate-200/50">
-                        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block mb-0.5">
-                          Original ({turn.sourceLangName}):
+                        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block mb-0.5">{uiText("ui_d835bf1b24dd")}{turn.sourceLangName}):
                         </span>
                         "{turn.originalText}"
                       </div>
 
                       {/* Direct Pure Translation */}
                       <div className="space-y-1">
-                        <span className="text-[10px] uppercase tracking-wider text-indigo-700 font-black block">
-                          Translation ({turn.targetLangName}):
+                        <span className="text-[10px] uppercase tracking-wider text-indigo-700 font-black block">{uiText("ui_5cb856e4601b")}{turn.targetLangName}):
                         </span>
                         <p className="text-sm sm:text-base font-black text-slate-900 leading-snug">
                           {turn.translatedText}
@@ -1330,7 +1322,7 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
                           type="button"
                           onClick={() => handleSpeak(turn.translatedText, turn.targetLangName)}
                           className="p-1 rounded-md text-slate-500 hover:text-blue-600 hover:bg-white/80 transition-all cursor-pointer"
-                          title="Listen to native translation speech"
+                          title={uiText("ui_e6bd1b939ddf")}
                         >
                           <Volume2 className="w-3.5 h-3.5" />
                         </button>
@@ -1339,7 +1331,7 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
                           type="button"
                           onClick={() => handleCopy(turn.translatedText)}
                           className="p-1 rounded-md text-slate-500 hover:text-blue-600 hover:bg-white/80 transition-all cursor-pointer"
-                          title="Copy translation"
+                          title={uiText("ui_e61283caa8b6")}
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </button>
@@ -1353,7 +1345,7 @@ export const AITranslatorView: React.FC<AITranslatorViewProps> = ({
             {isDialogueProcessing && (
               <div className="flex items-center gap-2 p-3 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold animate-pulse w-fit">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
-                <span>Generating ultra-fast dialogue translation...</span>
+                <span>{uiText("ui_2a6661251fd8")}</span>
               </div>
             )}
 

@@ -1,3 +1,4 @@
+import { uiText } from "../../services/uiLocalization.ts";
 import React, { useState, useEffect } from 'react';
 import { 
   BookOpen, 
@@ -185,17 +186,11 @@ export const GrammarModuleView: React.FC<GrammarModuleViewProps> = ({
               <Zap className="w-4 h-4 fill-white" />
             </div>
             <div>
-              <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
-                AI Sentence Doctor & Grammar Surgery
-              </h3>
-              <p className="text-[11px] text-slate-500">
-                Paste any phrase in {activeLanguage.name} for instant sub-second morpho-syntax diagnosis
-              </p>
+              <h3 className="font-extrabold text-sm sm:text-base text-slate-900">{uiText("ui_e596f63ec505")}</h3>
+              <p className="text-[11px] text-slate-500">{uiText("ui_5410506d8495")}{activeLanguage.name}{uiText("ui_437382c70896")}</p>
             </div>
           </div>
-          <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-mono font-bold">
-            Gemini 3.8 Flash
-          </span>
+          <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-mono font-bold">{uiText("ui_1b6b70b55ddf")}</span>
         </div>
 
         <form
@@ -218,17 +213,16 @@ export const GrammarModuleView: React.FC<GrammarModuleViewProps> = ({
             className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-sm disabled:opacity-40 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
           >
             {isDiagnosing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            <span>Diagnose</span>
+            <span>{uiText("ui_64dd65edfeaa")}</span>
           </button>
         </form>
 
         {diagnosisResult && (
           <div className="p-3.5 rounded-2xl bg-white border border-indigo-100 space-y-2 text-xs animate-in fade-in">
             <div className="font-bold text-indigo-900 flex items-center justify-between">
-              <span>Diagnosis & Structural Analysis</span>
+              <span>{uiText("ui_27b99a0b0186")}</span>
               {diagnosisResult.register && (
-                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">
-                  Register: {diagnosisResult.register}
+                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">{uiText("ui_053a9fd41356")}{diagnosisResult.register}
                 </span>
               )}
             </div>
@@ -236,9 +230,7 @@ export const GrammarModuleView: React.FC<GrammarModuleViewProps> = ({
 
             {diagnosisResult.corrections && diagnosisResult.corrections.length > 0 && (
               <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 space-y-1">
-                <span className="font-extrabold uppercase text-[10px] text-rose-700 block">
-                  Identified Slips & Corrections:
-                </span>
+                <span className="font-extrabold uppercase text-[10px] text-rose-700 block">{uiText("ui_03da0479bd43")}</span>
                 {diagnosisResult.corrections.map((c, i) => (
                   <div key={i} className="text-[11px] space-y-0.5">
                     <div className="font-mono">

@@ -1,3 +1,4 @@
+import { uiText } from "../../services/uiLocalization.ts";
 import React, { useState } from 'react';
 import { 
   Calendar, 
@@ -82,14 +83,10 @@ export const DailyDisciplinesView: React.FC<DailyDisciplinesViewProps> = ({
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-800 text-xs font-bold mb-1">
             <Flame className="w-3.5 h-3.5 fill-orange-500" />
-            <span>Habit Mastery & Streak Rituals</span>
+            <span>{uiText("ui_6224a138c4f1")}</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Daily Disciplines
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500">
-            Neuroplastic language habits designed for sustainable compounding fluency.
-          </p>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{uiText("ui_65d1284289d0")}</h2>
+          <p className="text-xs sm:text-sm text-slate-500">{uiText("ui_d00114d1a6af")}</p>
         </div>
 
         {/* Streak Shield Status */}
@@ -98,8 +95,8 @@ export const DailyDisciplinesView: React.FC<DailyDisciplinesViewProps> = ({
             <Flame className="w-5 h-5 fill-orange-500" />
           </div>
           <div>
-            <div className="text-xs font-bold text-slate-400">Current Streak</div>
-            <div className="text-lg font-black text-slate-900">{user.streakDays} Consecutive Days</div>
+            <div className="text-xs font-bold text-slate-400">{uiText("ui_a63360bf1136")}</div>
+            <div className="text-lg font-black text-slate-900">{user.streakDays}{" " + uiText("ui_ed25ec4ac293")}</div>
           </div>
         </div>
       </div>
@@ -109,12 +106,9 @@ export const DailyDisciplinesView: React.FC<DailyDisciplinesViewProps> = ({
         {/* Daily Rituals Checklist (Span 2 cols) */}
         <div className="md:col-span-2 p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-extrabold text-slate-900 text-base">
-              Today's Ritual Checklist
-            </h3>
+            <h3 className="font-extrabold text-slate-900 text-base">{uiText("ui_7235c6f76285")}</h3>
             <span className="text-xs font-bold text-slate-400">
-              {rituals.filter((r) => r.completed).length}/{rituals.length} Completed
-            </span>
+              {rituals.filter((r) => r.completed).length}/{rituals.length}{uiText("ui_22a970d2e5b1")}</span>
           </div>
 
           <div className="space-y-2.5">
@@ -198,11 +192,9 @@ export const DailyDisciplinesView: React.FC<DailyDisciplinesViewProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-slate-500" />
-            <h3 className="font-extrabold text-slate-900 text-sm">
-              Immersion Activity Heatmap (Last 14 Weeks)
-            </h3>
+            <h3 className="font-extrabold text-slate-900 text-sm">{uiText("ui_e7e45eddbf37")}</h3>
           </div>
-          <span className="text-xs text-slate-400">Total 124 Active Sessions</span>
+          <span className="text-xs text-slate-400">{uiText("ui_c903f83fe6a1")}</span>
         </div>
 
         <div className="overflow-x-auto pb-2">
@@ -229,14 +221,14 @@ export const DailyDisciplinesView: React.FC<DailyDisciplinesViewProps> = ({
         </div>
 
         <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
-          <span>Less Practice</span>
+          <span>{uiText("ui_c8fcf2be15a1")}</span>
           <div className="flex items-center gap-1">
             <span className="w-2.5 h-2.5 rounded-xs bg-slate-100" />
             <span className="w-2.5 h-2.5 rounded-xs bg-amber-200" />
             <span className="w-2.5 h-2.5 rounded-xs bg-amber-300" />
             <span className="w-2.5 h-2.5 rounded-xs bg-amber-500" />
           </div>
-          <span>More Practice</span>
+          <span>{uiText("ui_5fa84566a186")}</span>
         </div>
       </div>
     </div>
