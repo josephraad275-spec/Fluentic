@@ -141,6 +141,6 @@ export class OmniAppEngineClient {
     } catch { return diagnose(params.userAnswers); }
   }
   static executeActiveChat(params: ActiveChatParams): Promise<ActiveChatResult> {
-    return fluenticBrain.generateTutorResponse(params.history || [], params.userMessage, { nativeLanguageCode: params.nativeLanguageCode, targetLanguageCode: params.targetLanguageCode, cefrLevel: params.cefrLevel, learningIntent: params.learningIntent || 'conversational' }) as Promise<ActiveChatResult>;
+    return fluenticBrain.generateTutorResponse(params.history || [], params.userMessage, { nativeLanguageCode: params.nativeLanguageCode, targetLanguageCode: params.targetLanguageCode, cefrLevel: params.cefrLevel as 'A1'|'A2'|'B1'|'B2'|'C1'|'C2', learningIntent: params.learningIntent || 'conversational' }) as unknown as Promise<ActiveChatResult>;
   }
 }
