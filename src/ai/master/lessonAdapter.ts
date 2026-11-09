@@ -1,12 +1,12 @@
 import type { Exercise, LearningNode } from '../../types.ts';
-import { masterRequest } from './client.ts';
+import { fluenticBrain } from '../../services/FluenticBrain.ts';
 import { dueReviews, learnerState } from './learnerState.ts';
 import { validatePersonalLesson } from '../validation.ts';
 import { normalizeLearningIntent } from '../pedagogy.ts';
 
 export async function createAdaptiveNode(node:LearningNode,nativeLanguageCode:string,targetLanguageCode:string,learningIntent:string,signal?:AbortSignal):Promise<LearningNode> {
  const intent=normalizeLearningIntent(learningIntent);
- const result=await masterRequest<Record<string,unknown>>('personal_lesson',{nativeLanguageCode,targetLanguageCode,cefrLevel:node.cefr,learningIntent:intent,weaknesses:dueReviews().map(r=>r.concept),recentPerformance:learnerState().reviews},signal);
+ const result=await fluenticBrain.generatePersonalLesson({nativeLanguageCode,targetLanguageCode,cefrLevel:node.cefr,learningIntent:intent},{weaknesses:dueReviews().map(r=>r.concept),recentPerformance:learnerState().reviews},signal);
  validatePersonalLesson(result,node.cefr,intent);
  const steps=result.steps as Array<{id:string;type:Exercise['learningStage'];instruction:string;targetLanguageText:string;expectedAnswer:string;meaning:string;feedbackRule:string}>;
  const exercises:Exercise[]=steps.map(step=>{
