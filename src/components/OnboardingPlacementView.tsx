@@ -1,4 +1,4 @@
-import { ensureLocale } from "../ai/master/localizationClient.ts";
+import { fluenticBrain } from "../services/FluenticBrain.ts";
 import { subscribeTranslations, getTranslationRevision } from "../services/localization.ts";
 import { uiText } from "../services/uiLocalization.ts";
 import React, { useState } from 'react';
@@ -17,7 +17,7 @@ import {
 } from '../services/placementTestService';
 import { OmniAppEngineClient, DiagnosticData } from '../services/omniEngineService';
 import { getI18n } from '../services/localization';
-import { fluenticAssessment } from '../ai';
+
 import { FLUENTIC_CEFR_LEVELS, estimateLevelFromEvidence, nextAdaptiveLevel } from '../ai/pedagogy';
 import { isRtlLanguage, resolveDirection, hasRtlCharacters, stripTransliteration } from '../services/languageTypography';
 import { 
@@ -67,7 +67,7 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
   }, [initialProfile]);
 
   React.useSyncExternalStore(subscribeTranslations, getTranslationRevision);
-  React.useEffect(() => { ensureLocale(nativeLanguageCode).catch(() => {}); }, [nativeLanguageCode]);
+  React.useEffect(() => { fluenticBrain.activateLocalization(nativeLanguageCode).catch(() => {}); }, [nativeLanguageCode]);
 
   // Placement Test State & Dynamic Adaptive Routing (Strict 10-Question Standardized CEFR Assessment)
   const [selectedVariant, setSelectedVariant] = useState<'A' | 'B' | 'C' | 'D'>('A');
@@ -154,8 +154,8 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
     try {
       const nativeName = WORLD_LANGUAGES.find((language) => language.code === nativeLanguageCode)?.name || 'English';
       await OmniAppEngineClient.executeOnboarding({ displayName: name, nativeLanguageCode, targetLanguageCode: targetLanguage.code, learningIntent: initialProfile?.learningIntent || 'conversational' });
-      const generated = await fluenticAssessment.createPlacementTest(targetLanguage.name, nativeName, 10, initialProfile?.learningIntent || 'conversational');
-      const generatedQuestions = generated.questions as any[];
+      const generated = await fluenticBrain.runDiagnosticTest({ nativeLanguageCode, targetLanguageCode: targetLanguage.code, cefrLevel: 'A1', learningIntent: initialProfile?.learningIntent || 'conversational', questionCount: 10 });
+      const generatedQuestions = generated.questions || [];
       const tiers = new Set(generatedQuestions.map((question) => String(question.level || '').toUpperCase()));
       const valid = generatedQuestions.length === 10 && FLUENTIC_CEFR_LEVELS.every((level) => tiers.has(level)) && generatedQuestions.every((question) => Array.isArray(question.options) && question.options.length === 4 && question.options.some((option) => option.key === question.correctKey));
       if (valid) {
