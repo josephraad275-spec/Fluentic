@@ -6,7 +6,7 @@ import { normalizeLearningIntent } from '../pedagogy.ts';
 
 export async function createAdaptiveNode(node:LearningNode,nativeLanguageCode:string,targetLanguageCode:string,learningIntent:string,signal?:AbortSignal):Promise<LearningNode> {
  const intent=normalizeLearningIntent(learningIntent);
- const result=await fluenticBrain.generatePersonalLesson({nativeLanguageCode,targetLanguageCode,cefrLevel:node.cefr,learningIntent:intent},{weaknesses:dueReviews().map(r=>r.concept),recentPerformance:learnerState().reviews},signal);
+ const result=await fluenticBrain.generatePersonalLesson({nativeLanguageCode,targetLanguageCode,cefrLevel:node.cefr as 'A1'|'A2'|'B1'|'B2'|'C1'|'C2',learningIntent:intent},{weaknesses:dueReviews().map(r=>r.concept),recentPerformance:learnerState().reviews},signal);
  validatePersonalLesson(result,node.cefr,intent);
  const steps=result.steps as Array<{id:string;type:Exercise['learningStage'];instruction:string;targetLanguageText:string;expectedAnswer:string;meaning:string;feedbackRule:string}>;
  const exercises:Exercise[]=steps.map(step=>{
