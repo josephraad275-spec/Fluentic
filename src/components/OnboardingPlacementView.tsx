@@ -152,7 +152,6 @@ export const OnboardingPlacementView: React.FC<OnboardingPlacementViewProps> = (
       nativeLanguageCode
     ).questions;
     try {
-      const nativeName = WORLD_LANGUAGES.find((language) => language.code === nativeLanguageCode)?.name || 'English';
       await OmniAppEngineClient.executeOnboarding({ displayName: name, nativeLanguageCode, targetLanguageCode: targetLanguage.code, learningIntent: initialProfile?.learningIntent || 'conversational' });
       const generated = await fluenticBrain.runDiagnosticTest({ nativeLanguageCode, targetLanguageCode: targetLanguage.code, cefrLevel: 'A1', learningIntent: initialProfile?.learningIntent || 'conversational', questionCount: 10 });
       const generatedQuestions = generated.questions || [];
