@@ -50,38 +50,55 @@ const DEFAULT_USER: UserProfile = {
   email: 'explorer@fluentic.ai',
   avatar: 'EX',
   isGuest: false,
-  isPro: true,
-  hasCompletedOnboarding: true,
+  isPro: false,
+  hasCompletedOnboarding: false,
   nativeLanguageCode: 'en',
   nativeLanguage: 'English',
   targetPace: 'dedicated',
-  placementScore: 8,
-  structuralMastery: 85,
-  activeRecallRate: 90,
-  spacedErrorRecyclingCount: 2,
+  placementScore: 0,
+  structuralMastery: 0,
+  activeRecallRate: 0,
+  spacedErrorRecyclingCount: 0,
   xp: 0,
   level: 1,
-  gems: 100,
-  streakDays: 3,
-  speakingPunctuation: 92,
-  speakingScore: 88,
-  totalPracticeMinutes: 45,
-  streakShields: 1,
+  gems: 0,
+  streakDays: 0,
+  speakingPunctuation: 0,
+  speakingScore: 0,
+  totalPracticeMinutes: 0,
+  streakShields: 0,
   streakProtected: false,
   activeLanguageCode: 'es',
   activeLanguage: 'Spanish',
-  activeCefr: 'B1',
-  unlockedCefrLevels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
-  completedNodeIds: ['node-1'],
-  nodeCrowns: { 'node-1': 1 },
+  activeCefr: 'A1',
+  unlockedCefrLevels: ['A1'],
+  completedNodeIds: [],
+  nodeCrowns: {},
   dailyGoalMinutes: 15,
   dailyGoalCompleted: false,
-  weeklyActivity: [15, 20, 25, 0, 0, 0, 0],
-  unlockedAchievements: ['first-step'],
-  claimedAchievements: ['first-step'],
-  isSignedIn: true,
+  weeklyActivity: [0, 0, 0, 0, 0, 0, 0],
+  unlockedAchievements: [],
+  claimedAchievements: [],
+  isSignedIn: false,
   dailyQuests: [],
 };
+
+// One-time clean-slate migration for this single-user development app.
+// Runs only on the device after the updated app is opened; does not delete remote data.
+const FRESH_START_MIGRATION_KEY = 'fluentic_fresh_start_2026_11';
+function applyFreshStartOnce(): void {
+  try {
+    if (localStorage.getItem(FRESH_START_MIGRATION_KEY) === 'done') return;
+    const keys = Object.keys(localStorage).filter(key => key.startsWith('fluentic_'));
+    for (const key of keys) localStorage.removeItem(key);
+    sessionStorage.clear();
+    localStorage.setItem(FRESH_START_MIGRATION_KEY, 'done');
+  } catch {
+    // Storage may be blocked; the clean default profile still applies.
+  }
+}
+
+applyFreshStartOnce();
 
 export function App() {
   useSyncExternalStore(subscribeTranslations, getTranslationRevision);
