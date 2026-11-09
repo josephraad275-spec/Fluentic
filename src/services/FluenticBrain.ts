@@ -142,7 +142,7 @@ export class FluenticBrain {
     record(result.user_profile);
     record(result.pedagogical_trajectory);
     validateDictionary(result.ui_translation);
-    this.learner = data;
+    this.learner = { nativeLanguageCode: input.nativeLanguageCode, targetLanguageCode: input.targetLanguageCode, cefrLevel: input.cefrLevel || 'A1', learningIntent: input.learningIntent };
     return result;
   }
   async runDiagnosticTest(stage: DiagnosticStage, userResponse?: unknown[], signal?: AbortSignal): Promise<DiagnosticResult> {
