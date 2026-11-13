@@ -3,6 +3,7 @@ import type { GoogleGenAI } from "@google/genai";
 import { FLUENTIC_CEFR_LEVELS, buildPlacementAuthoringInstruction, buildPersonalLessonInstruction, estimateLevelFromEvidence, normalizeLearningIntent } from "../pedagogy";
 import { stripTransliteration } from "../../services/languageTypography";
 import { validateGeneratedResponse } from "./responseContracts";
+import { beginDiagnostic, recordDiagnosticAnswer, type DiagnosticSession, type DiagnosticResponse } from "../adaptiveDiagnostic";
 
 type AIClientProvider = () => GoogleGenAI | null;
 
@@ -53,6 +54,38 @@ function requireText(value: unknown, field: string, max = MAX_TEXT_LENGTH): stri
 }
 
 export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) {
+  const diagnosticSessions = new Map<string, { session: DiagnosticSession; updatedAt: number }>();
+  const ttlMs = 3600000;
+  app.post("/api/fluentic-ai/diagnostic/start", (req: Request, res: Response) => {
+    const id = cleanString(req.body?.sessionId);
+    if (!/^[a-zA-Z0-9_-]{12,128}$/.test(id)) return res.status(400).json({ error: "Invalid sessionId." });
+    for (const [key, value] of diagnosticSessions) {
+      if (Date.now() - value.updatedAt > ttlMs) diagnosticSessions.delete(key);
+    }
+    if (diagnosticSessions.has(id)) return res.status(409).json({ error: "Session already exists." });
+    if (diagnosticSessions.size >= 10000) return res.status(503).json({ error: "Diagnostic capacity reached." });
+    const session = beginDiagnostic(id);
+    diagnosticSessions.set(id, { session, updatedAt: Date.now() });
+    return res.json({ success: true, session, nextLevel: session.currentLevel });
+  });
+  app.post("/api/fluentic-ai/diagnostic/answer", (req: Request, res: Response) => {
+    const id = cleanString(req.body?.sessionId);
+    const stored = diagnosticSessions.get(id);
+    if (!stored || Date.now() - stored.updatedAt > ttlMs) {
+      diagnosticSessions.delete(id);
+      return res.status(404).json({ error: "Session expired or not found." });
+    }
+    try {
+      const answer = req.body?.answer as DiagnosticResponse;
+      if (!answer || typeof answer !== "object") throw new Error("An answer object is required.");
+      const decision = recordDiagnosticAnswer(stored.session, answer);
+      diagnosticSessions.set(id, { session: decision.session, updatedAt: Date.now() });
+      return res.json({ success: true, ...decision });
+    } catch (error) {
+      return res.status(400).json({ error: error instanceof Error ? error.message : "Invalid answer." });
+    }
+  });
+
   app.get("/api/fluentic-ai/health", (_req: Request, res: Response) => {
     res.json({
       name: "Fluentic AI",
