@@ -360,7 +360,7 @@ export class FluenticMasterEngine {
     const reply = await OmniAppEngineClient.executeActiveChat({
       userMessage: message, targetLanguage: this.user.targetLanguage,
       targetLanguageCode: this.user.targetLanguage, nativeLanguage: this.user.nativeLanguage,
-      nativeLanguageCode: this.user.nativeLanguage, cefrLevel: this.user.currentCefr,
+      nativeLanguageCode: this.user.nativeLanguage, cefrLevel: this.user.currentCefr === 'evaluating' ? 'A1' : this.user.currentCefr,
       learningIntent: this.user.intent === 'fluency' ? 'conversational' : this.user.intent, history,
     });
     ensure(reply.status === 'success', 'AI tutor unavailable or response could not be verified');
