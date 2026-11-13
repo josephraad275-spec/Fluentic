@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import type { GoogleGenAI } from "@google/genai";
 import { FLUENTIC_CEFR_LEVELS, buildPlacementAuthoringInstruction, buildPersonalLessonInstruction, estimateLevelFromEvidence, normalizeLearningIntent } from "../pedagogy";
 import { stripTransliteration } from "../../services/languageTypography";
+import { validateGeneratedResponse } from "./responseContracts";
 
 type AIClientProvider = () => GoogleGenAI | null;
 
@@ -16,29 +17,32 @@ function cleanString(value: unknown, fallback = ""): string {
 }
 
 function parseJson(text: string): any {
-  const cleaned = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    const first = cleaned.indexOf("{");
-    const last = cleaned.lastIndexOf("}");
-    if (first >= 0 && last > first) return JSON.parse(cleaned.slice(first, last + 1));
-    throw new Error("The AI returned an invalid structured response.");
-  }
+  const parsed: unknown = JSON.parse(text.trim());
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("The AI returned an invalid JSON object.");
+  return parsed as Record<string, unknown>;
 }
 
-async function generateJson(ai: GoogleGenAI, systemInstruction: string, input: unknown, maxOutputTokens = 1800) {
-  const result = await ai.models.generateContent({
-    model: CORE_MODEL,
-    contents: typeof input === "string" ? input : JSON.stringify(input),
-    config: {
-      systemInstruction,
-      responseMimeType: "application/json",
-      temperature: 0.25,
-      maxOutputTokens,
-    },
-  });
-  return parseJson(result.text || "");
+async function generateJson(ai: GoogleGenAI, systemInstruction: string, input: unknown, maxOutputTokens = 1800, validate?: (result: Record<string, unknown>) => void): Promise<any> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const result = await ai.models.generateContent({
+        model: CORE_MODEL,
+        contents: typeof input === "string" ? input : JSON.stringify(input),
+        config: { systemInstruction, responseMimeType: "application/json", temperature: 0.15, maxOutputTokens },
+      });
+      const parsed = parseJson(result.text || "");
+      validate?.(parsed);
+      return parsed;
+    } catch (error) {
+      lastError = error;
+      const status = (error as { status?: number }).status;
+      // Validation failures may be regenerated; permanent auth and input failures must not be retried.
+      if (status && ![429, 500, 502, 503, 504].includes(status)) break;
+      if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 250 * 2 ** attempt));
+    }
+  }
+  throw lastError;
 }
 
 function requireText(value: unknown, field: string, max = MAX_TEXT_LENGTH): string {
@@ -79,7 +83,8 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           ai,
           `You are Fluentic's expert translation engine. Translate into ${targetLanguage}. Source language: ${sourceLanguage}. Preserve meaning, tone, formatting, names, numbers and intent. Handle idioms naturally rather than literally. Return only the target language in its authentic writing system; never append transliteration, phonetic respelling, or English approximations. Return JSON only: {"translation":"...","detectedSourceLanguage":"...","register":"formal|informal|neutral","notes":"short optional nuance note"}.`,
           sourceText,
-          1200
+          1200,
+          result => { validateGeneratedResponse('translate', result, targetLanguage); }
         );
         if (!cleanString(result.translation)) throw new Error("Translation response was empty.");
         result.translation = stripTransliteration(result.translation);
@@ -94,7 +99,8 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           ai,
           buildPlacementAuthoringInstruction(targetLanguage, nativeLanguage, count),
           { learnerGoal: cleanString(payload.goal, "general fluency"), knownLevel: cleanString(payload.currentLevel, "unknown") },
-          5000
+          5000,
+          result => { validateGeneratedResponse('placement', result, targetLanguage, count); }
         );
         if (!Array.isArray(result.questions) || result.questions.length !== count) throw new Error("Placement test generation was incomplete.");
         result.questions = result.questions.map((question: any) => ({ ...question, prompt: stripTransliteration(String(question.prompt || "")) }));
@@ -113,7 +119,8 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           ai,
           `You are Fluentic's cautious CEFR assessor for ${targetLanguage}. Estimate the learner's level using only the supplied evidence. Distinguish demonstrated ability from uncertainty; never overstate precision. C1/C2 require advanced academic discourse, formal debate, complex literary/rhetorical analysis, inference and synthesis; elementary phrase recognition cannot support an advanced result. Evaluate grammar, vocabulary, reading, writing and communication where evidence exists. Return JSON: {"estimatedLevel":"A1|A2|B1|B2|C1|C2","confidence":0-100,"skillLevels":{"grammar":"...","vocabulary":"...","reading":"...","writing":"...","communication":"..."},"strengths":["..."],"priorityGaps":["..."],"reasoning":"...","recommendedNextStep":"..."}.`,
           { answers, selfReportedLevel: cleanString(payload.selfReportedLevel, "unknown"), learnerGoal: cleanString(payload.goal, "general fluency") },
-          2200
+          2200,
+          result => { validateGeneratedResponse('level-analysis', result, targetLanguage); }
         );
         if (!CEFR_LEVELS.includes(result.estimatedLevel)) throw new Error("The level assessor returned an invalid CEFR level.");
         const evidenceAnswers = answers.map((answer: any) => ({
@@ -148,7 +155,8 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
             recentPerformance: payload.recentPerformance || {},
             minutesAvailable: Math.max(5, Math.min(60, Number(payload.minutesAvailable) || 15)),
           },
-          3500
+          3500,
+          result => { validateGeneratedResponse('personal-lesson', result, targetLanguage); }
         );
         if (!Array.isArray(result.steps) || result.steps.length < 4) throw new Error("The adaptive lesson did not contain a complete retrieval-to-transfer sequence.");
         result.steps = result.steps.map((step: any) => ({ ...step, targetLanguageText: stripTransliteration(String(step.targetLanguageText || "")) }));
@@ -170,7 +178,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
           },
           config: { responseMimeType: "application/json", temperature: 0.15, maxOutputTokens: 1800 },
         });
-        const analysis = parseJson(result.text || "");
+        const analysis = validateGeneratedResponse('speech-analysis', parseJson(result.text || ""), targetLanguage);
         analysis.transcript = stripTransliteration(String(analysis.transcript || ""));
         analysis.corrections = Array.isArray(analysis.corrections) ? analysis.corrections.map((correction: any) => ({
           ...correction,
