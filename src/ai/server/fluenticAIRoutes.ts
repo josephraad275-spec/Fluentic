@@ -55,17 +55,19 @@ function requireText(value: unknown, field: string, max = MAX_TEXT_LENGTH): stri
 
 export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) {
   const diagnosticSessions = new Map<string, { session: DiagnosticSession; updatedAt: number }>();
+  const diagnosticQuestionKeys = new Map<string, Map<string, string>>();
   const ttlMs = 3600000;
   app.post("/api/fluentic-ai/diagnostic/start", (req: Request, res: Response) => {
     const id = cleanString(req.body?.sessionId);
     if (!/^[a-zA-Z0-9_-]{12,128}$/.test(id)) return res.status(400).json({ error: "Invalid sessionId." });
     for (const [key, value] of diagnosticSessions) {
-      if (Date.now() - value.updatedAt > ttlMs) diagnosticSessions.delete(key);
+      if (Date.now() - value.updatedAt > ttlMs) { diagnosticSessions.delete(key); diagnosticQuestionKeys.delete(key); }
     }
     if (diagnosticSessions.has(id)) return res.status(409).json({ error: "Session already exists." });
     if (diagnosticSessions.size >= 10000) return res.status(503).json({ error: "Diagnostic capacity reached." });
     const session = beginDiagnostic(id);
     diagnosticSessions.set(id, { session, updatedAt: Date.now() });
+    diagnosticQuestionKeys.set(id, new Map());
     return res.json({ success: true, session, nextLevel: session.currentLevel });
   });
   app.post("/api/fluentic-ai/diagnostic/answer", (req: Request, res: Response) => {
@@ -73,12 +75,18 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
     const stored = diagnosticSessions.get(id);
     if (!stored || Date.now() - stored.updatedAt > ttlMs) {
       diagnosticSessions.delete(id);
+      diagnosticQuestionKeys.delete(id);
       return res.status(404).json({ error: "Session expired or not found." });
     }
     try {
       const answer = req.body?.answer as DiagnosticResponse;
       if (!answer || typeof answer !== "object") throw new Error("An answer object is required.");
-      const decision = recordDiagnosticAnswer(stored.session, answer);
+      const expected = diagnosticQuestionKeys.get(id)?.get(String(answer.questionId));
+      if (!expected) return res.status(409).json({ error: "Question has not been issued by the server." });
+      const selectedKey = cleanString(req.body?.selectedKey);
+      if (!/^[ABCD]$/.test(selectedKey)) throw new Error("Invalid selectedKey.");
+      const assessed: DiagnosticResponse = { questionId: String(answer.questionId), level: answer.level, skill: answer.skill, correct: selectedKey === expected, advancedEvidence: false };
+      const decision = recordDiagnosticAnswer(stored.session, assessed);
       diagnosticSessions.set(id, { session: decision.session, updatedAt: Date.now() });
       return res.json({ success: true, ...decision });
     } catch (error) {
@@ -127,7 +135,7 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
       if (action === "placement") {
         const targetLanguage = requireText(payload.targetLanguage, "targetLanguage", 100);
         const nativeLanguage = cleanString(payload.nativeLanguage, "English");
-        const count = Math.max(8, Math.min(30, Number(payload.questionCount) || 15));
+        const count = Math.max(cleanString(payload.sessionId) ? 18 : 8, Math.min(30, Number(payload.questionCount) || 18));
         const result = await generateJson(
           ai,
           buildPlacementAuthoringInstruction(targetLanguage, nativeLanguage, count),
@@ -141,6 +149,16 @@ export function registerFluenticAIRoutes(app: Express, getAI: AIClientProvider) 
         if (CEFR_LEVELS.some((level) => !presentTiers.has(level))) throw new Error("Placement test must contain evidence for every CEFR tier from A1 to C2.");
         const invalidQuestion = result.questions.some((question: any) => !Array.isArray(question.options) || question.options.length !== 4 || !question.options.some((option: any) => option.key === question.correctKey));
         if (invalidQuestion) throw new Error("Placement test contains an invalid four-option answer set.");
+      const sessionId = cleanString(payload.sessionId);
+      const sessionRecord = diagnosticSessions.get(sessionId);
+      if (sessionRecord && Date.now() - sessionRecord.updatedAt <= ttlMs) {
+        const keys = diagnosticQuestionKeys.get(sessionId);
+        for (const question of result.questions) keys?.set(String(question.id), String(question.correctKey));
+      }
+      if (sessionRecord) result.questions = result.questions.map((question: any) => {
+        const { correctKey, ...safeQuestion } = question;
+        return safeQuestion;
+      });
         return res.json({ success: true, action, ...result });
       }
 
