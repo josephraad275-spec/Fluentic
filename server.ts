@@ -162,7 +162,7 @@ Return strictly valid JSON matching:
         },
         config: {
           responseMimeType: "application/json",
-          temperature: 0.1,
+          temperature: 0.15,
         },
       });
 
@@ -602,7 +602,7 @@ Format strictly as JSON:
 }`;
               const diagResponse = await generateContentWithFallback(ai, {
                 contents: diagnosticPrompt,
-                config: { responseMimeType: "application/json", temperature: 0.2 },
+                config: { responseMimeType: "application/json", temperature: 0.15 },
               });
               const diagParsed = JSON.parse(diagResponse.text || "{}");
               if (diagParsed.realtimeGrammarFeedback) {
@@ -705,7 +705,7 @@ Format strictly as JSON:
 }`;
             const response = await generateContentWithFallback(ai, {
               contents: prompt,
-              config: { responseMimeType: "application/json", temperature: 0.25 },
+              config: { responseMimeType: "application/json", temperature: 0.15 },
             });
             const parsed = JSON.parse(response.text || "{}");
             if (Array.isArray(parsed.questions) && parsed.questions.length >= 8) {
@@ -833,7 +833,7 @@ Format strictly as JSON:
 
             const response = await generateContentWithFallback(ai, {
               contents: `History: ${JSON.stringify(history)}\nUser says: "${userMessage}"`,
-              config: { systemInstruction, responseMimeType: "application/json", temperature: 0.45 },
+              config: { systemInstruction, responseMimeType: "application/json", temperature: 0.15 },
             });
 
             const parsed = JSON.parse(response.text || "{}");
@@ -938,7 +938,7 @@ Format your response as a JSON object with:
         config: {
           systemInstruction,
           responseMimeType: "application/json",
-          temperature: 0.7,
+          temperature: 0.15,
         },
       });
 
@@ -1010,7 +1010,7 @@ Format strictly as JSON:
         config: {
           systemInstruction,
           responseMimeType: "application/json",
-          temperature: 0.7,
+          temperature: 0.15,
         },
       });
 
@@ -1054,7 +1054,7 @@ Respond in JSON:
         config: {
           systemInstruction,
           responseMimeType: "application/json",
-          temperature: 0.8,
+          temperature: 0.15,
         },
       });
 
@@ -1102,7 +1102,7 @@ Format as JSON:
         config: {
           systemInstruction,
           responseMimeType: "application/json",
-          temperature: 0.5,
+          temperature: 0.15,
         },
       });
 
@@ -1151,7 +1151,7 @@ Format as JSON:
         config: {
           systemInstruction,
           responseMimeType: "application/json",
-          temperature: 0.4,
+          temperature: 0.15,
         },
       });
 
@@ -1215,7 +1215,7 @@ Format your response STRICTLY as a valid JSON object matching:
         config: {
           systemInstruction,
           responseMimeType: "application/json",
-          temperature: 0.5,
+          temperature: 0.15,
         },
       });
 
@@ -1313,7 +1313,7 @@ Format strictly as JSON:
         config: {
           systemInstruction,
           responseMimeType: "application/json",
-          temperature: 0.2,
+          temperature: 0.15,
         },
       });
 
@@ -1400,7 +1400,7 @@ Format strictly as JSON:
         config: {
           systemInstruction,
           responseMimeType: "application/json",
-          temperature: 0.4,
+          temperature: 0.15,
         },
       });
 
@@ -1429,9 +1429,9 @@ User's Native Language: ${native} (${nativeLanguageCode || ""}).
 
 Rules:
 1. Generate exactly 10 multiple-choice questions spanning the full CEFR spectrum:
-   - Q1-Q3: A1, A2, A3 (Survival words, greetings, essential verbs, routine nouns)
-   - Q4-Q6: B1, B2, B3 (Past tenses, conjunctions, hypotheticals, subordinate clauses)
-   - Q7-Q10: C1, C2, C3, C3+ (Advanced subjunctive, high-register idiomatic expressions, complex inverted syntax)
+   - Q1-Q3: A1, A1, A2 (Survival vocabulary, essential verbs, routine nouns)
+   - Q4-Q6: A2, B1, B1 (Past tenses, conjunctions, hypotheticals, subordinate clauses)
+   - Q7-Q10: B2, B2, C1, C2 (Complex argumentation, academic synthesis, rhetorical analysis, nuanced discourse)
 2. Target phrases, choices, and vocab MUST be in the TARGET language's authentic native script (Arabic, Japanese Kanji/Kana, Russian Cyrillic, Chinese Hanzi, Korean Hangul, Greek, Hindi, etc.).
 3. Prompts, questions, translations, target skill names, and explanations MUST be written in the user's NATIVE language (${native}).
 
@@ -1463,7 +1463,7 @@ Format strictly as JSON:
             config: {
               systemInstruction,
               responseMimeType: "application/json",
-              temperature: 0.3,
+              temperature: 0.15,
             },
           });
 
@@ -1549,7 +1549,7 @@ Format as JSON:
         config: {
           systemInstruction,
           responseMimeType: "application/json",
-          temperature: 0.3,
+          temperature: 0.15,
         },
       });
 
@@ -1609,7 +1609,7 @@ Format strictly as JSON:
         config: {
           systemInstruction,
           responseMimeType: "application/json",
-          temperature: 0.4,
+          temperature: 0.15,
         },
       });
 
@@ -1668,7 +1668,7 @@ Format strictly as JSON:
         config: {
           systemInstruction,
           responseMimeType: "application/json",
-          temperature: 0.6,
+          temperature: 0.15,
         },
       });
 
@@ -1723,7 +1723,7 @@ Return valid JSON matching this schema:
             config: {
               systemInstruction: sysPrompt,
               responseMimeType: "application/json",
-              temperature: 0.1,
+              temperature: 0.15,
               maxOutputTokens: 350,
             },
           });
@@ -1797,7 +1797,7 @@ Return valid JSON matching this schema:
                 { role: "user", content: trimmedText },
               ],
               max_tokens: 200,
-              temperature: 0.1,
+              temperature: 0.15,
             }),
           });
           if (orResponse.ok) {

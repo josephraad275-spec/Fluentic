@@ -43,7 +43,7 @@ export function validateGeneratedResponse(action: 'translate' | 'placement' | 'l
       for (const option of q.options) {
         assert(record(option) && string(option.key) && /^[ABCD]$/.test(option.key) && !keys.has(option.key), 'option key');
         keys.add(option.key);
-        assert(string(option.text), 'option text');
+        targetText(option.text, language, 'option text');
       }
       assert(keys.size === 4 && keys.has(q.correctKey as string), 'correct answer');
       if (q.level === 'C1' || q.level === 'C2') {
