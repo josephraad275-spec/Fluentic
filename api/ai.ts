@@ -2,16 +2,16 @@ import { GoogleGenAI } from '@google/genai';
 
 const ai = new GoogleGenAI({});
 
-export async function POST(request: Request) {
+export default async function handler(req: any, res: any) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   try {
-    const body = await request.json();
-    const { system, messages, temperature = 0.15, maxTokens = 2048 } = body;
+    const { system, messages, temperature = 0.15, maxTokens = 2048 } = req.body;
 
     if (!messages || !Array.isArray(messages)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid messages payload' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return res.status(400).json({ error: 'Invalid messages payload' });
     }
 
     const contents = messages.map((m: { role: string; content: string }) => ({
@@ -30,15 +30,9 @@ export async function POST(request: Request) {
       },
     });
 
-    return new Response(
-      JSON.stringify({ text: response.text ?? '' }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return res.status(200).json({ text: response.text ?? '' });
   } catch (error) {
     console.error('AI Proxy Error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to generate AI response' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return res.status(500).json({ error: 'Failed to generate AI response' });
   }
 }
