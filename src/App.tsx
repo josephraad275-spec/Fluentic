@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { DiagnosticQuiz } from './components/DiagnosticQuiz';
 
 export default function App() {
-  const [started, setStarted] = useState(false);
-  const [targetLanguage, setTargetLanguage] = useState('Spanish');
+  const [started, setStarted] = useState<boolean>(false);
+  const [targetLanguage, setTargetLanguage] = useState<string>('Spanish');
   const [completedLevel, setCompletedLevel] = useState<string | null>(null);
 
   if (completedLevel) {
@@ -35,7 +35,7 @@ export default function App() {
           
           <select
             value={targetLanguage}
-            onChange={(e) => setTargetLanguage(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setTargetLanguage(e.target.value)}
             className="w-full p-3 border border-gray-300 rounded-xl mb-6 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="Spanish">Spanish</option>
@@ -64,7 +64,7 @@ export default function App() {
       </div>
       <DiagnosticQuiz
         targetLanguage={targetLanguage}
-        onComplete={(level) => setCompletedLevel(level)}
+        onComplete={(level: string) => setCompletedLevel(level)}
       />
     </div>
   );
